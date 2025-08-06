@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-ocean-green text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply bg-sail-white text-ocean-green border-2 border-ocean-green px-6 py-3 rounded-lg hover:bg-ocean-green hover:text-white transition-colors;
+  }
+} 

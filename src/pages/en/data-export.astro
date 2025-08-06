@@ -1,0 +1,348 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Navigation from '../../components/Navigation.astro';
+import { 
+  getAllMembers, 
+  getBoatStatus, 
+  getActiveCheckIns, 
+  getRecentNotifications 
+} from '../../lib/database.js';
+
+// Get all data for export
+const members = await getAllMembers();
+const boats = [
+  { id: 'boat-1', name: 'Quest 1' },
+  { id: 'boat-2', name: 'Quest 2' },
+  { id: 'boat-3', name: 'Zest 1' },
+  { id: 'boat-4', name: 'Zest 2' },
+  { id: 'boat-5', name: 'Zest 3' },
+  { id: 'boat-6', name: 'Zest 4' },
+  { id: 'boat-7', name: 'Zest 5' },
+  { id: 'boat-8', name: 'Zest 6' },
+  { id: 'boat-9', name: 'Topaz 1' },
+  { id: 'boat-10', name: 'Topaz 2' },
+  { id: 'boat-11', name: 'Laser 1' },
+  { id: 'boat-12', name: 'Laser 2' },
+  { id: 'boat-13', name: 'Laser 3' },
+  { id: 'boat-14', name: 'Laser 4' },
+  { id: 'kayak', name: 'Kayak' },
+  { id: 'paddle-board', name: 'Paddle Board' }
+];
+
+const boatStatuses = await Promise.all(boats.map(async (boat) => {
+  const status = await getBoatStatus(boat.id);
+  const activeCheckIns = await getActiveCheckIns(boat.id);
+  return { ...boat, ...status, activeCheckIns };
+}));
+
+const notifications = await getRecentNotifications(100);
+---
+
+<Layout title="Data Export - Ymir Sailing Club" lang="en">
+  <Navigation />
+  
+  <main>
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-br from-ocean-blue to-blue-600 text-white py-20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-5xl font-bold mb-6">
+          Data Export
+        </h1>
+        <p class="text-xl mb-8 max-w-3xl mx-auto">
+          Export club data for analysis, reporting, and backup purposes.
+        </p>
+      </div>
+    </section>
+
+    <!-- Export Content -->
+    <section class="py-16 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Data Summary -->
+        <div class="grid md:grid-cols-4 gap-6 mb-8">
+          <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500">
+            <div class="flex items-center">
+              <div class="flex-1">
+                <p class="text-sm font-medium text-gray-600">Members</p>
+                <p class="text-2xl font-bold text-gray-900">{members.length}</p>
+              </div>
+              <div class="text-blue-500">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-green-500">
+            <div class="flex items-center">
+              <div class="flex-1">
+                <p class="text-sm font-medium text-gray-600">Boats</p>
+                <p class="text-2xl font-bold text-gray-900">{boats.length}</p>
+              </div>
+              <div class="text-green-500">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-orange-500">
+            <div class="flex items-center">
+              <div class="flex-1">
+                <p class="text-sm font-medium text-gray-600">Notifications</p>
+                <p class="text-2xl font-bold text-gray-900">{notifications.length}</p>
+              </div>
+              <div class="text-orange-500">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4 19h6v-2H4v2zM4 15h6v-2H4v2zM4 11h6V9H4v2zM4 7h6V5H4v2z"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-purple-500">
+            <div class="flex items-center">
+              <div class="flex-1">
+                <p class="text-sm font-medium text-gray-600">Last Export</p>
+                <p class="text-2xl font-bold text-gray-900">-</p>
+              </div>
+              <div class="text-purple-500">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Export Options -->
+        <div class="grid lg:grid-cols-2 gap-8">
+          <!-- Individual Exports -->
+          <div class="bg-sail-white rounded-lg p-6 shadow-lg">
+            <h3 class="text-xl font-bold text-ocean-blue mb-6">Export Individual Data</h3>
+            <div class="space-y-4">
+              <button
+                onclick="exportData('members', 'json')"
+                class="w-full flex items-center justify-between p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                <div class="flex items-center">
+                  <div class="text-blue-500 mr-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                  </div>
+                  <div class="text-left">
+                    <h4 class="font-semibold text-gray-900">Members List</h4>
+                    <p class="text-sm text-gray-600">{members.length} members</p>
+                  </div>
+                </div>
+                <span class="text-blue-500">JSON</span>
+              </button>
+              
+              <button
+                onclick="exportData('boats', 'json')"
+                class="w-full flex items-center justify-between p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+              >
+                <div class="flex items-center">
+                  <div class="text-green-500 mr-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                  </div>
+                  <div class="text-left">
+                    <h4 class="font-semibold text-gray-900">Boat Status</h4>
+                    <p class="text-sm text-gray-600">{boats.length} boats</p>
+                  </div>
+                </div>
+                <span class="text-green-500">JSON</span>
+              </button>
+              
+              <button
+                onclick="exportData('notifications', 'json')"
+                class="w-full flex items-center justify-between p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors"
+              >
+                <div class="flex items-center">
+                  <div class="text-orange-500 mr-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4 19h6v-2H4v2zM4 15h6v-2H4v2zM4 11h6V9H4v2zM4 7h6V5H4v2z"></path>
+                    </svg>
+                  </div>
+                  <div class="text-left">
+                    <h4 class="font-semibold text-gray-900">Activity Log</h4>
+                    <p class="text-sm text-gray-600">{notifications.length} notifications</p>
+                  </div>
+                </div>
+                <span class="text-orange-500">JSON</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Complete Export -->
+          <div class="bg-sail-white rounded-lg p-6 shadow-lg">
+            <h3 class="text-xl font-bold text-ocean-blue mb-6">Complete Data Export</h3>
+            <div class="space-y-4">
+              <button
+                onclick="exportCompleteData('json')"
+                class="w-full flex items-center justify-between p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
+              >
+                <div class="flex items-center">
+                  <div class="text-purple-500 mr-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                  </div>
+                  <div class="text-left">
+                    <h4 class="font-semibold text-gray-900">Complete Export</h4>
+                    <p class="text-sm text-gray-600">All data in one file</p>
+                  </div>
+                </div>
+                <span class="text-purple-500">JSON</span>
+              </button>
+              
+              <button
+                onclick="exportCompleteData('csv')"
+                class="w-full flex items-center justify-between p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
+              >
+                <div class="flex items-center">
+                  <div class="text-indigo-500 mr-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                  </div>
+                  <div class="text-left">
+                    <h4 class="font-semibold text-gray-900">CSV Export</h4>
+                    <p class="text-sm text-gray-600">Spreadsheet format</p>
+                  </div>
+                </div>
+                <span class="text-indigo-500">CSV</span>
+              </button>
+            </div>
+            
+            <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+              <h4 class="font-semibold text-gray-900 mb-2">Export Includes:</h4>
+              <ul class="text-sm text-gray-600 space-y-1">
+                <li>• All member information</li>
+                <li>• Boat status and check-ins</li>
+                <li>• Activity notifications</li>
+                <li>• Trip history and notes</li>
+                <li>• Social interactions</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Export History -->
+        <div class="mt-8 bg-sail-white rounded-lg p-6 shadow-lg">
+          <h3 class="text-xl font-bold text-ocean-blue mb-6">Export History</h3>
+          <div class="text-center py-8">
+            <p class="text-gray-500">No previous exports found.</p>
+            <p class="text-sm text-gray-400 mt-2">Export history will be tracked here for future reference.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Check if user is logged in as admin
+    function checkAdminAuth() {
+      const adminMember = localStorage.getItem('adminMember');
+      if (!adminMember) {
+        // Redirect to admin login if not authenticated
+        window.location.href = '/en/admin-login?returnUrl=' + encodeURIComponent(window.location.pathname);
+        return;
+      }
+    }
+
+    // Check auth when page loads
+    checkAdminAuth();
+
+    // Data for export - properly serialized from server
+    const exportData = {
+      members: JSON.parse('{JSON.stringify(members)}'),
+      boats: JSON.parse('{JSON.stringify(boatStatuses)}'),
+      notifications: JSON.parse('{JSON.stringify(notifications)}')
+    };
+
+    function exportData(type, format) {
+      const data = exportData[type];
+      const filename = `ymir-${type}-${new Date().toISOString().split('T')[0]}.${format}`;
+      
+      if (format === 'json') {
+        downloadJSON(data, filename);
+      }
+    }
+
+    function exportCompleteData(format) {
+      const completeData = {
+        exportDate: new Date().toISOString(),
+        members: exportData.members,
+        boats: exportData.boats,
+        notifications: exportData.notifications,
+        summary: {
+          totalMembers: exportData.members.length,
+          totalBoats: exportData.boats.length,
+          totalNotifications: exportData.notifications.length
+        }
+      };
+      
+      const filename = `ymir-complete-export-${new Date().toISOString().split('T')[0]}.${format}`;
+      
+      if (format === 'json') {
+        downloadJSON(completeData, filename);
+      } else if (format === 'csv') {
+        downloadCSV(completeData, filename);
+      }
+    }
+
+    function downloadJSON(data, filename) {
+      const jsonString = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function downloadCSV(data, filename) {
+      // Convert JSON to CSV format
+      let csvContent = '';
+      
+      // Members CSV
+      csvContent += 'MEMBERS\n';
+      csvContent += 'Member Number,Name,Phone,Email,Joined,Is Admin,PIN\n';
+      data.members.forEach(member => {
+        csvContent += `${member.member_number},"${member.name}","${member.phone || ''}","${member.email || ''}","${member.created_at}","${member.is_admin || false}","${member.pin || ''}"\n`;
+      });
+      
+      csvContent += '\nBOATS\n';
+      csvContent += 'ID,Name,Status,Type,Notes,Last Maintenance\n';
+      data.boats.forEach(boat => {
+        csvContent += `${boat.id},"${boat.name}","${boat.status}","${boat.boat_type || 'individual'}","${boat.notes || ''}","${boat.last_maintenance || ''}"\n`;
+      });
+      
+      csvContent += '\nNOTIFICATIONS\n';
+      csvContent += 'Type,Message,Date,Boat ID\n';
+      data.notifications.forEach(notification => {
+        csvContent += `${notification.type},"${notification.message}","${notification.sent_at}","${notification.boat_id || ''}"\n`;
+      });
+      
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</Layout> 

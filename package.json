@@ -6,9 +6,18 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "cleanup-messages": "node cleanup-messages.js",
+    "update-qr-urls": "node update-qr-urls.js"
   },
   "dependencies": {
-    "astro": "^5.12.0"
+    "@astrojs/node": "^9.3.0",
+    "@astrojs/react": "^4.3.0",
+    "@astrojs/tailwind": "^6.0.2",
+    "@tailwindcss/forms": "^0.5.10",
+    "astro": "^5.12.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "tailwindcss": "^3.4.17"
   }
 }

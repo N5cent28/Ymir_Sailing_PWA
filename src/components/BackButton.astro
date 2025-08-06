@@ -1,0 +1,79 @@
+---
+interface Props {
+  href?: string;
+  label?: string;
+  variant?: 'admin' | 'profile' | 'general';
+}
+
+const { 
+  href = null, 
+  label = 'Back', 
+  variant = 'general' 
+} = Astro.props;
+
+// Determine the appropriate back destination based on variant
+let backHref = href;
+if (!backHref) {
+  switch (variant) {
+    case 'admin':
+      backHref = '/en/admin-dashboard';
+      break;
+    case 'profile':
+      backHref = '/en/';
+      break;
+    default:
+      backHref = '/en/';
+  }
+}
+---
+
+<button 
+  onclick="goBack()"
+  class="inline-flex items-center px-3 py-2 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors"
+  data-back-href={backHref}
+>
+  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+  </svg>
+  {label}
+</button>
+
+<script>
+  // Make goBack function globally available
+  window.goBack = function() {
+    const button = document.querySelector('[data-back-href]');
+    const backHref = button.getAttribute('data-back-href');
+    
+    // For admin pages, always go back to admin dashboard
+    if (backHref === '/en/admin-dashboard') {
+      window.location.href = backHref;
+      return;
+    }
+    
+    // Check if we have a previous page in session storage
+    const previousPage = sessionStorage.getItem('previousPage');
+    const currentPage = window.location.pathname;
+    
+    // Store current page for next time
+    sessionStorage.setItem('previousPage', currentPage);
+    
+    // If we have a previous page and it's different from current, go there
+    if (previousPage && previousPage !== currentPage && previousPage.startsWith('/en/')) {
+      window.location.href = previousPage;
+    } else {
+      // Otherwise go to the default back location
+      window.location.href = backHref;
+    }
+  }
+  
+  // Store the current page when the page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    const currentPage = window.location.pathname;
+    const previousPage = sessionStorage.getItem('previousPage');
+    
+    // Only update if we're not already on the stored page
+    if (previousPage !== currentPage) {
+      sessionStorage.setItem('previousPage', previousPage || '/en/');
+    }
+  });
+</script> 

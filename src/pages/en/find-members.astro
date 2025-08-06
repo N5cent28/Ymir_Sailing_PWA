@@ -1,0 +1,383 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Navigation from '../../components/Navigation.astro';
+import { getAllMembers } from '../../lib/database.js';
+
+// Get all members for initial display
+const members = await getAllMembers();
+---
+
+<Layout title="Find Members - Ymir Sailing Club" lang="en">
+  <Navigation />
+  
+  <main>
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-br from-ocean-blue to-blue-600 text-white py-20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-5xl font-bold mb-6">
+          Find Members
+        </h1>
+        <p class="text-xl mb-8 max-w-3xl mx-auto">
+          Discover fellow sailors, connect with club members, and see who's been out on the water.
+        </p>
+      </div>
+    </section>
+
+    <!-- Find Members Content -->
+    <section class="py-16 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Search Section -->
+        <div class="bg-sail-white rounded-lg p-6 shadow-lg mb-8">
+          <h3 class="text-xl font-bold text-ocean-blue mb-6">Search Members</h3>
+          <div class="flex flex-col md:flex-row gap-4">
+            <div class="flex-1">
+              <input
+                type="text"
+                id="memberSearch"
+                placeholder="Search by name (first or last name works)..."
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean-blue"
+              />
+            </div>
+            <button
+              id="clearSearch"
+              class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+            >
+              Clear Search
+            </button>
+          </div>
+          <p class="text-sm text-gray-600 mt-2">
+            Search by first name, last name, or partial matches. Results update as you type.
+          </p>
+        </div>
+
+        <!-- Members Grid -->
+        <div class="bg-sail-white rounded-lg p-6 shadow-lg">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold text-ocean-blue">
+              Club Members (<span id="memberCount">{members.length}</span>)
+            </h3>
+            <div class="flex space-x-2">
+              <button
+                id="sortByName"
+                class="px-3 py-1 bg-ocean-blue text-white rounded text-sm hover:bg-blue-700 transition-colors"
+              >
+                Sort by Name
+              </button>
+              <button
+                id="sortByHours"
+                class="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 transition-colors"
+              >
+                Sort by Hours
+              </button>
+            </div>
+          </div>
+          
+          <div id="membersGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {members.map((member) => (
+              <div class="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
+                <div class="p-6">
+                  <!-- Profile Photo/Initials -->
+                  <div class="flex items-center mb-4">
+                    <div class="w-16 h-16 bg-ocean-blue rounded-full flex items-center justify-center text-white text-xl font-bold overflow-hidden mr-4" id={`avatar-${member.member_number}`}>
+                      {member.profile_picture ? (
+                        <img src={member.profile_picture} alt="Profile photo" class="w-full h-full object-cover" id={`photo-${member.member_number}`}>
+                      ) : (
+                        <span>{member.name.split(' ').map(n => n[0]).join('').toUpperCase()}</span>
+                      )}
+                    </div>
+                    <div class="flex-1">
+                      <h4 class="text-lg font-semibold text-gray-900">
+                        {member.name}
+                        {member.is_admin && (
+                          <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                            Admin
+                          </span>
+                        )}
+                      </h4>
+                    </div>
+                  </div>
+                  
+                  <!-- Bio -->
+                  <div class="mb-4">
+                    <p class="text-sm text-gray-700">
+                      {member.bio || 'No bio yet'}
+                    </p>
+                  </div>
+                  
+                  <!-- Stats -->
+                  <div class="grid grid-cols-2 gap-4 mb-4 text-center">
+                    <div class="bg-blue-50 rounded-lg p-3">
+                      <div class="text-lg font-bold text-blue-600" id={`trips-${member.member_number}`}>-</div>
+                      <div class="text-xs text-blue-800">Trips</div>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-3">
+                      <div class="text-lg font-bold text-green-600" id={`hours-${member.member_number}`}>-</div>
+                      <div class="text-xs text-green-800">Hours</div>
+                    </div>
+                  </div>
+                  
+                  <!-- Message Button -->
+                  <button
+                    onclick={`openMessageTo('${member.member_number}', '${member.name}')`}
+                    class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold flex items-center justify-center"
+                  >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                    </svg>
+                    Message
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div id="noResults" class="hidden text-center py-12">
+            <div class="text-6xl mb-4">🔍</div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No members found</h3>
+            <p class="text-gray-600">Try adjusting your search terms or browse all members.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Simple authentication check
+    function getCurrentUser() {
+      try {
+        const memberData = localStorage.getItem('ymir_current_member');
+        const expiryTime = localStorage.getItem('ymir_session_expiry');
+        
+        if (!memberData || !expiryTime) {
+          return null;
+        }
+        
+        if (Date.now() > parseInt(expiryTime)) {
+          localStorage.removeItem('ymir_current_member');
+          localStorage.removeItem('ymir_session_expiry');
+          return null;
+        }
+        
+        return JSON.parse(memberData);
+      } catch (error) {
+        return null;
+      }
+    }
+
+    // Check if user is logged in
+    const currentMember = getCurrentUser();
+    if (!currentMember) {
+      window.location.href = '/en/profile?returnUrl=' + encodeURIComponent(window.location.pathname);
+    }
+
+    const searchInput = document.getElementById('memberSearch');
+    const clearSearchBtn = document.getElementById('clearSearch');
+    const membersGrid = document.getElementById('membersGrid');
+    const memberCount = document.getElementById('memberCount');
+    const noResults = document.getElementById('noResults');
+    const sortByNameBtn = document.getElementById('sortByName');
+    const sortByHoursBtn = document.getElementById('sortByHours');
+
+    let allMembers = [];
+    let filteredMembers = [];
+
+    // Load all members data
+    async function loadAllMembers() {
+      try {
+        const response = await fetch('/api/members');
+        const data = await response.json();
+        
+        if (data.success) {
+          allMembers = data.members;
+          filteredMembers = [...allMembers];
+          displayMembers(filteredMembers);
+          loadMemberStats();
+        }
+      } catch (error) {
+        console.error('Error loading members:', error);
+      }
+    }
+
+    // Load member statistics (trips and hours)
+    async function loadMemberStats() {
+      for (const member of allMembers) {
+        try {
+          // Load trips count
+          const tripsResponse = await fetch(`/api/profile?memberNumber=${member.member_number}`);
+          const tripsData = await tripsResponse.json();
+          
+          if (tripsData.success && tripsData.trips) {
+            const tripsElement = document.getElementById(`trips-${member.member_number}`);
+            if (tripsElement) {
+              tripsElement.textContent = tripsData.trips.length;
+            }
+          }
+          
+          // Load boat hours
+          const hoursResponse = await fetch(`/api/boat-hours?memberNumber=${member.member_number}`);
+          const hoursData = await hoursResponse.json();
+          
+          if (hoursData.totalHours !== undefined) {
+            const hoursElement = document.getElementById(`hours-${member.member_number}`);
+            if (hoursElement) {
+              hoursElement.textContent = hoursData.totalHours.toFixed(1);
+            }
+          }
+        } catch (error) {
+          console.error(`Error loading stats for member ${member.member_number}:`, error);
+        }
+      }
+    }
+
+    // Fuzzy search function
+    function fuzzySearch(searchTerm, text) {
+      if (!searchTerm) return true;
+      
+      const search = searchTerm.toLowerCase();
+      const target = text.toLowerCase();
+      
+      // Exact match
+      if (target.includes(search)) return true;
+      
+      // Split into words and check if any word matches
+      const searchWords = search.split(' ').filter(word => word.length > 0);
+      const targetWords = target.split(' ').filter(word => word.length > 0);
+      
+      return searchWords.some(searchWord => 
+        targetWords.some(targetWord => 
+          targetWord.includes(searchWord) || searchWord.includes(targetWord)
+        )
+      );
+    }
+
+    // Search functionality
+    searchInput.addEventListener('input', (e) => {
+      const searchTerm = e.target.value.trim();
+      
+      if (searchTerm === '') {
+        filteredMembers = [...allMembers];
+      } else {
+        filteredMembers = allMembers.filter(member => 
+          fuzzySearch(searchTerm, member.name)
+        );
+      }
+      
+      displayMembers(filteredMembers);
+    });
+
+    // Clear search
+    clearSearchBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      filteredMembers = [...allMembers];
+      displayMembers(filteredMembers);
+    });
+
+    // Sort by name
+    sortByNameBtn.addEventListener('click', () => {
+      filteredMembers.sort((a, b) => a.name.localeCompare(b.name));
+      displayMembers(filteredMembers);
+      updateSortButtons('name');
+    });
+
+    // Sort by hours (placeholder - would need to implement hours sorting)
+    sortByHoursBtn.addEventListener('click', () => {
+      // For now, just sort by name as a placeholder
+      filteredMembers.sort((a, b) => a.name.localeCompare(b.name));
+      displayMembers(filteredMembers);
+      updateSortButtons('hours');
+    });
+
+    function updateSortButtons(activeSort) {
+      if (activeSort === 'name') {
+        sortByNameBtn.className = 'px-3 py-1 bg-ocean-blue text-white rounded text-sm hover:bg-blue-700 transition-colors';
+        sortByHoursBtn.className = 'px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 transition-colors';
+      } else {
+        sortByNameBtn.className = 'px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 transition-colors';
+        sortByHoursBtn.className = 'px-3 py-1 bg-ocean-blue text-white rounded text-sm hover:bg-blue-700 transition-colors';
+      }
+    }
+
+    // Display members in grid
+    function displayMembers(members) {
+      memberCount.textContent = members.length;
+      
+      if (members.length === 0) {
+        membersGrid.classList.add('hidden');
+        noResults.classList.remove('hidden');
+        return;
+      }
+      
+      membersGrid.classList.remove('hidden');
+      noResults.classList.add('hidden');
+      
+      membersGrid.innerHTML = members.map(member => `
+        <div class="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
+          <div class="p-6">
+            <!-- Profile Photo/Initials -->
+            <div class="flex items-center mb-4">
+              <div class="w-16 h-16 bg-ocean-blue rounded-full flex items-center justify-center text-white text-xl font-bold overflow-hidden mr-4" id="avatar-${member.member_number}">
+                ${member.profile_picture ? 
+                  `<img src="${member.profile_picture}" alt="Profile photo" class="w-full h-full object-cover" id="photo-${member.member_number}">` :
+                  `<span>${member.name.split(' ').map(n => n[0]).join('').toUpperCase()}</span>`
+                }
+              </div>
+              <div class="flex-1">
+                <h4 class="text-lg font-semibold text-gray-900">
+                  ${member.name}
+                  ${member.is_admin ? 
+                    '<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">Admin</span>' : 
+                    ''
+                  }
+                </h4>
+              </div>
+            </div>
+            
+            <!-- Bio -->
+            <div class="mb-4">
+              <p class="text-sm text-gray-700">
+                ${member.bio || 'No bio yet'}
+              </p>
+            </div>
+            
+            <!-- Stats -->
+            <div class="grid grid-cols-2 gap-4 mb-4 text-center">
+              <div class="bg-blue-50 rounded-lg p-3">
+                <div class="text-lg font-bold text-blue-600" id="trips-${member.member_number}">-</div>
+                <div class="text-xs text-blue-800">Trips</div>
+              </div>
+              <div class="bg-green-50 rounded-lg p-3">
+                <div class="text-lg font-bold text-green-600" id="hours-${member.member_number}">-</div>
+                <div class="text-xs text-green-800">Hours</div>
+              </div>
+            </div>
+            
+            <!-- Message Button -->
+            <button
+              onclick="openMessageTo('${member.member_number}', '${member.name}')"
+              class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold flex items-center justify-center"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+              </svg>
+              Message
+            </button>
+          </div>
+        </div>
+      `).join('');
+      
+      // Reload stats for displayed members
+      loadMemberStats();
+    }
+
+    function openMessageTo(memberNumber, memberName) {
+      // Navigate to messages page with the selected member
+      window.location.href = `/en/messages?member=${memberNumber}&name=${encodeURIComponent(memberName)}`;
+    }
+
+    // Make function globally available for onclick handlers
+    window.openMessageTo = openMessageTo;
+
+    // Load members on page load
+    loadAllMembers();
+  </script>
+</Layout> 

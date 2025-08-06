@@ -1,0 +1,967 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Navigation from '../../components/Navigation.astro';
+import MaintenanceModal from '../../components/MaintenanceModal.astro';
+import { getBoatStatus, getActiveCheckIns } from '../../lib/database.js';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  // This would typically come from a database
+  // For now, we'll create some example boat IDs with names
+  return [
+    { params: { boatId: 'boat-1' }, props: { boatName: 'Quest 1' } },
+    { params: { boatId: 'boat-2' }, props: { boatName: 'Quest 2' } },
+    { params: { boatId: 'boat-3' }, props: { boatName: 'Zest 1' } },
+    { params: { boatId: 'boat-4' }, props: { boatName: 'Zest 2' } },
+    { params: { boatId: 'boat-5' }, props: { boatName: 'Zest 3' } },
+    { params: { boatId: 'boat-6' }, props: { boatName: 'Zest 4' } },
+    { params: { boatId: 'boat-7' }, props: { boatName: 'Zest 5' } },
+    { params: { boatId: 'boat-8' }, props: { boatName: 'Zest 6' } },
+    { params: { boatId: 'boat-9' }, props: { boatName: 'Topaz 1' } },
+    { params: { boatId: 'boat-10' }, props: { boatName: 'Topaz 2' } },
+    { params: { boatId: 'boat-11' }, props: { boatName: 'Laser 1' } },
+    { params: { boatId: 'boat-12' }, props: { boatName: 'Laser 2' } },
+    { params: { boatId: 'boat-13' }, props: { boatName: 'Laser 3' } },
+    { params: { boatId: 'boat-14' }, props: { boatName: 'Laser 4' } },
+    { params: { boatId: 'kayak' }, props: { boatName: 'Kayak' } },
+    { params: { boatId: 'paddle-board' }, props: { boatName: 'Paddle Board' } }
+  ];
+}
+
+const { boatId } = Astro.params;
+const { boatName } = Astro.props;
+
+// Get boat status from database
+const boat = await getBoatStatus(boatId);
+const activeCheckIns = await getActiveCheckIns(boatId);
+
+// Debug logging for page load
+console.log('🔍 PAGE LOAD DEBUG:');
+console.log('- Astro.params:', Astro.params);
+console.log('- boatId from params:', boatId);
+console.log('- boatName from props:', boatName);
+console.log('- boat from database:', boat);
+console.log('- activeCheckIns:', activeCheckIns);
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Boat Check-Out - Siglingafélagið Ýmir</title>
+    <style>
+      @import '../../styles/global.css';
+    </style>
+  </head>
+  <body class="bg-sail-white min-h-screen flex items-center justify-center" data-boat-id={boatId}>
+    <div class="max-w-md w-full mx-4">
+      <div class="bg-white rounded-lg shadow-lg p-8">
+        <div class="text-center mb-6">
+          <h1 class="text-2xl font-bold text-ocean-green mb-2" id="pageTitle">Boat Check-Out</h1>
+          <p class="text-anchor-gray" id="boatInfo">Boat: {boat?.name || boatName}</p>
+          
+          <!-- Success message (hidden by default) -->
+          <div id="successMessage" class="hidden">
+            <div class="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+              <div class="text-4xl mb-4">🎉</div>
+              <h2 class="text-xl font-bold text-green-600 mb-2" id="successTitle"></h2>
+              <p class="text-gray-600" id="successSubtitle">Don't forget to check back in when you return :) Have fun!</p>
+              <div id="profileLinkContainer" class="mt-4">
+                <!-- Profile link will be added here if member info is available -->
+              </div>
+            </div>
+          </div>
+          
+          {boat && (
+            <div class="mt-4 p-3 rounded-lg text-sm">
+              {boat.status === 'operational' && (
+                <div class="bg-green-100 text-green-800">
+                  {boat.boat_type === 'shared' ? (
+                    <>
+                      ✅ Operational (Shared boat - multiple people can use simultaneously)
+                      <p class="mt-1 text-xs">This is a shared boat. You can check it out even if others are using similar boats.</p>
+                    </>
+                  ) : (
+                    '✅ Operational'
+                  )}
+                </div>
+              )}
+              {boat.status === 'maintenance' && (
+                <div class="bg-yellow-100 text-yellow-800">
+                  🔧 Under maintenance
+                  {boat.notes && <p class="mt-1 text-xs">{boat.notes}</p>}
+                </div>
+              )}
+              {boat.status === 'out_of_service' && (
+                <div class="bg-red-100 text-red-800">
+                  ❌ Out of service
+                  {boat.notes && <p class="mt-1 text-xs">{boat.notes}</p>}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        
+        <!-- Extension Options (will be populated by JavaScript) -->
+        <div id="extensionOptions" class="mb-6 hidden">
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-blue-900 mb-3">Extend Your Time?</h3>
+            <p class="text-blue-800 mb-4">Your return time is approaching. Would you like to extend?</p>
+            <div id="extensionButtons" class="space-y-2">
+              <!-- Extension buttons will be added here -->
+            </div>
+            <button
+              id="declineExtension"
+              class="mt-3 w-full px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+            >
+              No, thanks
+            </button>
+          </div>
+        </div>
+        
+        <!-- Easy Check-In Button (for active check-ins) -->
+        <div id="easyCheckIn" class="mb-6 hidden">
+          <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-green-900 mb-3">Welcome Back!</h3>
+            <p class="text-green-800 mb-4">You have an active check-in for this boat. Ready to check in?</p>
+            <div id="activeCheckInInfo" class="mb-4 p-3 bg-white rounded border">
+              <!-- Active check-in details will be shown here -->
+            </div>
+            <div class="flex space-x-3">
+              <button
+                id="checkInButton"
+                class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+              >
+                ✅ Check In Now
+              </button>
+              <button
+                id="takeBoatOverButton"
+                class="flex-1 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-semibold"
+              >
+                🚤 Take Boat Over
+              </button>
+            </div>
+            <p class="text-xs text-gray-600 mt-2">
+              "Take Boat Over" is for when you find a boat on land that wasn't properly checked in by the previous sailor.
+            </p>
+          </div>
+        </div>
+        
+        <!-- Take Boat Over Form -->
+        <div id="takeBoatOverForm" class="mb-6 hidden">
+          <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-orange-900 mb-3">Take Boat Over</h3>
+            <p class="text-orange-800 mb-4">You're assuming responsibility for this boat. The previous sailor will be notified.</p>
+            
+            <form id="takeOverForm" class="space-y-4">
+              <div>
+                <label for="takeOverMemberNumber" class="block text-sm font-medium text-anchor-gray mb-1">
+                  Member Number
+                </label>
+                <input
+                  type="text"
+                  id="takeOverMemberNumber"
+                  name="memberNumber"
+                  placeholder="Enter your member number"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ocean-green"
+                />
+                <button
+                  type="button"
+                  id="takeOverLookupMember"
+                  class="mt-1 text-sm text-ocean-green hover:text-green-700"
+                >
+                  Look up member info
+                </button>
+              </div>
+              
+              <div>
+                <label for="takeOverName" class="block text-sm font-medium text-anchor-gray mb-1">
+                  Your Name
+                </label>
+                <input
+                  type="text"
+                  id="takeOverName"
+                  name="name"
+                  required
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ocean-green"
+                />
+              </div>
+              
+              <div>
+                <label for="takeOverPhone" class="block text-sm font-medium text-anchor-gray mb-1">
+                  Phone Number (Optional)
+                </label>
+                <input
+                  type="tel"
+                  id="takeOverPhone"
+                  name="phone"
+                  placeholder="For notifications"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ocean-green"
+                />
+              </div>
+              
+              <div>
+                <label for="takeOverReturn" class="block text-sm font-medium text-anchor-gray mb-1">
+                  Your Expected Return Time
+                </label>
+                <input
+                  type="datetime-local"
+                  id="takeOverReturn"
+                  name="return"
+                  required
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ocean-green"
+                />
+              </div>
+              
+              <div class="flex space-x-3">
+                <button
+                  type="submit"
+                  class="flex-1 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-semibold"
+                >
+                  🚤 Take Boat Over
+                </button>
+                <button
+                  type="button"
+                  id="cancelTakeOver"
+                  class="flex-1 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+        
+        {boat && boat.status === 'operational' ? (
+          <form id="checkInForm" class="space-y-4">
+            <!-- Boat Selection Dropdown -->
+            <div>
+              <label for="boatSelection" class="block text-sm font-medium text-anchor-gray mb-1">
+                Select Boat
+              </label>
+              <select
+                id="boatSelection"
+                name="boatSelection"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ocean-green"
+              >
+                <option value="">Select a boat...</option>
+                <option value="boat-1" data-boat-name="Quest 1">Quest 1</option>
+                <option value="boat-2" data-boat-name="Quest 2">Quest 2</option>
+                <option value="boat-3" data-boat-name="Zest 1">Zest 1</option>
+                <option value="boat-4" data-boat-name="Zest 2">Zest 2</option>
+                <option value="boat-5" data-boat-name="Zest 3">Zest 3</option>
+                <option value="boat-6" data-boat-name="Zest 4">Zest 4</option>
+                <option value="boat-7" data-boat-name="Zest 5">Zest 5</option>
+                <option value="boat-8" data-boat-name="Zest 6">Zest 6</option>
+                <option value="boat-9" data-boat-name="Topaz 1">Topaz 1</option>
+                <option value="boat-10" data-boat-name="Topaz 2">Topaz 2</option>
+                <option value="boat-11" data-boat-name="Laser 1">Laser 1</option>
+                <option value="boat-12" data-boat-name="Laser 2">Laser 2</option>
+                <option value="boat-13" data-boat-name="Laser 3">Laser 3</option>
+                <option value="boat-14" data-boat-name="Laser 4">Laser 4</option>
+                <option value="kayak" data-boat-name="Kayak">Kayak</option>
+                <option value="paddle-board" data-boat-name="Paddle Board">Paddle Board</option>
+              </select>
+            </div>
+            
+            <div>
+              <label for="memberNumber" class="block text-sm font-medium text-anchor-gray mb-1">
+                Member Number
+              </label>
+              <input
+                type="text"
+                id="memberNumber"
+                name="memberNumber"
+                placeholder="Enter your member number"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ocean-green"
+              />
+              <button
+                type="button"
+                id="lookupMember"
+                class="mt-1 text-sm text-ocean-green hover:text-green-700"
+              >
+                Look up member info
+              </button>
+            </div>
+            
+            <div>
+              <label for="name" class="block text-sm font-medium text-anchor-gray mb-1">
+                Your Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ocean-green"
+              />
+            </div>
+            
+            <div>
+              <label for="phone" class="block text-sm font-medium text-anchor-gray mb-1">
+                Phone Number (Optional)
+              </label>
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                placeholder="For SMS notifications"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ocean-green"
+              />
+            </div>
+            
+            <div>
+              <label for="return" class="block text-sm font-medium text-anchor-gray mb-1">
+                Expected Return Time
+              </label>
+              <input
+                type="datetime-local"
+                id="return"
+                name="return"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ocean-green"
+              />
+            </div>
+
+            <!-- Safety Checklist -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 class="text-lg font-semibold text-blue-900 mb-3">Safety Checklist</h3>
+              <p class="text-blue-800 mb-4 text-sm">Please confirm you have completed all safety items before departure:</p>
+              
+              <div class="space-y-3">
+                <label class="flex items-center space-x-3">
+                  <input type="checkbox" id="lifejacket" name="safetyChecklist" class="w-4 h-4 text-ocean-green border-gray-300 rounded focus:ring-ocean-green">
+                  <span class="text-sm text-blue-900">All persons are wearing life jackets</span>
+                </label>
+                
+                <label class="flex items-center space-x-3">
+                  <input type="checkbox" id="communication" name="safetyChecklist" class="w-4 h-4 text-ocean-green border-gray-300 rounded focus:ring-ocean-green">
+                  <span class="text-sm text-blue-900">I have considered bringing a radio as applicable</span>
+                </label>
+                
+                <label class="flex items-center space-x-3">
+                  <input type="checkbox" id="experience" name="safetyChecklist" class="w-4 h-4 text-ocean-green border-gray-300 rounded focus:ring-ocean-green">
+                  <span class="text-sm text-blue-900">I have the necessary experience for current and forcasted conditions</span>
+                </label>
+              </div>
+              
+              <div class="mt-4 p-3 bg-blue-100 rounded border border-blue-300">
+                <p class="text-xs text-blue-800">
+                  By checking out this boat, you confirm that you have completed all safety checks and are responsible for the safe operation of the vessel.
+                </p>
+              </div>
+            </div>
+            
+            <button
+              type="submit"
+              class="w-full btn-primary"
+            >
+              Check Out Boat
+            </button>
+            
+            <!-- Weather Meteogram Widget -->
+            <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+              <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">Weather Forecast</h3>
+              <div class="flex justify-center">
+                <iframe 
+                  src="https://www.meteoblue.com/en/weather/widget/daily/reykjavik_iceland_3413829?geoloc=fixed&days=2&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&precipunit=MILLIMETER&coloured=monochrome&pictoicon=1&maxtemperature=1&mintemperature=1&windspeed=1&windgust=1&winddirection=1&uv=0&humidity=0&precipitation=1&precipitationprobability=1&spot=0&pressure=0&layout=light"  
+                  frameborder="0" 
+                  scrolling="NO" 
+                  allowtransparency="true" 
+                  sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" 
+                  style="width: 216px; height: 420px; border-radius: 8px;"
+                ></iframe>
+              </div>
+              <div class="mt-2 text-xs text-gray-500 text-center">
+                <a href="https://www.meteoblue.com/en/weather/week/reykjavik_iceland_3413829" target="_blank" rel="noopener">meteoblue</a>
+              </div>
+              
+              <!-- Take me home button -->
+              <div class="mt-4 text-center">
+                <a 
+                  href="/en" 
+                  class="inline-flex items-center px-4 py-2 bg-ocean-green text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                  </svg>
+                  Take me home
+                </a>
+              </div>
+            </div>
+          </form>
+        ) : (
+          <div class="text-center py-8">
+            <div class="text-4xl mb-4">
+              {boat?.status === 'maintenance' ? '🔧' : '❌'}
+            </div>
+            <h3 class="text-lg font-semibold mb-2">
+              {boat?.status === 'maintenance' ? 'Under Maintenance' : 'Out of Service'}
+            </h3>
+            <p class="text-anchor-gray">
+              {boat?.notes || 'This boat is currently unavailable. Please check back later or contact the club for more information.'}
+            </p>
+          </div>
+        )}
+        
+        <!-- Success/Error Messages -->
+        <div id="message" class="mt-4 p-3 rounded-lg hidden"></div>
+      </div>
+    </div>
+
+    <script>
+      // Get boatId from a data attribute instead of template literal
+      const boatId = document.querySelector('[data-boat-id]').getAttribute('data-boat-id');
+      const form = document.getElementById('checkInForm');
+      const messageDiv = document.getElementById('message');
+      const extensionOptions = document.getElementById('extensionOptions');
+      const extensionButtons = document.getElementById('extensionButtons');
+      const declineExtension = document.getElementById('declineExtension');
+      const easyCheckIn = document.getElementById('easyCheckIn');
+      const activeCheckInInfo = document.getElementById('activeCheckInInfo');
+      const checkInButton = document.getElementById('checkInButton');
+      const takeBoatOverButton = document.getElementById('takeBoatOverButton');
+      const takeBoatOverForm = document.getElementById('takeBoatOverForm');
+      const takeOverForm = document.getElementById('takeOverForm');
+      const cancelTakeOver = document.getElementById('cancelTakeOver');
+      const memberNumberInput = document.getElementById('memberNumber');
+      const nameInput = document.getElementById('name');
+      const phoneInput = document.getElementById('phone');
+      const lookupMemberBtn = document.getElementById('lookupMember');
+      const takeOverMemberNumberInput = document.getElementById('takeOverMemberNumber');
+      const takeOverNameInput = document.getElementById('takeOverName');
+      const takeOverPhoneInput = document.getElementById('takeOverPhone');
+      const takeOverLookupMemberBtn = document.getElementById('takeOverLookupMember');
+      const boatSelectionDropdown = document.getElementById('boatSelection');
+      
+      // Initialize boat selection dropdown
+      function initializeBoatSelection() {
+        if (boatSelectionDropdown) {
+          // Set the initial value based on the QR code
+          boatSelectionDropdown.value = boatId;
+          
+          // Add event listener for boat selection changes
+          boatSelectionDropdown.addEventListener('change', handleBoatSelectionChange);
+        }
+      }
+      
+      // Handle boat selection changes
+      async function handleBoatSelectionChange() {
+        const selectedBoatId = boatSelectionDropdown.value;
+        if (!selectedBoatId) return;
+        
+        try {
+          // Fetch boat status for the selected boat
+          const response = await fetch(`/api/boat-status?boatId=${selectedBoatId}`);
+          const boatData = await response.json();
+          
+          // Update the boat info display
+          const boatInfo = document.getElementById('boatInfo');
+          if (boatInfo && boatData.boat) {
+            boatInfo.textContent = `Boat: ${boatData.boat.name}`;
+          }
+          
+          // Update the page title data attribute for other functions
+          document.body.setAttribute('data-boat-id', selectedBoatId);
+          
+          console.log('🔍 Boat selection changed to:', selectedBoatId);
+        } catch (error) {
+          console.error('Error fetching boat status:', error);
+        }
+      }
+      
+      // Initialize boat selection on page load
+      initializeBoatSelection();
+      
+      // Check for active check-ins and show easy check-in button
+      async function checkActiveCheckIns() {
+        try {
+          const response = await fetch(`/api/check-in?boatId=${boatId}`);
+          const data = await response.json();
+          
+          console.log('🔍 ACTIVE CHECK-INS:', data.activeCheckIns);
+          
+          if (data.activeCheckIns && data.activeCheckIns.length > 0) {
+            console.log('🔍 Found active check-ins:', data.activeCheckIns.length);
+            data.activeCheckIns.forEach((checkIn, index) => {
+              console.log(`- Check-in ${index + 1}:`, checkIn.sailor_name, 'ID:', checkIn.id, 'Status:', checkIn.actual_return ? 'Completed' : 'Active');
+            });
+            
+            // For shared boats, show active check-ins but don't hide the form
+            if (boatId === 'kayak' || boatId === 'paddle-board') {
+              showSharedBoatActiveCheckIns(data.activeCheckIns);
+            } else {
+              // For individual boats, show easy check-in and hide form
+              showEasyCheckIn(data.activeCheckIns[0]);
+            }
+          } else {
+            console.log('🔍 No active check-ins found');
+          }
+        } catch (error) {
+          console.error('Error checking active check-ins:', error);
+        }
+      }
+      
+      function showSharedBoatActiveCheckIns(activeCheckIns) {
+        // Show active check-ins for shared boats but keep form visible
+        const activeCheckInsInfo = document.createElement('div');
+        activeCheckInsInfo.className = 'mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg';
+        activeCheckInsInfo.innerHTML = `
+          <h4 class="text-sm font-semibold text-blue-900 mb-2">Currently Active Check-ins (${activeCheckIns.length})</h4>
+          <div class="space-y-2">
+            ${activeCheckIns.map(checkIn => `
+              <div class="text-xs text-blue-800">
+                <strong>${checkIn.sailor_name}</strong> - Expected back: ${new Date(checkIn.expected_return).toLocaleString()}
+              </div>
+            `).join('')}
+          </div>
+          <p class="text-xs text-blue-600 mt-2">This is a shared boat. You can still check it out!</p>
+        `;
+        
+        // Insert before the form
+        if (form) {
+          form.parentNode.insertBefore(activeCheckInsInfo, form);
+        }
+      }
+      
+      function showEasyCheckIn(checkIn) {
+        const departureTime = new Date(checkIn.departure_time).toLocaleString();
+        const expectedReturn = new Date(checkIn.expected_return).toLocaleString();
+        
+        activeCheckInInfo.innerHTML = `
+          <div class="text-sm">
+            <p><strong>Sailor:</strong> ${checkIn.sailor_name}</p>
+            <p><strong>Departure:</strong> ${departureTime}</p>
+            <p><strong>Expected Return:</strong> ${expectedReturn}</p>
+          </div>
+        `;
+        
+        // Store the check-in ID for the check-out process
+        activeCheckInInfo.dataset.checkInId = checkIn.id;
+        
+        easyCheckIn.classList.remove('hidden');
+        
+        // Hide the weather widget and check-in form if there's an active check-in
+        if (form) {
+          form.classList.add('hidden');
+        }
+      }
+      
+      // Handle easy check-in button click
+      checkInButton.addEventListener('click', async () => {
+        try {
+          const response = await fetch('/api/check-out', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+              checkInId: activeCheckInInfo.dataset.checkInId 
+            })
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            showMessage(result.message, 'success');
+            easyCheckIn.classList.add('hidden');
+            
+            // Don't auto-refresh - let user choose where to go
+          } else {
+            showMessage(result.error, 'error');
+          }
+        } catch (error) {
+          console.error('Error checking in:', error);
+          showMessage('An error occurred while checking in.', 'error');
+        }
+      });
+      
+      // Handle take boat over button click
+      takeBoatOverButton.addEventListener('click', () => {
+        easyCheckIn.classList.add('hidden');
+        takeBoatOverForm.classList.remove('hidden');
+        
+        // Set default return time (2 hours from now)
+        const now = new Date();
+        const returnTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+        const returnDateTime = new Date(returnTime.getTime() - returnTime.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        document.getElementById('takeOverReturn').value = returnDateTime;
+      });
+      
+      // Handle cancel take over button click
+      cancelTakeOver.addEventListener('click', () => {
+        takeBoatOverForm.classList.add('hidden');
+        easyCheckIn.classList.remove('hidden');
+        
+        // Show the weather widget again when returning to easy check-in
+      });
+      
+      // Handle take over member lookup
+      takeOverLookupMemberBtn.addEventListener('click', async () => {
+        const memberNumber = takeOverMemberNumberInput.value.trim();
+        if (!memberNumber) {
+          showMessage('Please enter a member number', 'error');
+          return;
+        }
+        
+        try {
+          const response = await fetch(`/api/check-in?memberNumber=${memberNumber}`);
+          const data = await response.json();
+          
+          if (data.found) {
+            takeOverNameInput.value = data.member.name;
+            if (data.member.phone) {
+              takeOverPhoneInput.value = data.member.phone;
+            }
+            showMessage('Member information loaded!', 'success');
+          } else {
+            showMessage('Member number not found', 'error');
+          }
+        } catch (error) {
+          console.error('Error looking up member:', error);
+          showMessage('Error looking up member', 'error');
+        }
+      });
+      
+      // Member lookup functionality
+      lookupMemberBtn.addEventListener('click', async () => {
+        const memberNumber = memberNumberInput.value.trim();
+        if (!memberNumber) {
+          showMessage('Please enter a member number', 'error');
+          return;
+        }
+        
+        try {
+          const response = await fetch(`/api/check-in?memberNumber=${memberNumber}`);
+          const data = await response.json();
+          
+          if (data.found) {
+            nameInput.value = data.member.name;
+            if (data.member.phone) {
+              phoneInput.value = data.member.phone;
+            }
+            showMessage('Member information loaded!', 'success');
+          } else {
+            showMessage('Member number not found', 'error');
+          }
+        } catch (error) {
+          console.error('Error looking up member:', error);
+          showMessage('Error looking up member', 'error');
+        }
+      });
+      
+      // Check for extension options when page loads
+      async function checkExtensionOptions() {
+        try {
+          const response = await fetch(`/api/extend-time?boatId=${boatId}`);
+          const data = await response.json();
+          
+          if (data.hasActiveCheckIn && data.isNearReturn) {
+            showExtensionOptions(data);
+          }
+        } catch (error) {
+          console.error('Error checking extension options:', error);
+        }
+      }
+      
+      function showExtensionOptions(data) {
+        extensionButtons.innerHTML = '';
+        
+        data.extensionOptions.forEach(option => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'w-full px-4 py-2 bg-ocean-green text-white rounded hover:bg-green-700 transition-colors mb-2';
+          button.textContent = `Extend by ${option.label}`;
+          button.onclick = () => extendTime(data.checkIn.id, option.newTime);
+          extensionButtons.appendChild(button);
+        });
+        
+        extensionOptions.classList.remove('hidden');
+        
+        // Hide the weather widget and check-in form if there's an active check-in
+        if (form) {
+          form.classList.add('hidden');
+        }
+      }
+      
+      async function extendTime(checkInId, newReturnTime) {
+        try {
+          const response = await fetch('/api/extend-time', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ checkInId, newReturnTime })
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            showMessage(result.message, 'success');
+            extensionOptions.classList.add('hidden');
+            // Refresh the page to show updated status
+            setTimeout(() => location.reload(), 2000);
+          } else {
+            showMessage(result.error, 'error');
+          }
+        } catch (error) {
+          console.error('Error extending time:', error);
+          showMessage('An error occurred while extending time.', 'error');
+        }
+      }
+      
+      function showMessage(text, type) {
+        messageDiv.className = 'mt-4 p-3 rounded-lg';
+        messageDiv.className += type === 'success' ? ' bg-green-100 text-green-800' : ' bg-red-100 text-red-800';
+        messageDiv.textContent = text;
+        messageDiv.classList.remove('hidden');
+        
+        setTimeout(() => {
+          messageDiv.classList.add('hidden');
+        }, 5000);
+      }
+      
+      // Hide extension options when declined
+      declineExtension.addEventListener('click', () => {
+        extensionOptions.classList.add('hidden');
+        if (form) {
+          form.classList.remove('hidden');
+        }
+      });
+      
+      // Check for extension options on page load
+      checkExtensionOptions();
+      
+      // Check for active check-ins on page load
+      checkActiveCheckIns();
+      
+      // Check every 30 seconds for extension options
+      setInterval(checkExtensionOptions, 30000);
+      
+      // Check every 30 seconds for active check-ins
+      setInterval(checkActiveCheckIns, 30000);
+      
+      // Set default return time to 2 hours from now
+      function setDefaultReturnTime() {
+        const returnInput = document.getElementById('return');
+        if (returnInput) {
+          const now = new Date();
+          const returnTime = new Date(now.getTime() + 2 * 60 * 60 * 1000); // 2 hours from now
+          const returnDateTime = new Date(returnTime.getTime() - returnTime.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+          returnInput.value = returnDateTime;
+        }
+      }
+      
+      // Set default return time on page load
+      setDefaultReturnTime();
+      
+      if (form) {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          // Check if all safety checklist items are completed
+          const safetyCheckboxes = document.querySelectorAll('input[name="safetyChecklist"]');
+          const allChecked = Array.from(safetyCheckboxes).every(checkbox => checkbox.checked);
+          
+          if (!allChecked) {
+            showMessage('Please complete all safety checklist items before checking out the boat.', 'error');
+            return;
+          }
+          
+          const formData = new FormData(form);
+          const selectedBoatId = boatSelectionDropdown ? boatSelectionDropdown.value : boatId;
+          
+          if (!selectedBoatId) {
+            showMessage('Please select a boat to check out.', 'error');
+            return;
+          }
+          
+          const data = {
+            boatId: selectedBoatId,
+            sailorName: formData.get('name'),
+            memberNumber: formData.get('memberNumber') || null,
+            phone: formData.get('phone') || null,
+            expectedReturn: formData.get('return'),
+            safetyChecklist: true
+          };
+          
+          try {
+            const response = await fetch('/api/check-in', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+              // Show success message in header
+              const pageTitle = document.getElementById('pageTitle');
+              const boatInfo = document.getElementById('boatInfo');
+              const successMessage = document.getElementById('successMessage');
+              const checkoutForm = document.getElementById('checkInForm');
+              
+              // Update the page header
+              pageTitle.textContent = `${result.boatName} checked out successfully!`;
+              pageTitle.className = 'text-2xl font-bold text-green-600 mb-2';
+              boatInfo.style.display = 'none';
+              successMessage.classList.remove('hidden');
+              
+              // Add profile link if member info is available
+              const profileLinkContainer = document.getElementById('profileLinkContainer');
+              if (result.memberNumber) {
+                profileLinkContainer.innerHTML = `
+                  <div class="flex space-x-3 justify-center mb-4">
+                    <a href="/en/profile?memberNumber=${result.memberNumber}" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                      View My Profile
+                    </a>
+                    <a href="/en/" class="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                      Go Home
+                    </a>
+                  </div>
+                  <div class="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg text-center">
+                    <p class="text-orange-800 mb-3">Notice any issues with the boat?</p>
+                    <button 
+                      onclick="openMaintenanceModal('${selectedBoatId || boatId}', '${result.memberNumber}')"
+                      class="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                    >
+                      🔧 Report Maintenance Issue
+                    </button>
+                  </div>
+                `;
+              } else {
+                profileLinkContainer.innerHTML = '';
+              }
+              
+              // Hide the checkout form
+              if (checkoutForm) {
+                checkoutForm.style.display = 'none';
+              }
+              
+              showMessage(result.message, 'success');
+              form.reset();
+              // Don't auto-refresh - let user choose where to go
+            } else {
+              showMessage(result.error, 'error');
+            }
+          } catch (error) {
+            console.error('🔍 FETCH ERROR:');
+            console.error('- Error type:', error.name);
+            console.error('- Error message:', error.message);
+            console.error('- Error stack:', error.stack);
+            showMessage('An error occurred. Please try again.', 'error');
+          }
+        });
+      }
+      
+      // Handle take over form submission
+      if (takeOverForm) {
+        takeOverForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          const formData = new FormData(takeOverForm);
+          const data = {
+            boatId: boatId,
+            sailorName: formData.get('name'),
+            expectedReturn: formData.get('return'),
+            takeOver: true,
+            previousCheckInId: activeCheckInInfo.dataset.checkInId
+          };
+          
+          console.log('🔍 TAKEOVER: Form data being sent:', data);
+          console.log('- previousCheckInId from dataset:', activeCheckInInfo.dataset.checkInId);
+          
+          try {
+            const response = await fetch('/api/check-in', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+              // Show success message in header
+              const pageTitle = document.getElementById('pageTitle');
+              const boatInfo = document.getElementById('boatInfo');
+              const successMessage = document.getElementById('successMessage');
+              const takeBoatOverForm = document.getElementById('takeBoatOverForm');
+              
+              // Update the page header
+              pageTitle.textContent = `${result.boatName} checked out successfully!`;
+              pageTitle.className = 'text-2xl font-bold text-green-600 mb-2';
+              boatInfo.style.display = 'none';
+              successMessage.classList.remove('hidden');
+              
+              // Add profile link if member info is available
+              const profileLinkContainer = document.getElementById('profileLinkContainer');
+              if (result.memberNumber) {
+                profileLinkContainer.innerHTML = `
+                  <div class="flex space-x-3 justify-center mb-4">
+                    <a href="/en/profile?memberNumber=${result.memberNumber}" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                      View My Profile
+                    </a>
+                    <a href="/en/" class="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                      Go Home
+                    </a>
+                  </div>
+                  <div class="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg text-center">
+                    <p class="text-orange-800 mb-3">Notice any issues with the boat?</p>
+                    <button 
+                      onclick="openMaintenanceModal('${boatId}', '${result.memberNumber}')"
+                      class="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                    >
+                      🔧 Report Maintenance Issue
+                    </button>
+                  </div>
+                `;
+              } else {
+                profileLinkContainer.innerHTML = '';
+              }
+              
+              // Hide the take over form
+              if (takeBoatOverForm) {
+                takeBoatOverForm.style.display = 'none';
+              }
+              
+              showMessage(result.message, 'success');
+              takeOverForm.reset();
+              
+              // For take-over, refresh the page after a short delay to update the UI state
+              // We can detect take-over by checking if we're in the take-over form context
+              setTimeout(() => {
+                location.reload();
+              }, 3000); // 3 second delay to show success message
+              // Don't auto-refresh for regular checkout - let user choose where to go
+            } else {
+              showMessage(result.error, 'error');
+            }
+          } catch (error) {
+            console.error('Error:', error);
+            showMessage('An error occurred. Please try again.', 'error');
+          }
+        });
+      }
+    </script>
+    
+    <script>
+      // Callback function for when maintenance issue is reported
+      window.onMaintenanceReported = function(issueId) {
+        showMessage('Maintenance issue reported successfully! The admin team has been notified.', 'success');
+        
+        // Optionally refresh the page to show updated boat status
+        setTimeout(() => {
+          location.reload();
+        }, 2000);
+      };
+    </script>
+    
+    <MaintenanceModal />
+  </body>
+</html> 
