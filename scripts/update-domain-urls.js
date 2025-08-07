@@ -27,10 +27,18 @@ async function updateDomainUrls() {
     );
     console.log(`✅ Updated ${qrResult.rowCount} QR code URLs`);
     
-    // Update any other URLs that might be stored
-    console.log('\n2️⃣ Checking for other URL references...');
+    // Update trip photo URLs
+    console.log('\n2️⃣ Updating trip photo URLs...');
+    const photoResult = await client.query(
+      `UPDATE trip_photos 
+       SET photo_url = REPLACE(photo_url, $1, $2)
+       WHERE photo_url LIKE $3`,
+      [OLD_DOMAIN, NEW_DOMAIN, `%${OLD_DOMAIN}%`]
+    );
+    console.log(`✅ Updated ${photoResult.rowCount} trip photo URLs`);
     
     // Check if there are any other tables with URL fields
+    console.log('\n3️⃣ Checking for other URL references...');
     const tablesResult = await client.query(`
       SELECT table_name, column_name 
       FROM information_schema.columns 
@@ -43,16 +51,6 @@ async function updateDomainUrls() {
     tablesResult.rows.forEach(row => {
       console.log(`- ${row.table_name}.${row.column_name}`);
     });
-    
-    // Update any profile picture URLs
-    console.log('\n3️⃣ Updating profile picture URLs...');
-    const profileResult = await client.query(
-      `UPDATE members 
-       SET profile_picture_url = REPLACE(profile_picture_url, $1, $2)
-       WHERE profile_picture_url LIKE $3`,
-      [OLD_DOMAIN, NEW_DOMAIN, `%${OLD_DOMAIN}%`]
-    );
-    console.log(`✅ Updated ${profileResult.rowCount} profile picture URLs`);
     
     console.log('\n🎉 Domain URL update completed!');
     
