@@ -22,7 +22,7 @@ export async function POST({ request }) {
     
     const issueId = await reportMaintenanceIssue({
       boat_id,
-      reported_by_member_number,
+      reported_by: reported_by_member_number, // Fix: map to PostgreSQL column name
       issue_type,
       description,
       severity: severity || 'medium'
@@ -102,8 +102,8 @@ export async function PUT({ request }) {
     
     await updateMaintenanceIssue(parseInt(issueId), {
       status,
-      resolved_by_member_number,
-      admin_notes
+      resolved_by: resolved_by_member_number, // Fix: map to PostgreSQL column name
+      resolution_notes: admin_notes // Fix: map to PostgreSQL column name
     });
     
     return new Response(JSON.stringify({ 
