@@ -75,14 +75,34 @@ Your Ymir Sailing Club PWA is now:
 
 ## 🔧 Troubleshooting
 
+### **Node.js Version Compatibility**
+
+**⚠️ Important**: You may see this warning during build:
+```
+The local Node.js version (24) is not supported by Vercel Serverless Functions.
+Your project will use Node.js 22 as the runtime instead.
+```
+
+**This is normal and expected!** Vercel automatically handles the version mismatch:
+- ✅ **Local development**: Node.js 24 (your machine)
+- ✅ **Production deployment**: Node.js 22 (Vercel's runtime)
+- ✅ **No action needed**: Vercel automatically uses the correct version
+
+**If you want to match versions locally:**
+```bash
+# Install Node.js 22 (optional)
+nvm install 22
+nvm use 22
+```
+
 ### **If deployment fails with "Cannot find module '/var/task/dist/server/entry.mjs'"**
 
 **This was the main issue we fixed!** The problem was:
 - ❌ **Deprecated adapter**: `@astrojs/vercel/serverless` was causing build issues
-- ✅ **Solution**: Switched to `@astrojs/node` adapter with `mode: 'standalone'`
+- ✅ **Solution**: Switched to `@astrojs/vercel` with proper configuration
 
 **If you see this error again:**
-1. Check that `astro.config.mjs` uses `@astrojs/node` adapter
+1. Check that `astro.config.mjs` uses `@astrojs/vercel` adapter
 2. Verify `dist/server/entry.mjs` exists after build
 3. Clean build cache: `rm -rf dist .vercel && npm run build`
 
@@ -125,10 +145,11 @@ Your app includes:
 ## 🛠️ Technical Details
 
 **Current Configuration:**
-- **Adapter**: `@astrojs/node` (standalone mode)
+- **Adapter**: `@astrojs/vercel` (modern configuration)
 - **Database**: Neon PostgreSQL
 - **File Storage**: Vercel Blob
 - **Build Output**: `dist/server/entry.mjs` ✅
+- **Node.js Runtime**: 22 (Vercel production) / 24 (local development)
 
 **Key Files:**
 - `astro.config.mjs` - Astro configuration
