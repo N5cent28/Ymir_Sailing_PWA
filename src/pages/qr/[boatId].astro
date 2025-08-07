@@ -413,7 +413,29 @@ console.log('- activeCheckIns:', activeCheckIns);
 
     <script>
       // Get boatId from a data attribute instead of template literal
-      const boatId = document.querySelector('[data-boat-id]').getAttribute('data-boat-id');
+      let boatId = document.querySelector('[data-boat-id]')?.getAttribute('data-boat-id');
+      
+      // Fallback: try to get boatId from URL if data attribute is not available
+      if (!boatId) {
+        const pathSegments = window.location.pathname.split('/');
+        boatId = pathSegments[pathSegments.length - 1];
+        console.log('🔍 Using boatId from URL path:', boatId);
+      }
+      
+      // Debug logging
+      console.log('🔍 SCRIPT INITIALIZATION:');
+      console.log('- boatId from data attribute:', boatId);
+      console.log('- boatId type:', typeof boatId);
+      console.log('- boatId length:', boatId ? boatId.length : 'undefined');
+      console.log('- Current URL:', window.location.href);
+      
+      // Validate boatId
+      if (!boatId) {
+        console.error('❌ CRITICAL ERROR: boatId is undefined or empty!');
+        showMessage('Error: Boat ID not found. Please refresh the page.', 'error');
+        return;
+      }
+      
       const form = document.getElementById('checkInForm');
       const messageDiv = document.getElementById('message');
       const extensionOptions = document.getElementById('extensionOptions');
@@ -478,7 +500,19 @@ console.log('- activeCheckIns:', activeCheckIns);
       // Check for active check-ins and show easy check-in button
       async function checkActiveCheckIns() {
         try {
+          console.log('🔍 Checking active check-ins for boatId:', boatId);
+          
+          if (!boatId) {
+            console.error('❌ Cannot check active check-ins: boatId is undefined');
+            return;
+          }
+          
           const response = await fetch(`/api/check-in?boatId=${boatId}`);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
           const data = await response.json();
           
           console.log('🔍 ACTIVE CHECK-INS:', data.activeCheckIns);
@@ -500,7 +534,10 @@ console.log('- activeCheckIns:', activeCheckIns);
             console.log('🔍 No active check-ins found');
           }
         } catch (error) {
-          console.error('Error checking active check-ins:', error);
+          console.error('❌ Error checking active check-ins:', error);
+          console.error('- Error details:', error.message);
+          console.error('- boatId used:', boatId);
+          console.error('- Response status:', error.status);
         }
       }
       
