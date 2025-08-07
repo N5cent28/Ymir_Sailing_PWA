@@ -429,11 +429,10 @@ console.log('- activeCheckIns:', activeCheckIns);
       console.log('- boatId length:', boatId ? boatId.length : 'undefined');
       console.log('- Current URL:', window.location.href);
       
-      // Validate boatId
+      // Validate boatId - show error but don't return (which would cause syntax error)
       if (!boatId) {
         console.error('❌ CRITICAL ERROR: boatId is undefined or empty!');
-        showMessage('Error: Boat ID not found. Please refresh the page.', 'error');
-        return;
+        // We'll handle this in the functions that need boatId
       }
       
       const form = document.getElementById('checkInForm');
@@ -457,6 +456,25 @@ console.log('- activeCheckIns:', activeCheckIns);
       const takeOverPhoneInput = document.getElementById('takeOverPhone');
       const takeOverLookupMemberBtn = document.getElementById('takeOverLookupMember');
       const boatSelectionDropdown = document.getElementById('boatSelection');
+      
+      // Function to show error message
+      function showMessage(text, type) {
+        if (messageDiv) {
+          messageDiv.className = 'mt-4 p-3 rounded-lg';
+          messageDiv.className += type === 'success' ? ' bg-green-100 text-green-800' : ' bg-red-100 text-red-800';
+          messageDiv.textContent = text;
+          messageDiv.classList.remove('hidden');
+          
+          setTimeout(() => {
+            messageDiv.classList.add('hidden');
+          }, 5000);
+        }
+      }
+      
+      // Show error if boatId is missing
+      if (!boatId) {
+        showMessage('Error: Boat ID not found. Please refresh the page.', 'error');
+      }
       
       // Initialize boat selection dropdown
       function initializeBoatSelection() {
@@ -747,17 +765,6 @@ console.log('- activeCheckIns:', activeCheckIns);
           console.error('Error extending time:', error);
           showMessage('An error occurred while extending time.', 'error');
         }
-      }
-      
-      function showMessage(text, type) {
-        messageDiv.className = 'mt-4 p-3 rounded-lg';
-        messageDiv.className += type === 'success' ? ' bg-green-100 text-green-800' : ' bg-red-100 text-red-800';
-        messageDiv.textContent = text;
-        messageDiv.classList.remove('hidden');
-        
-        setTimeout(() => {
-          messageDiv.classList.add('hidden');
-        }, 5000);
       }
       
       // Hide extension options when declined
