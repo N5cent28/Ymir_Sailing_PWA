@@ -216,6 +216,10 @@
 			"dest": "_render"
 		},
 		{
+			"src": "^/test/?$",
+			"dest": "_render"
+		},
+		{
 			"src": "^/$",
 			"dest": "_render"
 		}

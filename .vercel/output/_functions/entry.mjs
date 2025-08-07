@@ -1,6 +1,6 @@
 import { renderers } from './renderers.mjs';
 import { c as createExports } from './chunks/entrypoint_DQMgTQNL.mjs';
-import { manifest } from './manifest_Ba5rq4IX.mjs';
+import { manifest } from './manifest_CCgyatih.mjs';
 
 const serverIslandMap = new Map();;
 
@@ -55,7 +55,8 @@ const _page47 = () => import('./pages/is/profile.astro.mjs');
 const _page48 = () => import('./pages/is/qr-codes.astro.mjs');
 const _page49 = () => import('./pages/is.astro.mjs');
 const _page50 = () => import('./pages/qr/_boatid_.astro.mjs');
-const _page51 = () => import('./pages/index.astro.mjs');
+const _page51 = () => import('./pages/test.astro.mjs');
+const _page52 = () => import('./pages/index.astro.mjs');
 const pageMap = new Map([
     ["node_modules/astro/dist/assets/endpoint/generic.js", _page0],
     ["src/pages/api/admin-enhanced.js", _page1],
@@ -108,7 +109,8 @@ const pageMap = new Map([
     ["src/pages/is/qr-codes.astro", _page48],
     ["src/pages/is/index.astro", _page49],
     ["src/pages/qr/[boatId].astro", _page50],
-    ["src/pages/index.astro", _page51]
+    ["src/pages/test.astro", _page51],
+    ["src/pages/index.astro", _page52]
 ]);
 
 const _manifest = Object.assign(manifest, {
@@ -119,7 +121,7 @@ const _manifest = Object.assign(manifest, {
     middleware: () => import('./_noop-middleware.mjs')
 });
 const _args = {
-    "middlewareSecret": "c61f0143-de14-4e80-b2e1-1bd997106871",
+    "middlewareSecret": "d0a82802-6109-4ade-aefc-acc15ff55b07",
     "skewProtection": false
 };
 const _exports = createExports(_manifest, _args);

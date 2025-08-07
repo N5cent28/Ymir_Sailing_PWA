@@ -8,9 +8,7 @@ import vercel from '@astrojs/vercel';
 export default defineConfig({
   integrations: [react(), tailwind()],
   output: 'server',
-  adapter: vercel({
-    includeFiles: ['./src/lib/database-postgres.js']
-  }),
+  adapter: vercel(),
   i18n: {
     defaultLocale: 'en',
     locales: ['en', 'is'],
