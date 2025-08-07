@@ -5,6 +5,7 @@
 **Database**: ✅ Neon PostgreSQL connected and migrated  
 **File Storage**: ✅ Vercel Blob configured and tested  
 **Code**: ✅ Pushed to GitHub and ready for deployment  
+**Build**: ✅ Fixed serverless deployment issue  
 
 ## 📋 Deployment Steps
 
@@ -74,6 +75,19 @@ Your Ymir Sailing Club PWA is now:
 
 ## 🔧 Troubleshooting
 
+### **If deployment fails with "Cannot find module '/var/task/dist/server/entry.mjs'"**
+
+**This was the main issue we fixed!** The problem was:
+- ❌ **Deprecated adapter**: `@astrojs/vercel/serverless` was causing build issues
+- ✅ **Solution**: Switched to `@astrojs/node` adapter with `mode: 'standalone'`
+
+**If you see this error again:**
+1. Check that `astro.config.mjs` uses `@astrojs/node` adapter
+2. Verify `dist/server/entry.mjs` exists after build
+3. Clean build cache: `rm -rf dist .vercel && npm run build`
+
+### **Other Common Issues:**
+
 **If deployment fails:**
 1. Check environment variables are set correctly
 2. Verify database connection string
@@ -87,6 +101,11 @@ Your Ymir Sailing Club PWA is now:
 1. Verify DATABASE_URL is correct
 2. Check Neon database is active
 3. Test connection locally first
+
+**If build fails locally:**
+1. Run `npm run build` to check for errors
+2. Verify all imports are correct
+3. Check for missing dependencies
 
 ## 📱 PWA Features
 
@@ -102,6 +121,20 @@ Your app includes:
 - **Member authentication** with member numbers
 - **Secure database** with SSL connections
 - **Environment variables** for sensitive data
+
+## 🛠️ Technical Details
+
+**Current Configuration:**
+- **Adapter**: `@astrojs/node` (standalone mode)
+- **Database**: Neon PostgreSQL
+- **File Storage**: Vercel Blob
+- **Build Output**: `dist/server/entry.mjs` ✅
+
+**Key Files:**
+- `astro.config.mjs` - Astro configuration
+- `src/lib/database-postgres.js` - Database functions
+- `vercel.json` - Vercel configuration
+- `env.example` - Environment variables template
 
 ---
 

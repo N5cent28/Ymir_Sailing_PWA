@@ -1,0 +1,258 @@
+export { renderers } from '../../renderers.mjs';
+
+// Authentication Utility for Ymir Sailing Club PWA
+
+const SESSION_KEY = 'ymir_current_member';
+const SESSION_EXPIRY_KEY = 'ymir_session_expiry';
+const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+/**
+ * Check admin credentials and return member data if valid
+ * @param {string} memberNumber - Member number
+ * @param {string} pin - 3-digit PIN
+ * @returns {Object} Result with authorized flag and member data or error
+ */
+async function checkAdminCredentials(memberNumber, pin) {
+  try {
+    // Import database functions dynamically to avoid circular dependencies
+    const { verifyMemberCredentials, isAdmin } = await import('../../chunks/database-postgres_A4NcQA_p.mjs');
+    
+    // First verify the member credentials
+    const member = await verifyMemberCredentials(memberNumber, pin);
+    
+    if (!member) {
+      return {
+        authorized: false,
+        error: 'Invalid member number or PIN'
+      };
+    }
+    
+    // Check if the member is an admin
+    const adminStatus = await isAdmin(memberNumber);
+    
+    if (!adminStatus) {
+      return {
+        authorized: false,
+        error: 'Admin access required'
+      };
+    }
+    
+    return {
+      authorized: true,
+      member: member
+    };
+    
+  } catch (error) {
+    console.error('Error checking admin credentials:', error);
+    return {
+      authorized: false,
+      error: 'Internal server error'
+    };
+  }
+}
+
+/**
+ * Store user session in localStorage with expiration
+ * @param {Object} member - Member data from login
+ */
+function setUserSession(member) {
+  const expiryTime = Date.now() + SESSION_DURATION;
+  
+  localStorage.setItem(SESSION_KEY, JSON.stringify(member));
+  localStorage.setItem(SESSION_EXPIRY_KEY, expiryTime.toString());
+  
+  // Dispatch custom event for other components to listen to
+  window.dispatchEvent(new CustomEvent('userLogin', { detail: member }));
+}
+
+/**
+ * Get current user session if valid
+ * @returns {Object|null} Member data or null if not logged in/expired
+ */
+function getCurrentUser() {
+  try {
+    const memberData = localStorage.getItem(SESSION_KEY);
+    const expiryTime = localStorage.getItem(SESSION_EXPIRY_KEY);
+    
+    if (!memberData || !expiryTime) {
+      return null;
+    }
+    
+    // Check if session has expired
+    if (Date.now() > parseInt(expiryTime)) {
+      clearUserSession();
+      return null;
+    }
+    
+    return JSON.parse(memberData);
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    clearUserSession();
+    return null;
+  }
+}
+
+/**
+ * Clear user session (logout)
+ */
+function clearUserSession() {
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(SESSION_EXPIRY_KEY);
+  
+  // Dispatch custom event for other components to listen to
+  window.dispatchEvent(new CustomEvent('userLogout'));
+}
+
+/**
+ * Extend session (useful for keeping users logged in during activity)
+ */
+function extendSession() {
+  const user = getCurrentUser();
+  if (user) {
+    setUserSession(user);
+  }
+}
+
+/**
+ * Initialize authentication system
+ * Sets up event listeners and checks session on page load
+ */
+function initAuth() {
+  // Check session on page load
+  const user = getCurrentUser();
+  
+  if (user) {
+    // Extend session on page load if user is active
+    extendSession();
+    
+    // Update UI to show logged-in state
+    updateAuthUI(user);
+  } else {
+    // Update UI to show logged-out state
+    updateAuthUI(null);
+  }
+  
+  // Listen for login/logout events
+  window.addEventListener('userLogin', (event) => {
+    updateAuthUI(event.detail);
+  });
+  
+  window.addEventListener('userLogout', () => {
+    updateAuthUI(null);
+  });
+}
+
+/**
+ * Update UI elements based on authentication state
+ * @param {Object|null} user - Current user or null
+ */
+function updateAuthUI(user) {
+  // Update navigation badge if it exists
+  const badge = document.getElementById('badge-messages');
+  if (badge) {
+    if (user) {
+      // Load unread count for logged-in user
+      loadUnreadMessageCount();
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+  
+  // Update any other UI elements that depend on auth state
+  const authDependentElements = document.querySelectorAll('[data-auth-required]');
+  authDependentElements.forEach(element => {
+    if (user) {
+      element.classList.remove('hidden');
+    } else {
+      element.classList.add('hidden');
+    }
+  });
+}
+
+/**
+ * Load unread message count for navigation badge
+ */
+async function loadUnreadMessageCount() {
+  try {
+    const user = getCurrentUser();
+    if (!user) return;
+    
+    const response = await fetch(`/api/messages?action=unreadCount&memberNumber1=${user.member_number}`);
+    const data = await response.json();
+    
+    if (data.success) {
+      const badge = document.getElementById('badge-messages');
+      if (badge) {
+        badge.textContent = data.count;
+        badge.style.display = data.count > 0 ? 'flex' : 'none';
+      }
+    }
+  } catch (error) {
+    console.error('Error loading unread count:', error);
+  }
+}
+
+// Auto-initialize auth system when this module is imported
+if (typeof window !== 'undefined') {
+  // Wait for DOM to be ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAuth);
+  } else {
+    initAuth();
+  }
+}
+
+async function POST({ request }) {
+  try {
+    const { memberNumber, pin } = await request.json();
+    
+    // Validate required fields
+    if (!memberNumber || !pin) {
+      return new Response(JSON.stringify({ 
+        error: 'Member number and PIN are required' 
+      }), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // Check admin credentials
+    const result = await checkAdminCredentials(memberNumber, pin);
+    
+    if (result.authorized) {
+      return new Response(JSON.stringify({ 
+        success: true,
+        message: 'Admin login successful',
+        member: result.member
+      }), { 
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } else {
+      return new Response(JSON.stringify({ 
+        error: result.error 
+      }), { 
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+  } catch (error) {
+    console.error('Admin login error:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Internal server error' 
+    }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+  __proto__: null,
+  POST
+}, Symbol.toStringTag, { value: 'Module' }));
+
+const page = () => _page;
+
+export { page };

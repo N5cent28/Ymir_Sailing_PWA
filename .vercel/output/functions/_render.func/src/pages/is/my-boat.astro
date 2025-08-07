@@ -1,0 +1,304 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Navigation from '../../components/Navigation.astro';
+import MaintenanceModal from '../../components/MaintenanceModal.astro';
+---
+
+<Layout title="Mín Virki Bátur - Siglingafélagið Ýmir" lang="is">
+  <Navigation />
+  
+  <main>
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-br from-ocean-green to-green-600 text-white py-20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-5xl font-bold mb-6">
+          Mín Virki Bátur
+        </h1>
+        <p class="text-xl mb-8 max-w-3xl mx-auto">
+          Skráðu þig inn á bátinn þinn með meðlimsnúmeri. Engin QR-kóði þarf!
+        </p>
+      </div>
+    </section>
+
+    <!-- Member Lookup Section -->
+    <section class="py-16 bg-white">
+      <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-lg shadow-lg p-8">
+          <h2 class="text-2xl font-bold text-ocean-green mb-6">Finndu Virka Bátinn</h2>
+          
+          <!-- Member Number Input -->
+          <div class="mb-6">
+            <label for="memberNumber" class="block text-sm font-medium text-anchor-gray mb-2">
+              Meðlimsnúmer
+            </label>
+            <div class="flex gap-2">
+              <input
+                type="text"
+                id="memberNumber"
+                placeholder="Sláðu inn meðlimsnúmerið þitt"
+                class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean-green"
+              />
+              <button
+                id="findBoat"
+                class="px-6 py-3 bg-ocean-green text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+              >
+                Finna Bát
+              </button>
+            </div>
+          </div>
+
+          <!-- Loading State -->
+          <div id="loading" class="hidden text-center py-8">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-ocean-green mx-auto mb-4"></div>
+            <p class="text-anchor-gray">Leita að virka bátnum þínum...</p>
+          </div>
+
+          <!-- Active Boat Display -->
+          <div id="activeBoat" class="hidden">
+            <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+              <h3 class="text-lg font-semibold text-green-900 mb-4">Virkur Báturinn Þinn</h3>
+              <div id="boatInfo" class="space-y-3 mb-6">
+                <!-- Boat information will be populated here -->
+              </div>
+              
+              <!-- Action Buttons -->
+              <div class="flex gap-3 mb-6">
+                <button
+                  id="checkInButton"
+                  class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                >
+                  ✅ Skrá Inn Núna
+                </button>
+                <button
+                  onclick="openMaintenanceModalFromMyBoat()"
+                  class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                >
+                  🔧 Skrá Viðhaldsvandamál
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- No Active Boat -->
+          <div id="noActiveBoat" class="hidden">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+              <div class="text-4xl mb-4">🚤</div>
+              <h3 class="text-lg font-semibold text-blue-900 mb-2">Enginn Virkur Bátur Fannst</h3>
+              <p class="text-blue-800 mb-4">
+                Það lítur út fyrir að þú hafir enga báta í notkun! Ef þú vilt fara að sigla, farðu yfir í báta svæðið til að fá bát.
+              </p>
+              <div class="space-y-3">
+                <a href="/is/qr-codes" class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                  Skoða Alla Báta
+                </a>
+                <div class="text-sm text-blue-600">
+                  <p>Þarftu hjálp? Hafðu samband við skrifstofuna.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Error Message -->
+          <div id="error" class="hidden">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+              <div class="text-4xl mb-4">❌</div>
+              <h3 class="text-lg font-semibold text-red-900 mb-2">Villa</h3>
+              <p id="errorMessage" class="text-red-800">
+                Villa kom upp. Vinsamlegast reyndu aftur.
+              </p>
+            </div>
+          </div>
+
+          <!-- Success Message -->
+          <div id="success" class="hidden">
+            <div class="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+              <div class="text-4xl mb-4">✅</div>
+              <h3 class="text-lg font-semibold text-green-900 mb-2">Tókst að Skrá Inn!</h3>
+              <p class="text-green-800 mb-4">
+                Báturinn þinn hefur verið skráður inn með góðum árangri. Takk fyrir að nota Siglingafélagið Ýmir!
+              </p>
+              <a href="/is" class="inline-block px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                Aftur á Forsíðu
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <MaintenanceModal />
+
+    <script>
+      const memberNumberInput = document.getElementById('memberNumber');
+      const findBoatBtn = document.getElementById('findBoat');
+      const loading = document.getElementById('loading');
+      const activeBoat = document.getElementById('activeBoat');
+      const noActiveBoat = document.getElementById('noActiveBoat');
+      const error = document.getElementById('error');
+      const success = document.getElementById('success');
+      const boatInfo = document.getElementById('boatInfo');
+      const checkInButton = document.getElementById('checkInButton');
+      const errorMessage = document.getElementById('errorMessage');
+
+      let currentCheckInId = null;
+      let currentBoatId = null;
+
+      // Handle find boat button click
+      findBoatBtn.addEventListener('click', async () => {
+        const memberNumber = memberNumberInput.value.trim();
+        
+        if (!memberNumber) {
+          showError('Vinsamlegast sláðu inn meðlimsnúmerið þitt');
+          return;
+        }
+
+        showLoading();
+        
+        try {
+          console.log('🔍 Searching for boat with member number:', memberNumber);
+          const response = await fetch(`/api/my-active-boat?memberNumber=${memberNumber}`);
+          console.log('📡 Response status:', response.status);
+          
+          const data = await response.json();
+          console.log('📡 Response data:', data);
+          
+          if (data.success) {
+            if (data.activeBoat) {
+              console.log('✅ Found active boat, showing boat info');
+              showActiveBoat(data.activeBoat);
+            } else {
+              console.log('✅ No active boat found, showing no boat message');
+              showNoActiveBoat();
+            }
+          } else {
+            console.log('❌ API returned error:', data.error);
+            showError(data.error || 'Mistókst að finna virkan bátinn þinn');
+          }
+        } catch (err) {
+          console.error('❌ Error finding boat:', err);
+          showError('Villa kom upp við að leita að báti');
+        }
+      });
+
+      // Handle check-in button click
+      checkInButton.addEventListener('click', async () => {
+        if (!currentCheckInId) {
+          showError('Enginn virkur bátur til að skrá inn');
+          return;
+        }
+
+        showLoading();
+        
+        try {
+          const response = await fetch('/api/check-out', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ checkInId: currentCheckInId })
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            showSuccess();
+          } else {
+            showError(result.error || 'Mistókst að skrá inn bát');
+          }
+        } catch (err) {
+          console.error('Error checking in:', err);
+          showError('Villa kom upp við að skrá inn');
+        }
+      });
+
+      function showLoading() {
+        hideAll();
+        loading.classList.remove('hidden');
+      }
+
+      function showActiveBoat(boat) {
+        hideAll();
+        
+        const departureTime = new Date(boat.departure_time).toLocaleString('is-IS');
+        const expectedReturn = new Date(boat.expected_return).toLocaleString('is-IS');
+        
+        boatInfo.innerHTML = `
+          <div class="grid grid-cols-1 gap-3">
+            <div class="flex justify-between">
+              <span class="font-medium text-gray-700">Bátur:</span>
+              <span class="text-gray-900">${boat.boat_name}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-medium text-gray-700">Siglingamaður:</span>
+              <span class="text-gray-900">${boat.sailor_name}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-medium text-gray-700">Brottför:</span>
+              <span class="text-gray-900">${departureTime}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-medium text-gray-700">Væntanlegur afturkomutími:</span>
+              <span class="text-gray-900">${expectedReturn}</span>
+            </div>
+          </div>
+        `;
+        
+        currentCheckInId = boat.id;
+        currentBoatId = boat.boat_id;
+        activeBoat.classList.remove('hidden');
+      }
+
+      function showNoActiveBoat() {
+        console.log('🚤 Showing no active boat message');
+        hideAll();
+        noActiveBoat.classList.remove('hidden');
+      }
+
+      function showError(message) {
+        hideAll();
+        errorMessage.textContent = message;
+        error.classList.remove('hidden');
+      }
+
+      function showSuccess() {
+        hideAll();
+        success.classList.remove('hidden');
+        setTimeout(() => {
+          success.classList.add('hidden');
+        }, 5000); // Hide success message after 5 seconds
+      }
+
+      function hideAll() {
+        console.log('🔄 Hiding all sections');
+        loading.classList.add('hidden');
+        activeBoat.classList.add('hidden');
+        noActiveBoat.classList.add('hidden');
+        error.classList.add('hidden');
+        success.classList.add('hidden');
+      }
+
+      // Allow Enter key to submit
+      memberNumberInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          findBoatBtn.click();
+        }
+      });
+
+      // Maintenance modal callback
+      window.onMaintenanceReported = function() {
+        alert('Viðhaldsvandamál skráð með góðum árangri! Staða bátsins hefur verið uppfærð.');
+        // Don't reload the page - keep the current state
+      };
+
+      // Function to open maintenance modal
+      window.openMaintenanceModalFromMyBoat = function() {
+        const memberNumber = memberNumberInput.value.trim();
+        if (window.openMaintenanceModal && currentBoatId && memberNumber) {
+          window.openMaintenanceModal(currentBoatId, memberNumber);
+        } else {
+          alert('Vinsamlegast sláðu inn meðlimsnúmerið þitt og finndu bátinn þinn fyrst.');
+        }
+      };
+    </script>
+  </main>
+</Layout> 
