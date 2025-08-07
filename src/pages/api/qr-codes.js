@@ -1,4 +1,4 @@
-import { getQRCodes } from '../../lib/database.js';
+import { getQRCodes } from '../../lib/database-postgres.js';
 
 export async function GET() {
   try {

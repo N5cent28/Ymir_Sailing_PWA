@@ -2,7 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import Navigation from '../../components/Navigation.astro';
 import MaintenanceModal from '../../components/MaintenanceModal.astro';
-import { getBoatStatus, getActiveCheckIns } from '../../lib/database.js';
+import { getBoatStatus, getActiveCheckIns } from '../../lib/database-postgres.js';
 
 export const prerender = true;
 

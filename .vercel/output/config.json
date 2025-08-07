@@ -1,0 +1,237 @@
+{
+	"version": 3,
+	"routes": [
+		{
+			"handle": "filesystem"
+		},
+		{
+			"src": "^/_astro/(.*)$",
+			"headers": {
+				"cache-control": "public, max-age=31536000, immutable"
+			},
+			"continue": true
+		},
+		{
+			"src": "^/_server-islands/([^/]+?)/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/_image/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/admin-enhanced/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/admin-login/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/boat-hours/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/boat-status/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/check-in/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/check-out/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/check-overdue/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/cleanup-messages/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/extend-time/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/maintenance/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/member-login/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/members/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/messages/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/my-active-boat/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/profile/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/push-notification/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/qr-codes/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/seed-members/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/seed-messages/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/social/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/update-boat-status/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/upload-qr-code/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/en/admin/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/en/admin-dashboard/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/en/admin-login/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/en/admin-maintenance/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/en/admin-qr-codes/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/en/admin-test/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/en/contact/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/en/courses/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/en/data-export/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/en/find-members/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/en/members/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/en/messages/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/en/my-boat/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/en/profile/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/en/qr-codes/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/en/test-login/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/en/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/is/admin/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/is/admin-login/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/is/contact/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/is/courses/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/is/find-members/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/is/messages/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/is/my-boat/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/is/profile/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/is/qr-codes/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/is/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/$",
+			"dest": "_render"
+		}
+	],
+	"images": {
+		"sizes": [
+			640,
+			750,
+			828,
+			1080,
+			1200,
+			1920,
+			2048,
+			3840
+		],
+		"domains": [],
+		"remotePatterns": []
+	}
+}

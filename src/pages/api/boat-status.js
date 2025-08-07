@@ -1,4 +1,4 @@
-import { getBoatStatus } from '../../lib/database.js';
+import { getBoatStatus } from '../../lib/database-postgres.js';
 
 export async function GET({ url }) {
   try {

@@ -1,4 +1,4 @@
-import { getActiveCheckInsWithBoatNames } from '../../lib/database.js';
+import { getActiveCheckInsWithBoatNames } from '../../lib/database-postgres.js';
 
 export async function GET({ request }) {
   try {

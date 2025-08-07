@@ -51,7 +51,7 @@ async function testDatabaseDirectly() {
   console.log('\n🔍 Testing Database Directly...\n');
   
   try {
-    const { verifyMemberCredentials, getMemberByNumber } = await import('./src/lib/database.js');
+    const { verifyMemberCredentials, getMemberByNumber } = await import('./src/lib/database-postgres.js');
     
     // Test member credentials
     console.log('1. Testing verifyMemberCredentials...');

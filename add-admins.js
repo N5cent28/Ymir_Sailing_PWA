@@ -1,4 +1,4 @@
-import { createMember } from './src/lib/database.js';
+import { createMember } from './src/lib/database-postgres.js';
 
 async function addAdmins() {
   try {

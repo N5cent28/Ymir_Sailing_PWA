@@ -11,7 +11,7 @@ import {
   getRecentNotifications,
   cleanupOldNotifications,
   getNotificationStats
-} from '../../lib/database.js';
+} from '../../lib/database-postgres.js';
 
 // Boat definitions for export functionality
 const boats = [

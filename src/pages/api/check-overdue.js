@@ -1,4 +1,4 @@
-import { getOverdueBoats, getActiveCheckIns } from '../../lib/database.js';
+import { getOverdueBoats, getActiveCheckIns } from '../../lib/database-postgres.js';
 import { sendOverdueAlert, sendExtensionReminder, sendAdminOverdueAlert } from '../../lib/notifications.js';
 
 export async function GET() {

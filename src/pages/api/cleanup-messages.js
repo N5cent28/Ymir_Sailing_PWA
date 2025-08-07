@@ -1,4 +1,4 @@
-import { cleanupOldMessages, isAdmin } from '../../lib/database.js';
+import { cleanupOldMessages, isAdmin } from '../../lib/database-postgres.js';
 
 export async function POST({ request }) {
   try {

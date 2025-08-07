@@ -3,7 +3,7 @@ import {
   getMaintenanceIssues, 
   updateMaintenanceIssue,
   getMaintenanceIssue 
-} from '../../lib/database.js';
+} from '../../lib/database-postgres.js';
 
 export async function POST({ request }) {
   try {

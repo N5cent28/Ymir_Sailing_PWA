@@ -15,7 +15,7 @@
  *   node cleanup-messages.js 90    # Clean messages older than 90 days
  */
 
-import { cleanupOldMessages } from './src/lib/database.js';
+import { cleanupOldMessages } from './src/lib/database-postgres.js';
 
 const daysOld = parseInt(process.argv[2]) || 30;
 

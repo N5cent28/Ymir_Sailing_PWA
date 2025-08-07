@@ -13,7 +13,7 @@ const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 export async function checkAdminCredentials(memberNumber, pin) {
   try {
     // Import database functions dynamically to avoid circular dependencies
-    const { verifyMemberCredentials, isAdmin } = await import('./database.js');
+    const { verifyMemberCredentials, isAdmin } = await import('./database-postgres.js');
     
     // First verify the member credentials
     const member = await verifyMemberCredentials(memberNumber, pin);

@@ -1,4 +1,4 @@
-import { getMemberByNumber, updateMemberProfile, getMemberTrips } from '../../lib/database.js';
+import { getMemberByNumber, updateMemberProfile, getMemberTrips } from '../../lib/database-postgres.js';
 
 export async function GET({ request }) {
   try {

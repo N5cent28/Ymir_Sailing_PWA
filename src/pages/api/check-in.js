@@ -1,4 +1,4 @@
-import { createCheckIn, getBoatStatus, createNotification, getMemberByNumber, getActiveCheckIns, updateCheckoutChecklist, completeCheckIn } from '../../lib/database.js';
+import { createCheckIn, getBoatStatus, createNotification, getMemberByNumber, getActiveCheckIns, updateCheckoutChecklist, completeCheckIn } from '../../lib/database-postgres.js';
 import { sendCheckOutConfirmation, sendTakeOverNotification } from '../../lib/notifications.js';
 
 export async function POST({ request }) {

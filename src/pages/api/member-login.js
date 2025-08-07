@@ -1,4 +1,4 @@
-import { verifyMemberCredentials } from '../../lib/database.js';
+import { verifyMemberCredentials } from '../../lib/database-postgres.js';
 
 export async function POST({ request }) {
   try {

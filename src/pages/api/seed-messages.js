@@ -1,4 +1,4 @@
-import { sendMessage } from '../../lib/database.js';
+import { sendMessage } from '../../lib/database-postgres.js';
 
 export async function POST({ request }) {
   try {

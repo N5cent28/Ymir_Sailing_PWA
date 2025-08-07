@@ -1,4 +1,4 @@
-import { sendMessage, getMessages, markMessageAsRead, getUnreadMessageCount, getMemberByNumber } from '../../lib/database.js';
+import { sendMessage, getMessages, markMessageAsRead, getUnreadMessageCount, getMemberByNumber } from '../../lib/database-postgres.js';
 import { sendPushNotification } from '../../lib/notifications.js';
 
 export async function POST({ request }) {

@@ -1,6 +1,5 @@
-import { getDb } from '../../lib/database.js';
-import fs from 'fs';
-import path from 'path';
+import { put } from '@vercel/blob';
+import { getQRCodes, getQRCodeByBoatId, createQRCode, updateQRCode } from '../../lib/database-postgres.js';
 
 export async function POST({ request }) {
   try {
@@ -30,53 +29,34 @@ export async function POST({ request }) {
       });
     }
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'qr-codes');
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-
     // Generate unique filename
     const fileExtension = qrCodeFile.name.split('.').pop();
-    const filename = `${boatId}-${Date.now()}.${fileExtension}`;
-    const filePath = path.join(uploadsDir, filename);
+    const filename = `qr-codes/${boatId}-${Date.now()}.${fileExtension}`;
 
-    // Convert file to buffer and save
-    const arrayBuffer = await qrCodeFile.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    fs.writeFileSync(filePath, buffer);
+    // Upload to Vercel Blob
+    const blob = await put(filename, qrCodeFile, {
+      access: 'public',
+      addRandomSuffix: false
+    });
 
     // Save to database
-    const db = await getDb();
+    const qrCodeUrl = blob.url;
     
     // Check if QR code already exists for this boat
-    const existingQR = await db.get('SELECT * FROM qr_codes WHERE boat_id = ?', [boatId]);
+    const existingQR = await getQRCodeByBoatId(boatId);
     
     if (existingQR) {
       // Update existing record
-      await db.run(
-        'UPDATE qr_codes SET filename = ?, boat_name = ?, updated_at = ? WHERE boat_id = ?',
-        [filename, boatName, new Date().toISOString(), boatId]
-      );
-      
-      // Delete old file if it exists
-      if (existingQR.filename && existingQR.filename !== filename) {
-        const oldFilePath = path.join(uploadsDir, existingQR.filename);
-        if (fs.existsSync(oldFilePath)) {
-          fs.unlinkSync(oldFilePath);
-        }
-      }
+      await updateQRCode(boatId, qrCodeUrl);
     } else {
-      // Insert new record
-      await db.run(
-        'INSERT INTO qr_codes (boat_id, boat_name, filename, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-        [boatId, boatName, filename, new Date().toISOString(), new Date().toISOString()]
-      );
+      // Create new record
+      await createQRCode(boatId, qrCodeUrl);
     }
 
     return new Response(JSON.stringify({
       success: true,
       filename: filename,
+      url: qrCodeUrl,
       message: `QR code uploaded successfully for ${boatName}`
     }), {
       status: 200,

@@ -1,4 +1,4 @@
-import { createMember } from '../../lib/database.js';
+import { createMember } from '../../lib/database-postgres.js';
 
 export async function POST({ request }) {
   try {

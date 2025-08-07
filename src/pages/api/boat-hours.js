@@ -1,4 +1,4 @@
-import { getMemberBoatHours, getTotalBoatHours } from '../../lib/database.js';
+import { getMemberBoatHours, getTotalBoatHours } from '../../lib/database-postgres.js';
 
 export async function GET({ url }) {
   const memberNumber = url.searchParams.get('memberNumber');

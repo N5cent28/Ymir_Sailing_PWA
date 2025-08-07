@@ -1,4 +1,4 @@
-import { updateBoatStatus, createNotification } from '../../lib/database.js';
+import { updateBoatStatus, createNotification } from '../../lib/database-postgres.js';
 
 export async function POST({ request }) {
   try {
