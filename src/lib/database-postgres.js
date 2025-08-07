@@ -175,6 +175,36 @@ async function initializeDatabase() {
         FOREIGN KEY (boat_id) REFERENCES boats (id)
       );
     `);
+    
+    // Populate boats table with default boats
+    const boats = [
+      { id: 'boat-1', name: 'Quest 1', type: 'individual' },
+      { id: 'boat-2', name: 'Quest 2', type: 'individual' },
+      { id: 'boat-3', name: 'Zest 1', type: 'individual' },
+      { id: 'boat-4', name: 'Zest 2', type: 'individual' },
+      { id: 'boat-5', name: 'Zest 3', type: 'individual' },
+      { id: 'boat-6', name: 'Zest 4', type: 'individual' },
+      { id: 'boat-7', name: 'Zest 5', type: 'individual' },
+      { id: 'boat-8', name: 'Zest 6', type: 'individual' },
+      { id: 'boat-9', name: 'Topaz 1', type: 'individual' },
+      { id: 'boat-10', name: 'Topaz 2', type: 'individual' },
+      { id: 'boat-11', name: 'Laser 1', type: 'individual' },
+      { id: 'boat-12', name: 'Laser 2', type: 'individual' },
+      { id: 'boat-13', name: 'Laser 3', type: 'individual' },
+      { id: 'boat-14', name: 'Laser 4', type: 'individual' },
+      { id: 'kayak', name: 'Kayak', type: 'shared' },
+      { id: 'paddle-board', name: 'Paddle Board', type: 'shared' }
+    ];
+    
+    for (const boat of boats) {
+      await client.query(
+        `INSERT INTO boats (id, name, boat_type, status) 
+         VALUES ($1, $2, $3, $4) 
+         ON CONFLICT (id) DO NOTHING`,
+        [boat.id, boat.name, boat.type, 'operational']
+      );
+    }
+    
   } finally {
     client.release();
   }
