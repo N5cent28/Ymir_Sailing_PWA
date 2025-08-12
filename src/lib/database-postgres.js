@@ -380,6 +380,22 @@ export async function getActiveCheckInsWithBoatNames(boatId) {
   }
 }
 
+export async function getAllActiveCheckIns() {
+  const client = await getClient();
+  try {
+    const result = await client.query(
+      `SELECT c.*, b.name as boat_name, b.status as boat_status
+       FROM check_ins c 
+       JOIN boats b ON c.boat_id = b.id 
+       WHERE c.actual_return IS NULL 
+       ORDER BY c.departure_time DESC`
+    );
+    return result.rows;
+  } finally {
+    client.release();
+  }
+}
+
 export async function getOverdueBoats() {
   const client = await getClient();
   try {

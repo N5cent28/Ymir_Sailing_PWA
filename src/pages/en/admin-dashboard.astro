@@ -7,7 +7,8 @@ import {
   getOverdueBoats, 
   getRecentNotifications, 
   getAllMembers,
-  getMemberTrips
+  getMemberTrips,
+  getAllActiveCheckIns
 } from '../../lib/database-postgres.js';
 
 // Get all boat data
@@ -40,10 +41,13 @@ const overdueBoats = await getOverdueBoats();
 const notifications = await getRecentNotifications(20);
 const members = await getAllMembers();
 
+// Get total active check-ins across all boats
+const allActiveCheckIns = await getAllActiveCheckIns();
+
 // Calculate statistics
 const totalBoats = boats.length;
 const availableBoats = boatStatuses.filter(b => b.status === 'operational').length;
-const activeCheckIns = boatStatuses.reduce((total, boat) => total + boat.activeCheckIns.length, 0);
+const activeCheckIns = allActiveCheckIns.length;
 const maintenanceBoats = boatStatuses.filter(b => b.status === 'maintenance').length;
 const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service').length;
 ---
@@ -161,7 +165,7 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
                 </svg>
               </div>
               <div>
-                <h4 class="font-semibold text-gray-900">Check-ins Management</h4>
+                <h4 class="font-semibold text-gray-900">Active Boats</h4>
                 <p class="text-sm text-gray-600">Monitor and force check-in overdue boats</p>
               </div>
             </a>

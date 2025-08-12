@@ -1,4 +1,4 @@
-import { completeCheckIn, getActiveCheckInsWithBoatNames, createNotification } from '../../lib/database-postgres.js';
+import { completeCheckIn, getAllActiveCheckIns, createNotification } from '../../lib/database-postgres.js';
 
 export async function POST({ request }) {
   try {
@@ -15,7 +15,7 @@ export async function POST({ request }) {
     }
     
     // Get active check-ins to verify this check-in exists and is active
-    const activeCheckIns = await getActiveCheckInsWithBoatNames();
+    const activeCheckIns = await getAllActiveCheckIns();
     const checkIn = activeCheckIns.find(c => c.id === parseInt(checkInId));
     
     if (!checkIn) {

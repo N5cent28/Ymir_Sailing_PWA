@@ -1,36 +1,44 @@
 ---
 // Admin Check-ins Management Page - Icelandic
 import Layout from '../../layouts/Layout.astro';
-import { getActiveCheckInsWithBoatNames } from '../../lib/database-postgres.js';
+import { getAllActiveCheckIns } from '../../lib/database-postgres.js';
 
 // Get all active check-ins across all boats
 let activeCheckIns = [];
 try {
   // Get all boats with active check-ins
-  const allBoats = await getActiveCheckInsWithBoatNames();
+  const allBoats = await getAllActiveCheckIns();
   activeCheckIns = allBoats || [];
 } catch (error) {
   console.error('Error fetching active check-ins:', error);
 }
 ---
 
-<Layout title="Stjórnun á innritunum - Ymir siglingafélag" lang="is">
+<Layout title="Virkir bátar - Stjórnborð">
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
     <div class="bg-green-600 text-white">
       <div class="max-w-7xl mx-auto px-4 py-6">
-        <h1 class="text-3xl font-bold text-center">Stjórnun á innritunum</h1>
-        <p class="text-center mt-2">Fylgja eftir og stjórna öllum virkum báta innritunum</p>
+        <div class="flex items-center justify-between mb-4">
+          <a href="/is/admin-dashboard" class="flex items-center text-white hover:text-green-100 transition-colors">
+            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            Aftur á stjórnborð
+          </a>
+        </div>
+        <h1 class="text-3xl font-bold text-center">Virkir bátar</h1>
+        <p class="text-center mt-2">Fylgja eftir og stjórna öllum bátum sem eru nú útleigðir</p>
       </div>
     </div>
 
     <!-- Stats Summary -->
     <div class="max-w-7xl mx-auto px-4 py-6">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
           <div class="flex items-center">
             <div class="flex-1">
-              <h3 class="text-lg font-semibold text-gray-900">Heildar innritanir</h3>
+              <h3 class="text-lg font-semibold text-gray-900">Heildar útleigðir</h3>
               <p class="text-3xl font-bold text-blue-600">{activeCheckIns.length}</p>
             </div>
             <div class="text-blue-500">
@@ -56,29 +64,13 @@ try {
             </div>
           </div>
         </div>
-
-        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
-          <div class="flex items-center">
-            <div class="flex-1">
-              <h3 class="text-lg font-semibold text-gray-900">Rétt á tíma</h3>
-              <p class="text-3xl font-bold text-green-600">
-                {activeCheckIns.filter(checkIn => new Date(checkIn.expected_return) >= new Date()).length}
-              </p>
-            </div>
-            <div class="text-green-500">
-              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Active Check-ins List -->
       <div class="bg-white rounded-lg shadow">
         <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-xl font-semibold text-gray-900">Virkar innritanir</h2>
-          <p class="text-sm text-gray-600">Stjórna öllum bátum sem eru nú útleigðir</p>
+          <h2 class="text-xl font-semibold text-gray-900">Bátar sem eru nú útleigðir</h2>
+          <p class="text-sm text-gray-600">Stjórna öllum bátum sem eru nú á vatninu</p>
         </div>
 
         {activeCheckIns.length === 0 ? (
@@ -88,8 +80,8 @@ try {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
             </div>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">Engar virkar innritanir</h3>
-            <p class="text-gray-500">Allir bátar eru nú innritaðir.</p>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Engir bátar eru nú útleigðir</h3>
+            <p class="text-gray-500">Allir bátar eru nú innritaðir í báthúsinu.</p>
           </div>
         ) : (
           <div class="overflow-x-auto">
