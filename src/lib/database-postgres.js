@@ -235,10 +235,37 @@ export async function getBoatStatus(boatId) {
 export async function updateBoatStatus(boatId, status, notes = null) {
   const client = await getClient();
   try {
+    // Update boat status
     await client.query(
       'UPDATE boats SET status = $1, notes = $2 WHERE id = $3',
       [status, notes, boatId]
     );
+    
+    // ✅ FIXED: Automatically create maintenance issue records
+    if (status === 'maintenance' || status === 'out_of_service') {
+      // Check if there's already an open maintenance issue for this boat
+      const existingIssue = await client.query(
+        'SELECT id FROM maintenance_issues WHERE boat_id = $1 AND status = \'open\'',
+        [boatId]
+      );
+      
+      if (existingIssue.rows.length === 0) {
+        // Create a new maintenance issue
+        await client.query(
+          `INSERT INTO maintenance_issues (boat_id, reported_by, issue_type, description, severity, status)
+           VALUES ($1, $2, $3, $4, $5, 'open')`,
+          [boatId, 'system', 'status_change', `Boat status changed to ${status}${notes ? `: ${notes}` : ''}`, 'medium']
+        );
+      }
+    } else if (status === 'operational') {
+      // Mark existing maintenance issues as resolved
+      await client.query(
+        'UPDATE maintenance_issues SET status = \'resolved\', resolved_at = CURRENT_TIMESTAMP WHERE boat_id = $1 AND status = \'open\'',
+        [boatId]
+      );
+    }
+    
+    return true;
   } finally {
     client.release();
   }
@@ -271,7 +298,7 @@ export async function completeCheckIn(checkInId) {
   try {
     // Get check-in details first
     const checkInResult = await client.query(
-      'SELECT boat_id, sailor_name FROM check_ins WHERE id = $1',
+      'SELECT boat_id, sailor_name, member_number FROM check_ins WHERE id = $1',
       [checkInId]
     );
     
@@ -279,7 +306,7 @@ export async function completeCheckIn(checkInId) {
       throw new Error('Check-in not found');
     }
     
-    const { boat_id, sailor_name } = checkInResult.rows[0];
+    const { boat_id, sailor_name, member_number } = checkInResult.rows[0];
     
     // Update check-in
     await client.query(
@@ -289,6 +316,11 @@ export async function completeCheckIn(checkInId) {
     
     // Update boat status
     await updateBoatStatus(boat_id, 'operational');
+    
+    // ✅ FIXED: Calculate and record boat hours
+    if (member_number) {
+      await calculateAndUpdateBoatHours(member_number, checkInId);
+    }
     
     // Create notification
     await createNotification(boat_id, 'check_in', `${sailor_name} returned ${boat_id}`);
@@ -314,13 +346,18 @@ export async function updateCheckInTime(checkInId, newReturnTime) {
 export async function getActiveCheckIns(boatId) {
   const client = await getClient();
   try {
+    // Get active check-ins with boat status information
     const result = await client.query(
-      `SELECT * FROM check_ins 
-       WHERE boat_id = $1 AND actual_return IS NULL 
-       ORDER BY departure_time DESC`,
+      `SELECT c.*, b.status as boat_status, b.name as boat_name
+       FROM check_ins c 
+       JOIN boats b ON c.boat_id = b.id 
+       WHERE c.boat_id = $1 AND c.actual_return IS NULL 
+       ORDER BY c.departure_time DESC`,
       [boatId]
     );
-    return result.rows;
+    
+    // Filter out check-ins for boats that are not operational
+    return result.rows.filter(checkIn => checkIn.boat_status === 'operational');
   } finally {
     client.release();
   }
@@ -1233,6 +1270,39 @@ export async function updateQRCode(boatId, qrCodeUrl) {
       'UPDATE qr_codes SET qr_code_url = $1, created_at = CURRENT_TIMESTAMP WHERE boat_id = $2',
       [qrCodeUrl, boatId]
     );
+  } finally {
+    client.release();
+  }
+} 
+
+// ✅ NEW: Function to sync existing boat statuses with maintenance issues
+export async function syncBoatStatusesWithMaintenance() {
+  const client = await getClient();
+  try {
+    // Get all boats with maintenance or out_of_service status
+    const maintenanceBoats = await client.query(
+      'SELECT id, name, status, notes FROM boats WHERE status IN (\'maintenance\', \'out_of_service\')'
+    );
+    
+    for (const boat of maintenanceBoats.rows) {
+      // Check if there's already a maintenance issue for this boat
+      const existingIssue = await client.query(
+        'SELECT id FROM maintenance_issues WHERE boat_id = $1 AND status = \'open\'',
+        [boat.id]
+      );
+      
+      if (existingIssue.rows.length === 0) {
+        // Create a maintenance issue for this boat
+        await client.query(
+          `INSERT INTO maintenance_issues (boat_id, reported_by, issue_type, description, severity, status)
+           VALUES ($1, $2, $3, $4, $5, 'open')`,
+          [boat.id, 'system', 'status_sync', `Boat status: ${boat.status}${boat.notes ? ` - ${boat.notes}` : ''}`, 'medium']
+        );
+      }
+    }
+    
+    console.log(`Synced ${maintenanceBoats.rows.length} boats with maintenance issues`);
+    return maintenanceBoats.rows.length;
   } finally {
     client.release();
   }
