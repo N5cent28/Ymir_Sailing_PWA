@@ -177,7 +177,7 @@ try {
             frá <span id="forceCheckInBoat" class="font-medium"></span>?
           </p>
           <p class="text-xs text-gray-400 mb-6">
-            Þetta mun merkja bátinn sem skilaðan og reikna út siglingatíma. Notaðu þetta aðeins þegar nauðsynlegt er.
+            Þetta mun merkja bátinn sem skilaðan. Notaðu þetta aðeins þegar nauðsynlegt er.
           </p>
           <div class="flex space-x-3">
             <button 
@@ -219,6 +219,8 @@ try {
       if (!currentCheckInId) return;
 
       try {
+        console.log('Sending force check-in request for checkInId:', currentCheckInId);
+        
         const response = await fetch('/api/force-check-in', {
           method: 'POST',
           headers: {
@@ -227,21 +229,33 @@ try {
           body: JSON.stringify({ checkInId: currentCheckInId })
         });
 
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+
         if (response.ok) {
           const result = await response.json();
+          console.log('Success result:', result);
+          
+          // Show success message
           alert(`Tókst að þvingaða innritun ${result.boatName}`);
-          // Refresh the page to show updated data
-          window.location.reload();
+          
+          // Close modal first
+          closeForceCheckInModal();
+          
+          // Force page refresh to show updated data
+          console.log('Refreshing page...');
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
         } else {
           const error = await response.json();
+          console.error('API error:', error);
           alert(`Villa: ${error.error}`);
         }
       } catch (error) {
-        alert('Villa við þvingaða innritun');
-        console.error('Force check-in error:', error);
+        console.error('Network or other error:', error);
+        alert('Villa við þvingaða innritun. Vinsamlegast reyndu aftur.');
       }
-
-      closeForceCheckInModal();
     });
 
     // Close modal when clicking outside
