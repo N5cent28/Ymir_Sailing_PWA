@@ -268,10 +268,12 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
                       <span class={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                         boat.status === 'operational' ? 'bg-green-100 text-green-800' :
                         boat.status === 'maintenance' ? 'bg-yellow-100 text-yellow-800' :
+                        boat.status === 'checked_out' ? 'bg-blue-100 text-blue-800' :
                         'bg-red-100 text-red-800'
                       }`}>
                         {boat.status === 'operational' ? 'Operational' :
                          boat.status === 'maintenance' ? 'Maintenance' :
+                         boat.status === 'checked_out' ? 'Active' :
                          'Out of Service'}
                       </span>
                     </div>
