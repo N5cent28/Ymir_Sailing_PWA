@@ -1,0 +1,261 @@
+---
+// Admin Check-ins Management Page
+import Layout from '../../layouts/Layout.astro';
+import { getActiveCheckInsWithBoatNames } from '../../lib/database-postgres.js';
+
+// Get all active check-ins across all boats
+let activeCheckIns = [];
+try {
+  // Get all boats with active check-ins
+  const allBoats = await getActiveCheckInsWithBoatNames();
+  activeCheckIns = allBoats || [];
+} catch (error) {
+  console.error('Error fetching active check-ins:', error);
+}
+---
+
+<Layout title="Admin Check-ins Management">
+  <div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-green-600 text-white">
+      <div class="max-w-7xl mx-auto px-4 py-6">
+        <h1 class="text-3xl font-bold text-center">Check-ins Management</h1>
+        <p class="text-center mt-2">Monitor and manage all active boat check-ins</p>
+      </div>
+    </div>
+
+    <!-- Stats Summary -->
+    <div class="max-w-7xl mx-auto px-4 py-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+          <div class="flex items-center">
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-gray-900">Total Check-ins</h3>
+              <p class="text-3xl font-bold text-blue-600">{activeCheckIns.length}</p>
+            </div>
+            <div class="text-blue-500">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-orange-500">
+          <div class="flex items-center">
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-gray-900">Overdue Boats</h3>
+              <p class="text-3xl font-bold text-orange-600">
+                {activeCheckIns.filter(checkIn => new Date(checkIn.expected_return) < new Date()).length}
+              </p>
+            </div>
+            <div class="text-orange-500">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+          <div class="flex items-center">
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-gray-900">On Time</h3>
+              <p class="text-3xl font-bold text-green-600">
+                {activeCheckIns.filter(checkIn => new Date(checkIn.expected_return) >= new Date()).length}
+              </p>
+            </div>
+            <div class="text-green-500">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Check-ins List -->
+      <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-xl font-semibold text-gray-900">Active Check-ins</h2>
+          <p class="text-sm text-gray-600">Manage all boats currently checked out</p>
+        </div>
+
+        {activeCheckIns.length === 0 ? (
+          <div class="p-8 text-center">
+            <div class="text-gray-400 mb-4">
+              <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No Active Check-ins</h3>
+            <p class="text-gray-500">All boats are currently checked in.</p>
+          </div>
+        ) : (
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Boat</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sailor</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member #</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departure</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expected Return</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                {activeCheckIns.map((checkIn) => {
+                  const isOverdue = new Date(checkIn.expected_return) < new Date();
+                  const departureTime = new Date(checkIn.departure_time).toLocaleString();
+                  const expectedReturn = new Date(checkIn.expected_return).toLocaleString();
+                  
+                  return (
+                    <tr class="hover:bg-gray-50" data-checkin-id={checkIn.id}>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">{checkIn.boat_name || checkIn.boat_id}</div>
+                        <div class="text-sm text-gray-500">ID: {checkIn.boat_id}</div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">{checkIn.sailor_name}</div>
+                        {checkIn.phone && (
+                          <div class="text-sm text-gray-500">{checkIn.phone}</div>
+                        )}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {checkIn.member_number || 'Guest'}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {departureTime}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-gray-900'}`}>
+                          {expectedReturn}
+                        </div>
+                        {isOverdue && (
+                          <div class="text-xs text-red-500">
+                            {Math.floor((new Date() - new Date(checkIn.expected_return)) / (1000 * 60 * 60))}h overdue
+                          </div>
+                        )}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span class={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          isOverdue 
+                            ? 'bg-red-100 text-red-800' 
+                            : 'bg-green-100 text-green-800'
+                        }`}>
+                          {isOverdue ? 'Overdue' : 'On Time'}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button 
+                          onclick={`forceCheckIn(${checkIn.id}, '${checkIn.sailor_name}', '${checkIn.boat_name || checkIn.boat_id}')`}
+                          class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-colors"
+                        >
+                          Force Check-in
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+
+  <!-- Force Check-in Confirmation Modal -->
+  <div id="forceCheckInModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="bg-white rounded-lg max-w-md w-full p-6">
+        <div class="flex items-center mb-4">
+          <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+          </div>
+        </div>
+        <div class="text-center">
+          <h3 class="text-lg font-medium text-gray-900 mb-2">Force Check-in Confirmation</h3>
+          <p class="text-sm text-gray-500 mb-4">
+            Are you sure you want to force check-in <span id="forceCheckInSailor" class="font-medium"></span> 
+            from <span id="forceCheckInBoat" class="font-medium"></span>?
+          </p>
+          <p class="text-xs text-gray-400 mb-6">
+            This will mark the boat as returned and calculate trip hours. Use this only when necessary.
+          </p>
+          <div class="flex space-x-3">
+            <button 
+              onclick="closeForceCheckInModal()"
+              class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded text-sm transition-colors"
+            >
+              Cancel
+            </button>
+            <button 
+              id="confirmForceCheckIn"
+              class="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm transition-colors"
+            >
+              Force Check-in
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentCheckInId = null;
+
+    function forceCheckIn(checkInId, sailorName, boatName) {
+      currentCheckInId = checkInId;
+      document.getElementById('forceCheckInSailor').textContent = sailorName;
+      document.getElementById('forceCheckInBoat').textContent = boatName;
+      document.getElementById('forceCheckInModal').classList.remove('hidden');
+    }
+
+    function closeForceCheckInModal() {
+      document.getElementById('forceCheckInModal').classList.add('hidden');
+      currentCheckInId = null;
+    }
+
+    // Handle force check-in confirmation
+    document.getElementById('confirmForceCheckIn').addEventListener('click', async () => {
+      if (!currentCheckInId) return;
+
+      try {
+        const response = await fetch('/api/force-check-in', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ checkInId: currentCheckInId })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          alert(`Successfully force checked-in ${result.boatName}`);
+          // Refresh the page to show updated data
+          window.location.reload();
+        } else {
+          const error = await response.json();
+          alert(`Error: ${error.error}`);
+        }
+      } catch (error) {
+        alert('Error performing force check-in');
+        console.error('Force check-in error:', error);
+      }
+
+      closeForceCheckInModal();
+    });
+
+    // Close modal when clicking outside
+    document.getElementById('forceCheckInModal').addEventListener('click', (e) => {
+      if (e.target.id === 'forceCheckInModal') {
+        closeForceCheckInModal();
+      }
+    });
+  </script>
+</Layout> 
