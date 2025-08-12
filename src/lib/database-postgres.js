@@ -293,7 +293,7 @@ export async function createCheckIn(boatId, sailorName, departureTime, expectedR
   }
 }
 
-export async function completeCheckIn(checkInId) {
+export async function completeCheckIn(checkInId, skipHoursCalculation = false) {
   const client = await getClient();
   try {
     // Get check-in details first
@@ -317,8 +317,8 @@ export async function completeCheckIn(checkInId) {
     // Update boat status
     await updateBoatStatus(boat_id, 'operational');
     
-    // ✅ FIXED: Calculate and record boat hours
-    if (member_number) {
+    // ✅ FIXED: Calculate and record boat hours only if not skipping
+    if (!skipHoursCalculation && member_number) {
       await calculateAndUpdateBoatHours(member_number, checkInId);
     }
     

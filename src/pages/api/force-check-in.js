@@ -36,9 +36,9 @@ export async function POST({ request }) {
       });
     }
     
-    // Force complete the check-in
+    // Force complete the check-in (skip hours calculation since this is admin action)
     console.log('Completing check-in...');
-    await completeCheckIn(checkInId);
+    await completeCheckIn(checkInId, true); // Skip hours calculation for admin force check-ins
     console.log('Check-in completed successfully');
     
     // Create admin notification
