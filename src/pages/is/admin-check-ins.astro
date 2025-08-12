@@ -199,19 +199,20 @@ try {
   </div>
 
   <script>
-    let currentCheckInId = null;
-
-    function forceCheckIn(checkInId, sailorName, boatName) {
+    // Make functions globally accessible
+    window.forceCheckIn = function(checkInId, sailorName, boatName) {
       currentCheckInId = checkInId;
       document.getElementById('forceCheckInSailor').textContent = sailorName;
       document.getElementById('forceCheckInBoat').textContent = boatName;
       document.getElementById('forceCheckInModal').classList.remove('hidden');
-    }
+    };
 
-    function closeForceCheckInModal() {
+    window.closeForceCheckInModal = function() {
       document.getElementById('forceCheckInModal').classList.add('hidden');
       currentCheckInId = null;
-    }
+    };
+
+    let currentCheckInId = null;
 
     // Handle force check-in confirmation
     document.getElementById('confirmForceCheckIn').addEventListener('click', async () => {
@@ -249,5 +250,9 @@ try {
         closeForceCheckInModal();
       }
     });
+
+    // Debug: Log that functions are loaded
+    console.log('Force check-in functions loaded successfully');
+    console.log('forceCheckIn function available:', typeof window.forceCheckIn);
   </script>
 </Layout> 
