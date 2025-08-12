@@ -3,11 +3,16 @@ import { sendCheckOutConfirmation, sendTakeOverNotification } from '../../lib/no
 
 export async function POST({ request }) {
   try {
+    console.log('🔍 Check-in API called');
+    
     const body = await request.json();
     const { boatId, sailorName, memberNumber, phone, expectedReturn, takeOver, previousCheckInId, safetyChecklist } = body;
     
+    console.log('Request body:', { boatId, sailorName, memberNumber, phone, expectedReturn, takeOver, previousCheckInId, safetyChecklist });
+    
     // Validate required fields
     if (!boatId || !sailorName || !expectedReturn) {
+      console.log('❌ Missing required fields');
       return new Response(JSON.stringify({ 
         error: 'Missing required fields' 
       }), { 
@@ -16,13 +21,19 @@ export async function POST({ request }) {
       });
     }
     
+    console.log('✅ Required fields validation passed');
+    
     // Record current timestamp for departure
     const departureTime = new Date().toISOString();
+    console.log('Departure time:', departureTime);
     
     // Check boat status
+    console.log('🔍 Getting boat status for:', boatId);
     const boat = await getBoatStatus(boatId);
+    console.log('Boat status result:', boat);
     
     if (!boat) {
+      console.log('❌ Boat not found');
       return new Response(JSON.stringify({ 
         error: 'Boat not found' 
       }), { 
@@ -31,9 +42,12 @@ export async function POST({ request }) {
       });
     }
     
+    console.log('✅ Boat found:', boat.name, 'Status:', boat.status);
+    
     // For take over, we allow check-out even if boat is not operational
     if (!takeOver) {
       if (boat.status === 'maintenance') {
+        console.log('❌ Boat is under maintenance');
         return new Response(JSON.stringify({ 
           error: 'Boat is currently under maintenance',
           boatName: boat.name,
@@ -45,6 +59,7 @@ export async function POST({ request }) {
       }
       
       if (boat.status === 'out_of_service') {
+        console.log('❌ Boat is out of service');
         return new Response(JSON.stringify({ 
           error: 'Boat is out of service',
           boatName: boat.name,
@@ -57,8 +72,12 @@ export async function POST({ request }) {
       
       // For individual boats, check if already in use (unless it's a shared boat like Kayak or Paddle Board)
       if (boat.boat_type === 'individual') {
+        console.log('🔍 Checking active check-ins for individual boat:', boat.name);
         const activeCheckIns = await getActiveCheckIns(boatId);
+        console.log('Active check-ins result:', activeCheckIns);
+        
         if (activeCheckIns.length > 0) {
+          console.log('❌ Boat is already in use');
           return new Response(JSON.stringify({ 
             error: `${boat.name} is currently in use by ${activeCheckIns[0].sailor_name}`,
             boatName: boat.name,
@@ -68,15 +87,20 @@ export async function POST({ request }) {
             headers: { 'Content-Type': 'application/json' }
           });
         }
+        console.log('✅ No active check-ins found');
       }
     }
     
+    console.log('🔍 Creating check-in...');
     // Create check-in with member info
     const checkInId = await createCheckIn(boatId, sailorName, departureTime, expectedReturn, memberNumber, phone);
+    console.log('✅ Check-in created with ID:', checkInId);
     
     // Update safety checklist status if provided
     if (safetyChecklist !== undefined) {
+      console.log('🔍 Updating checkout checklist...');
       await updateCheckoutChecklist(checkInId, safetyChecklist);
+      console.log('✅ Checkout checklist updated');
     }
     
     // For take over, also check in the previous sailor
