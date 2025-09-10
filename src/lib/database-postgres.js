@@ -399,11 +399,15 @@ export async function getAllActiveCheckIns() {
 export async function getOverdueBoats() {
   const client = await getClient();
   try {
+    // Fix timezone issue: The expected_return times are stored incorrectly
+    // They were stored as if they were in UTC when they were actually in local time (CDT = UTC-5)
+    // So we need to add 5 hours to convert them back to the correct UTC time
     const result = await client.query(
       `SELECT c.*, b.name as boat_name 
        FROM check_ins c 
        JOIN boats b ON c.boat_id = b.id 
-       WHERE c.actual_return IS NULL AND c.expected_return < CURRENT_TIMESTAMP`
+       WHERE c.actual_return IS NULL 
+       AND (c.expected_return + INTERVAL '5 hours') < NOW()`
     );
     return result.rows;
   } finally {

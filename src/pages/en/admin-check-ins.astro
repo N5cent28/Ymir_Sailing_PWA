@@ -54,7 +54,13 @@ try {
             <div class="flex-1">
               <h3 class="text-lg font-semibold text-gray-900">Overdue Boats</h3>
               <p class="text-3xl font-bold text-orange-600">
-                {activeCheckIns.filter(checkIn => new Date(checkIn.expected_return) < new Date()).length}
+                {activeCheckIns.filter(checkIn => {
+                  // Fix timezone issue: expected_return times are stored incorrectly
+                  // They were stored as if they were in UTC when they were actually in local time (CDT = UTC-5)
+                  const expectedReturn = new Date(checkIn.expected_return);
+                  expectedReturn.setHours(expectedReturn.getHours() + 5); // Add 5 hours to convert back to correct time
+                  return expectedReturn < new Date();
+                }).length}
               </p>
             </div>
             <div class="text-orange-500">
@@ -99,7 +105,10 @@ try {
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
                 {activeCheckIns.map((checkIn) => {
-                  const isOverdue = new Date(checkIn.expected_return) < new Date();
+                  // Fix timezone issue: expected_return times are stored incorrectly
+                  const expectedReturnTime = new Date(checkIn.expected_return);
+                  expectedReturnTime.setHours(expectedReturnTime.getHours() + 5); // Add 5 hours to convert back to correct time
+                  const isOverdue = expectedReturnTime < new Date();
                   const departureTime = new Date(checkIn.departure_time).toLocaleString();
                   const expectedReturn = new Date(checkIn.expected_return).toLocaleString();
                   
