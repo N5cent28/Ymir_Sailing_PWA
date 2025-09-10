@@ -44,11 +44,18 @@ async function processCheckInNotifications(checkIn, now) {
   // Create unique notification keys to prevent duplicates
   const checkInKey = `${checkIn.id}_${checkIn.member_number}`;
   
-  // Pre-check-in warnings (30, 15, 5 minutes before)
-  if (minutesDiff > 0 && minutesDiff <= 30) {
-    const warningKey = `${checkInKey}_warning_${Math.floor(minutesDiff / 5) * 5}`;
+  // Pre-check-in warnings (60, 30, 10 minutes before)
+  if (minutesDiff > 0 && minutesDiff <= 60) {
+    let warningKey;
+    if (minutesDiff <= 10) {
+      warningKey = `${checkInKey}_warning_10`;
+    } else if (minutesDiff <= 30) {
+      warningKey = `${checkInKey}_warning_30`;
+    } else if (minutesDiff <= 60) {
+      warningKey = `${checkInKey}_warning_60`;
+    }
     
-    if (!sentNotifications.has(warningKey)) {
+    if (warningKey && !sentNotifications.has(warningKey)) {
       await sendPreCheckInWarning(checkIn, minutesDiff);
       sentNotifications.add(warningKey);
     }
@@ -71,17 +78,16 @@ async function processCheckInNotifications(checkIn, now) {
  */
 async function sendPreCheckInWarning(checkIn, minutesUntilReturn) {
   const extensionOptions = [
+    { label: '15 minutes', value: 15 },
     { label: '30 minutes', value: 30 },
-    { label: '1 hour', value: 60 },
-    { label: '2 hours', value: 120 },
-    { label: '3 hours', value: 180 }
+    { label: '1 hour', value: 60 }
   ];
   
-  const title = minutesUntilReturn <= 5 
+  const title = minutesUntilReturn <= 10 
     ? '⏰ URGENT: Return Time Approaching!' 
     : '⏰ Return Time Reminder';
     
-  const body = minutesUntilReturn <= 5
+  const body = minutesUntilReturn <= 10
     ? `Hi ${checkIn.sailor_name}, you need to return ${checkIn.boat_name} in ${minutesUntilReturn} minutes!`
     : `Hi ${checkIn.sailor_name}, your return time for ${checkIn.boat_name} is in ${minutesUntilReturn} minutes. Need more time?`;
   

@@ -37,13 +37,21 @@
             How much extra time do you need?
           </label>
           
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-3 gap-3">
+            <button 
+              class="extension-option px-4 py-3 border-2 border-gray-200 rounded-lg hover:border-ocean-blue hover:bg-blue-50 transition-colors text-center"
+              data-minutes="15"
+            >
+              <div class="text-lg font-semibold">15 min</div>
+              <div class="text-sm text-gray-600">Quick extension</div>
+            </button>
+            
             <button 
               class="extension-option px-4 py-3 border-2 border-gray-200 rounded-lg hover:border-ocean-blue hover:bg-blue-50 transition-colors text-center"
               data-minutes="30"
             >
               <div class="text-lg font-semibold">30 min</div>
-              <div class="text-sm text-gray-600">Quick extension</div>
+              <div class="text-sm text-gray-600">Standard extension</div>
             </button>
             
             <button 
@@ -51,23 +59,7 @@
               data-minutes="60"
             >
               <div class="text-lg font-semibold">1 hour</div>
-              <div class="text-sm text-gray-600">Standard extension</div>
-            </button>
-            
-            <button 
-              class="extension-option px-4 py-3 border-2 border-gray-200 rounded-lg hover:border-ocean-blue hover:bg-blue-50 transition-colors text-center"
-              data-minutes="120"
-            >
-              <div class="text-lg font-semibold">2 hours</div>
               <div class="text-sm text-gray-600">Extended sail</div>
-            </button>
-            
-            <button 
-              class="extension-option px-4 py-3 border-2 border-gray-200 rounded-lg hover:border-ocean-blue hover:bg-blue-50 transition-colors text-center"
-              data-minutes="180"
-            >
-              <div class="text-lg font-semibold">3 hours</div>
-              <div class="text-sm text-gray-600">Long trip</div>
             </button>
           </div>
         </div>
@@ -82,7 +74,7 @@
               type="number"
               id="customHours"
               min="0"
-              max="12"
+              max="1"
               placeholder="0"
               class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean-blue"
             />

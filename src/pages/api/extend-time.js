@@ -20,10 +20,10 @@ export async function POST({ request }) {
     
     // Validate additional minutes
     const minutes = parseInt(additionalMinutes);
-    if (isNaN(minutes) || minutes <= 0 || minutes > 720) { // Max 12 hours
+    if (isNaN(minutes) || minutes <= 0 || minutes > 60) { // Max 1 hour
       return new Response(JSON.stringify({ 
         success: false, 
-        error: 'Invalid extension time. Must be between 1 and 720 minutes (12 hours)' 
+        error: 'Invalid extension time. Must be between 1 and 60 minutes (1 hour)' 
       }), { 
         status: 400,
         headers: { 'Content-Type': 'application/json' }
