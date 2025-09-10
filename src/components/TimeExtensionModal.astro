@@ -1,0 +1,294 @@
+---
+// Time Extension Modal Component
+// Provides easy preset options for extending boat return time
+---
+
+<div id="timeExtensionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+      <div class="p-6">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-2xl font-bold text-ocean-blue">Extend Return Time</h3>
+          <button 
+            id="closeTimeExtensionModal" 
+            class="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            ×
+          </button>
+        </div>
+        
+        <!-- Boat Info -->
+        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+          <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 bg-ocean-blue rounded-full flex items-center justify-center text-white text-lg font-bold">
+              ⛵
+            </div>
+            <div>
+              <h4 class="font-semibold text-gray-900" id="extensionBoatName">Boat Name</h4>
+              <p class="text-sm text-gray-600" id="extensionCurrentTime">Current return time</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Extension Options -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-3">
+            How much extra time do you need?
+          </label>
+          
+          <div class="grid grid-cols-2 gap-3">
+            <button 
+              class="extension-option px-4 py-3 border-2 border-gray-200 rounded-lg hover:border-ocean-blue hover:bg-blue-50 transition-colors text-center"
+              data-minutes="30"
+            >
+              <div class="text-lg font-semibold">30 min</div>
+              <div class="text-sm text-gray-600">Quick extension</div>
+            </button>
+            
+            <button 
+              class="extension-option px-4 py-3 border-2 border-gray-200 rounded-lg hover:border-ocean-blue hover:bg-blue-50 transition-colors text-center"
+              data-minutes="60"
+            >
+              <div class="text-lg font-semibold">1 hour</div>
+              <div class="text-sm text-gray-600">Standard extension</div>
+            </button>
+            
+            <button 
+              class="extension-option px-4 py-3 border-2 border-gray-200 rounded-lg hover:border-ocean-blue hover:bg-blue-50 transition-colors text-center"
+              data-minutes="120"
+            >
+              <div class="text-lg font-semibold">2 hours</div>
+              <div class="text-sm text-gray-600">Extended sail</div>
+            </button>
+            
+            <button 
+              class="extension-option px-4 py-3 border-2 border-gray-200 rounded-lg hover:border-ocean-blue hover:bg-blue-50 transition-colors text-center"
+              data-minutes="180"
+            >
+              <div class="text-lg font-semibold">3 hours</div>
+              <div class="text-sm text-gray-600">Long trip</div>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Custom Time Input -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Or enter custom time:
+          </label>
+          <div class="flex space-x-2">
+            <input
+              type="number"
+              id="customHours"
+              min="0"
+              max="12"
+              placeholder="0"
+              class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean-blue"
+            />
+            <span class="flex items-center text-gray-600">hours</span>
+            <input
+              type="number"
+              id="customMinutes"
+              min="0"
+              max="59"
+              placeholder="0"
+              class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean-blue"
+            />
+            <span class="flex items-center text-gray-600">minutes</span>
+          </div>
+        </div>
+        
+        <!-- Reason (Optional) -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Reason for extension (optional):
+          </label>
+          <textarea
+            id="extensionReason"
+            rows="2"
+            placeholder="e.g., Weather conditions, mechanical issue, enjoying the sail..."
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean-blue"
+          ></textarea>
+        </div>
+        
+        <!-- New Return Time Display -->
+        <div class="bg-blue-50 rounded-lg p-4 mb-6">
+          <div class="text-sm text-gray-600 mb-1">New return time:</div>
+          <div class="text-lg font-semibold text-ocean-blue" id="newReturnTime">
+            Select an option above
+          </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex space-x-3">
+          <button
+            id="confirmExtension"
+            class="flex-1 px-6 py-3 bg-ocean-blue text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled
+          >
+            Extend Time
+          </button>
+          <button
+            id="cancelExtension"
+            class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentCheckInId = null;
+  let currentExpectedReturn = null;
+  let selectedMinutes = 0;
+  
+  // Extension option buttons
+  const extensionOptions = document.querySelectorAll('.extension-option');
+  const customHours = document.getElementById('customHours');
+  const customMinutes = document.getElementById('customMinutes');
+  const newReturnTime = document.getElementById('newReturnTime');
+  const confirmButton = document.getElementById('confirmExtension');
+  const cancelButton = document.getElementById('cancelExtension');
+  const closeButton = document.getElementById('closeTimeExtensionModal');
+  const modal = document.getElementById('timeExtensionModal');
+  
+  // Handle extension option selection
+  extensionOptions.forEach(option => {
+    option.addEventListener('click', () => {
+      // Remove previous selection
+      extensionOptions.forEach(opt => {
+        opt.classList.remove('border-ocean-blue', 'bg-blue-50');
+        opt.classList.add('border-gray-200');
+      });
+      
+      // Select this option
+      option.classList.add('border-ocean-blue', 'bg-blue-50');
+      option.classList.remove('border-gray-200');
+      
+      selectedMinutes = parseInt(option.dataset.minutes);
+      updateNewReturnTime();
+    });
+  });
+  
+  // Handle custom time input
+  customHours.addEventListener('input', updateCustomTime);
+  customMinutes.addEventListener('input', updateCustomTime);
+  
+  function updateCustomTime() {
+    const hours = parseInt(customHours.value) || 0;
+    const minutes = parseInt(customMinutes.value) || 0;
+    selectedMinutes = (hours * 60) + minutes;
+    
+    // Clear preset selections
+    extensionOptions.forEach(opt => {
+      opt.classList.remove('border-ocean-blue', 'bg-blue-50');
+      opt.classList.add('border-gray-200');
+    });
+    
+    updateNewReturnTime();
+  }
+  
+  function updateNewReturnTime() {
+    if (selectedMinutes > 0 && currentExpectedReturn) {
+      const newTime = new Date(currentExpectedReturn.getTime() + (selectedMinutes * 60 * 1000));
+      newReturnTime.textContent = newTime.toLocaleString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short'
+      });
+      confirmButton.disabled = false;
+    } else {
+      newReturnTime.textContent = 'Select an option above';
+      confirmButton.disabled = true;
+    }
+  }
+  
+  // Handle confirm extension
+  confirmButton.addEventListener('click', async () => {
+    if (selectedMinutes <= 0) return;
+    
+    try {
+      const response = await fetch('/api/extend-time', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          checkInId: currentCheckInId,
+          additionalMinutes: selectedMinutes,
+          reason: document.getElementById('extensionReason').value.trim() || null
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Show success message
+        alert(`✅ Return time extended by ${selectedMinutes} minutes!`);
+        closeModal();
+        
+        // Refresh the page or update the UI
+        window.location.reload();
+      } else {
+        alert(`❌ Failed to extend time: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Error extending time:', error);
+      alert('❌ An error occurred while extending time');
+    }
+  });
+  
+  // Handle cancel/close
+  cancelButton.addEventListener('click', closeModal);
+  closeButton.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closeModal();
+    }
+  });
+  
+  function closeModal() {
+    modal.classList.add('hidden');
+    resetForm();
+  }
+  
+  function resetForm() {
+    selectedMinutes = 0;
+    customHours.value = '';
+    customMinutes.value = '';
+    document.getElementById('extensionReason').value = '';
+    newReturnTime.textContent = 'Select an option above';
+    confirmButton.disabled = true;
+    
+    extensionOptions.forEach(opt => {
+      opt.classList.remove('border-ocean-blue', 'bg-blue-50');
+      opt.classList.add('border-gray-200');
+    });
+  }
+  
+  // Global function to open the modal
+  window.openTimeExtensionModal = function(checkInId, boatName, expectedReturn) {
+    currentCheckInId = checkInId;
+    currentExpectedReturn = new Date(expectedReturn);
+    
+    document.getElementById('extensionBoatName').textContent = boatName;
+    document.getElementById('extensionCurrentTime').textContent = 
+      `Current return: ${currentExpectedReturn.toLocaleString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short'
+      })}`;
+    
+    modal.classList.remove('hidden');
+  };
+</script>

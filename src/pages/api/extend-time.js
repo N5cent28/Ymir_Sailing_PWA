@@ -1,44 +1,100 @@
-import { getActiveCheckIns, updateCheckInTime, createNotification } from '../../lib/database-postgres.js';
+// Time Extension API
+// Handles extending boat return times
+
+import { updateCheckInTime, getActiveCheckIns } from '../../lib/database-postgres.js';
+import { sendPushNotification } from '../../lib/notifications.js';
 
 export async function POST({ request }) {
   try {
-    const { checkInId, newReturnTime } = await request.json();
+    const { checkInId, additionalMinutes, reason } = await request.json();
     
-    // Validate required fields
-    if (!checkInId || !newReturnTime) {
+    if (!checkInId || !additionalMinutes) {
       return new Response(JSON.stringify({ 
-        error: 'Missing required fields' 
+        success: false, 
+        error: 'Missing required fields: checkInId and additionalMinutes' 
       }), { 
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
     
-    // Update the check-in time
-    await updateCheckInTime(checkInId, newReturnTime);
+    // Validate additional minutes
+    const minutes = parseInt(additionalMinutes);
+    if (isNaN(minutes) || minutes <= 0 || minutes > 720) { // Max 12 hours
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Invalid extension time. Must be between 1 and 720 minutes (12 hours)' 
+      }), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
     
-    // Get the check-in details for notification
+    // Get current check-in info
     const activeCheckIns = await getActiveCheckIns();
     const checkIn = activeCheckIns.find(c => c.id === parseInt(checkInId));
     
-    if (checkIn) {
-      // Create notification
-      await createNotification(checkIn.boat_id, 'time_extension', 
-        `${checkIn.sailor_name} extended return time to ${new Date(newReturnTime).toLocaleString()}`
-      );
+    if (!checkIn) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Check-in not found or already completed' 
+      }), { 
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
+    
+    // Calculate new return time
+    const currentReturnTime = new Date(checkIn.expected_return);
+    const newReturnTime = new Date(currentReturnTime.getTime() + (minutes * 60 * 1000));
+    
+    // Update the check-in time
+    await updateCheckInTime(checkInId, newReturnTime.toISOString());
+    
+    // Send confirmation notification
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    let timeString = '';
+    if (hours > 0) {
+      timeString = `${hours} hour${hours > 1 ? 's' : ''}`;
+      if (remainingMinutes > 0) {
+        timeString += ` and ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}`;
+      }
+    } else {
+      timeString = `${minutes} minute${minutes > 1 ? 's' : ''}`;
+    }
+    
+    await sendPushNotification(
+      '⏰ Return Time Extended',
+      `Your return time for ${checkIn.boat_name} has been extended by ${timeString}. New return time: ${newReturnTime.toLocaleString()}`,
+      {
+        type: 'time_extension',
+        checkInId: checkInId,
+        memberNumber: checkIn.member_number,
+        boatName: checkIn.boat_name,
+        additionalMinutes: minutes,
+        newReturnTime: newReturnTime.toISOString(),
+        reason: reason || null
+      }
+    );
+    
+    // Log the extension for admin tracking
+    console.log(`Time extension: Member ${checkIn.member_number} extended ${checkIn.boat_name} by ${timeString}${reason ? ` (Reason: ${reason})` : ''}`);
     
     return new Response(JSON.stringify({ 
       success: true, 
-      message: `Return time extended to ${new Date(newReturnTime).toLocaleString()}`
+      message: `Return time extended by ${timeString}`,
+      newReturnTime: newReturnTime.toISOString(),
+      additionalMinutes: minutes
     }), { 
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
     
   } catch (error) {
-    console.error('Extend time error:', error);
+    console.error('Time extension error:', error);
     return new Response(JSON.stringify({ 
+      success: false,
       error: 'Internal server error' 
     }), { 
       status: 500,
@@ -50,82 +106,54 @@ export async function POST({ request }) {
 export async function GET({ request }) {
   try {
     const url = new URL(request.url);
-    const boatId = url.searchParams.get('boatId');
+    const checkInId = url.searchParams.get('checkInId');
     
-    if (!boatId) {
+    if (!checkInId) {
       return new Response(JSON.stringify({ 
-        error: 'Missing boat ID' 
+        success: false, 
+        error: 'Missing checkInId parameter' 
       }), { 
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
     
-    // Get active check-ins for this boat
-    const activeCheckIns = await getActiveCheckIns(boatId);
+    // Get check-in info
+    const activeCheckIns = await getActiveCheckIns();
+    const checkIn = activeCheckIns.find(c => c.id === parseInt(checkInId));
     
-    if (activeCheckIns.length === 0) {
+    if (!checkIn) {
       return new Response(JSON.stringify({ 
-        hasActiveCheckIn: false 
+        success: false, 
+        error: 'Check-in not found' 
       }), { 
-        status: 200,
+        status: 404,
         headers: { 'Content-Type': 'application/json' }
       });
     }
-    
-    const checkIn = activeCheckIns[0];
-    const expectedReturn = new Date(checkIn.expected_return);
-    const now = new Date();
-    const timeUntilReturn = expectedReturn - now;
-    const minutesUntilReturn = Math.floor(timeUntilReturn / (1000 * 60));
-    
-    // Check if return time is within 10 minutes
-    const isNearReturn = minutesUntilReturn <= 10 && minutesUntilReturn > -30; // Allow 30 min grace period
-    
-    if (!isNearReturn) {
-      return new Response(JSON.stringify({ 
-        hasActiveCheckIn: true,
-        isNearReturn: false,
-        minutesUntilReturn
-      }), { 
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-    
-    // Calculate extension options
-    const extensionOptions = [
-      { label: '15 minutes', minutes: 15 },
-      { label: '30 minutes', minutes: 30 },
-      { label: '1 hour', minutes: 60 }
-    ].map(option => ({
-      ...option,
-      newTime: new Date(expectedReturn.getTime() + option.minutes * 60 * 1000).toISOString()
-    }));
     
     return new Response(JSON.stringify({ 
-      hasActiveCheckIn: true,
-      isNearReturn: true,
-      minutesUntilReturn,
+      success: true,
       checkIn: {
         id: checkIn.id,
-        sailorName: checkIn.sailor_name,
+        boatName: checkIn.boat_name,
         expectedReturn: checkIn.expected_return,
-        departureTime: checkIn.departure_time
-      },
-      extensionOptions
+        memberNumber: checkIn.member_number,
+        sailorName: checkIn.sailor_name
+      }
     }), { 
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
     
   } catch (error) {
-    console.error('Get extension options error:', error);
+    console.error('Get check-in error:', error);
     return new Response(JSON.stringify({ 
+      success: false,
       error: 'Internal server error' 
     }), { 
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
   }
-} 
+}

@@ -562,6 +562,19 @@ export async function updateTripNotes(checkInId, notes, weatherConditions) {
   }
 }
 
+export async function updateCheckInTime(checkInId, newReturnTime) {
+  const client = await getClient();
+  try {
+    await client.query(
+      'UPDATE check_ins SET expected_return = $1 WHERE id = $2',
+      [newReturnTime, checkInId]
+    );
+    return { success: true };
+  } finally {
+    client.release();
+  }
+}
+
 export async function addTripPhoto(checkInId, memberNumber, photoUrl, caption = null) {
   const client = await getClient();
   try {

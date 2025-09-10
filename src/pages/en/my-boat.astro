@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import Navigation from '../../components/Navigation.astro';
 import MaintenanceModal from '../../components/MaintenanceModal.astro';
+import TimeExtensionModal from '../../components/TimeExtensionModal.astro';
 ---
 
 <Layout title="My Active Boat - Siglingafélagið Ýmir" lang="en">
@@ -98,13 +99,21 @@ import MaintenanceModal from '../../components/MaintenanceModal.astro';
               </div>
               
               <!-- Action Buttons -->
-              <div class="flex gap-3 mb-6">
-                <button
-                  id="checkInButton"
-                  class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
-                >
-                  ✅ Check In Now
-                </button>
+              <div class="flex flex-col gap-3 mb-6">
+                <div class="flex gap-3">
+                  <button
+                    id="checkInButton"
+                    class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                  >
+                    ✅ Check In Now
+                  </button>
+                  <button
+                    id="extendTimeButton"
+                    class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                  >
+                    ⏰ Extend Time
+                  </button>
+                </div>
                 <button
                   onclick="openMaintenanceModalFromMyBoat()"
                   class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
@@ -144,6 +153,7 @@ import MaintenanceModal from '../../components/MaintenanceModal.astro';
   </main>
 
   <MaintenanceModal />
+  <TimeExtensionModal />
 
   <script>
     const memberNumberInput = document.getElementById('memberNumber');
@@ -154,6 +164,7 @@ import MaintenanceModal from '../../components/MaintenanceModal.astro';
     const success = document.getElementById('success');
     const boatInfo = document.getElementById('boatInfo');
     const checkInButton = document.getElementById('checkInButton');
+    const extendTimeButton = document.getElementById('extendTimeButton');
     const errorMessage = document.getElementById('errorMessage');
 
     let currentCheckInId = null;
@@ -186,6 +197,34 @@ import MaintenanceModal from '../../components/MaintenanceModal.astro';
       } catch (err) {
         console.error('Error finding boat:', err);
         showError('An error occurred while searching for your boat');
+      }
+    });
+
+    // Handle extend time button click
+    extendTimeButton.addEventListener('click', () => {
+      if (currentCheckInId && currentBoatId) {
+        // Get boat info from the displayed data
+        const boatNameElement = document.querySelector('#boatInfo .text-gray-900');
+        const expectedReturnElement = document.querySelectorAll('#boatInfo .text-gray-900')[2];
+        
+        if (boatNameElement && expectedReturnElement) {
+          const boatName = boatNameElement.textContent;
+          const expectedReturn = expectedReturnElement.textContent;
+          
+          // Parse the expected return time
+          const returnDate = new Date(expectedReturn);
+          
+          // Open the extension modal
+          if (window.openTimeExtensionModal) {
+            window.openTimeExtensionModal(currentCheckInId, boatName, returnDate);
+          } else {
+            alert('Time extension feature is loading...');
+          }
+        } else {
+          alert('Unable to get boat information for time extension');
+        }
+      } else {
+        alert('No active boat found');
       }
     });
 
