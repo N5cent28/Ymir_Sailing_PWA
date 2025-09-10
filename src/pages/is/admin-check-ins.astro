@@ -2,6 +2,7 @@
 // Admin Check-ins Management Page - Icelandic
 import Layout from '../../layouts/Layout.astro';
 import { getAllActiveCheckIns } from '../../lib/database-postgres.js';
+import { isOverdue, formatTimeForDisplay, getTimeUntilReturn } from '../../lib/frontend-timezone.js';
 
 // Get all active check-ins across all boats
 let activeCheckIns = [];
@@ -54,12 +55,7 @@ try {
             <div class="flex-1">
               <h3 class="text-lg font-semibold text-gray-900">Sein báta</h3>
               <p class="text-3xl font-bold text-orange-600">
-                {activeCheckIns.filter(checkIn => {
-                  // Fix timezone issue: expected_return times are stored incorrectly
-                  const expectedReturn = new Date(checkIn.expected_return);
-                  expectedReturn.setHours(expectedReturn.getHours() + 5); // Add 5 hours to convert back to correct time
-                  return expectedReturn < new Date();
-                }).length}
+                {activeCheckIns.filter(checkIn => isOverdue(checkIn.expected_return)).length}
               </p>
             </div>
             <div class="text-orange-500">
@@ -104,10 +100,7 @@ try {
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
                 {activeCheckIns.map((checkIn) => {
-                  // Fix timezone issue: expected_return times are stored incorrectly
-                  const expectedReturnTime = new Date(checkIn.expected_return);
-                  expectedReturnTime.setHours(expectedReturnTime.getHours() + 5); // Add 5 hours to convert back to correct time
-                  const isOverdue = expectedReturnTime < new Date();
+                  const isOverdueCheck = isOverdue(checkIn.expected_return);
                   const departureTime = new Date(checkIn.departure_time).toLocaleString('is-IS');
                   const expectedReturn = new Date(checkIn.expected_return).toLocaleString('is-IS');
                   
@@ -130,10 +123,10 @@ try {
                         {departureTime}
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap">
-                        <div class={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-gray-900'}`}>
+                        <div class={`text-sm ${isOverdueCheck ? 'text-red-600 font-medium' : 'text-gray-900'}`}>
                           {expectedReturn}
                         </div>
-                        {isOverdue && (
+                        {isOverdueCheck && (
                           <div class="text-xs text-red-500">
                             {Math.floor((new Date() - new Date(checkIn.expected_return)) / (1000 * 60 * 60))}kl seint
                           </div>
@@ -141,11 +134,11 @@ try {
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap">
                         <span class={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          isOverdue 
+                          isOverdueCheck 
                             ? 'bg-red-100 text-red-800' 
                             : 'bg-green-100 text-green-800'
                         }`}>
-                          {isOverdue ? 'Seint' : 'Rétt á tíma'}
+                          {isOverdueCheck ? 'Seint' : 'Rétt á tíma'}
                         </span>
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
