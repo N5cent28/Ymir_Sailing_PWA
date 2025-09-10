@@ -583,7 +583,14 @@ console.log('- activeCheckIns:', activeCheckIns);
           <div class="space-y-2">
             ${activeCheckIns.map(checkIn => `
               <div class="text-xs text-blue-800">
-                <strong>${checkIn.sailor_name}</strong> - Expected back: ${new Date(checkIn.expected_return).toLocaleString()}
+                <strong>${checkIn.sailor_name}</strong> - Expected back: ${new Date(checkIn.expected_return).toLocaleString('en-US', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  timeZoneName: 'short'
+                })}
               </div>
             `).join('')}
           </div>
@@ -597,8 +604,24 @@ console.log('- activeCheckIns:', activeCheckIns);
       }
       
       function showEasyCheckIn(checkIn) {
-        const departureTime = new Date(checkIn.departure_time).toLocaleString();
-        const expectedReturn = new Date(checkIn.expected_return).toLocaleString();
+        const departureTime = new Date(checkIn.departure_time).toLocaleString('en-US', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          timeZoneName: 'short'
+        });
+        const expectedReturn = new Date(checkIn.expected_return).toLocaleString('en-US', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          timeZoneName: 'short'
+        });
         
         activeCheckInInfo.innerHTML = `
           <div class="text-sm">
