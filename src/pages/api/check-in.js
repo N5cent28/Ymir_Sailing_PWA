@@ -101,6 +101,11 @@ export async function POST({ request }) {
     
     console.log('Expected return (local):', expectedReturn);
     console.log('Expected return (UTC):', expectedReturnUTC);
+    console.log('Current timezone offset:', new Date().getTimezoneOffset());
+    console.log('Browser timezone:', Intl.DateTimeFormat().resolvedOptions().timeZone);
+    console.log('Date object created:', expectedReturnDate);
+    console.log('Date object local string:', expectedReturnDate.toLocaleString());
+    console.log('Date object UTC string:', expectedReturnDate.toISOString());
     
     // Create check-in with member info
     const checkInId = await createCheckIn(boatId, sailorName, departureTime, expectedReturnUTC, memberNumber, phone);
