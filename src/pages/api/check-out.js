@@ -1,4 +1,4 @@
-import { completeCheckIn, getActiveCheckIns, createNotification, updateCheckinChecklist, updateTripNotes } from '../../lib/database-postgres.js';
+import { completeCheckIn, getAllActiveCheckIns, createNotification, updateCheckinChecklist, updateTripNotes } from '../../lib/database-postgres.js';
 import { sendCheckInConfirmation } from '../../lib/notifications.js';
 
 export async function POST({ request }) {
@@ -16,7 +16,7 @@ export async function POST({ request }) {
     }
     
     // Get active check-in
-    const activeCheckIns = await getActiveCheckIns();
+    const activeCheckIns = await getAllActiveCheckIns();
     const checkIn = activeCheckIns.find(c => c.id === parseInt(checkInId));
     
     if (!checkIn) {
