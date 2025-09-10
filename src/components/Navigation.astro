@@ -57,6 +57,7 @@ const items = navItems[currentLang as keyof typeof navItems];
         </div>
       </div>
       
+      <!-- Desktop Navigation -->
       <div class="hidden md:flex items-center space-x-8">
         {items.map((item) => (
           <a
@@ -83,6 +84,49 @@ const items = navItems[currentLang as keyof typeof navItems];
           {currentLang === 'en' ? 'IS' : 'EN'}
         </a>
       </div>
+
+      <!-- Mobile Menu Button -->
+      <div class="md:hidden">
+        <button
+          id="mobile-menu-button"
+          class="text-anchor-gray hover:text-ocean-blue p-2 rounded-md transition-colors"
+          aria-label="Open menu"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Menu Dropdown -->
+  <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-200">
+    <div class="px-2 pt-2 pb-3 space-y-1">
+      {items.map((item) => (
+        <a
+          href={item.href}
+          class="text-anchor-gray hover:text-ocean-blue block px-3 py-2 rounded-md text-base font-medium transition-colors relative"
+        >
+          {item.label}
+          {item.hasBadge && (
+            <span 
+              id={`mobile-badge-${item.href.split('/').pop()}`}
+              class="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1 hidden"
+            >
+              0
+            </span>
+          )}
+        </a>
+      ))}
+      
+      <!-- Language Toggle for Mobile -->
+      <a
+        href={currentLang === 'en' ? '/is' : '/en'}
+        class="text-anchor-gray hover:text-ocean-blue block px-3 py-2 rounded-md text-base font-medium transition-colors"
+      >
+        {currentLang === 'en' ? 'IS' : 'EN'}
+      </a>
     </div>
   </div>
 </nav>
@@ -136,4 +180,24 @@ const items = navItems[currentLang as keyof typeof navItems];
 
   // Refresh count every 30 seconds
   setInterval(loadUnreadMessageCount, 30000);
+
+  // Mobile menu toggle
+  const mobileMenuButton = document.getElementById('mobile-menu-button');
+  const mobileMenu = document.getElementById('mobile-menu');
+  
+  if (mobileMenuButton && mobileMenu) {
+    mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+      
+      // Update button icon
+      const icon = mobileMenuButton.querySelector('svg');
+      if (mobileMenu.classList.contains('hidden')) {
+        // Show hamburger icon
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>';
+      } else {
+        // Show X icon
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
+      }
+    });
+  }
 </script> 

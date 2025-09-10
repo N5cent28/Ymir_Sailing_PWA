@@ -431,7 +431,7 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
         const adminInfo = document.querySelector('.admin-info');
         if (adminInfo) {
           adminInfo.innerHTML = `
-            <span class="text-sm">Logged in as: ${member.name} (${member.memberNumber})</span>
+            <span class="text-sm">Logged in as: ${member.name} (${member.member_number})</span>
             <button 
               onclick="logout()" 
               class="px-4 py-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-colors text-sm"
