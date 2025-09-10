@@ -638,12 +638,12 @@ console.log('- activeCheckIns:', activeCheckIns);
         easyCheckIn.classList.add('hidden');
         takeBoatOverForm.classList.remove('hidden');
         
-        // Set default return time (2 hours from now)
-        const now = new Date();
-        const returnTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-        // Store in UTC by using toISOString() directly
-        const returnDateTime = returnTime.toISOString().slice(0, 16);
-        document.getElementById('takeOverReturn').value = returnDateTime;
+      // Set default return time (2 hours from now)
+      const now = new Date();
+      const returnTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+      // Convert to local time for datetime-local input
+      const returnDateTime = returnTime.toISOString().slice(0, 16);
+      document.getElementById('takeOverReturn').value = returnDateTime;
       });
       
       // Handle cancel take over button click
@@ -794,7 +794,7 @@ console.log('- activeCheckIns:', activeCheckIns);
         if (returnInput) {
           const now = new Date();
           const returnTime = new Date(now.getTime() + 2 * 60 * 60 * 1000); // 2 hours from now
-          // Store in UTC by using toISOString() directly
+          // Convert to local time for datetime-local input
           const returnDateTime = returnTime.toISOString().slice(0, 16);
           returnInput.value = returnDateTime;
         }

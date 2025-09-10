@@ -92,8 +92,18 @@ export async function POST({ request }) {
     }
     
     console.log('🔍 Creating check-in...');
+    
+    // Convert expectedReturn from local time to UTC
+    // The datetime-local input gives us "YYYY-MM-DDTHH:MM" in local time
+    // We need to create a Date object and convert to UTC
+    const expectedReturnDate = new Date(expectedReturn);
+    const expectedReturnUTC = expectedReturnDate.toISOString();
+    
+    console.log('Expected return (local):', expectedReturn);
+    console.log('Expected return (UTC):', expectedReturnUTC);
+    
     // Create check-in with member info
-    const checkInId = await createCheckIn(boatId, sailorName, departureTime, expectedReturn, memberNumber, phone);
+    const checkInId = await createCheckIn(boatId, sailorName, departureTime, expectedReturnUTC, memberNumber, phone);
     console.log('✅ Check-in created with ID:', checkInId);
     
     // Update safety checklist status if provided
@@ -154,9 +164,9 @@ export async function POST({ request }) {
     
     // Send push notification
     if (takeOver) {
-      await sendCheckOutConfirmation(sailorName, boat.name, expectedReturn, 'take_over');
+      await sendCheckOutConfirmation(sailorName, boat.name, expectedReturnUTC, 'take_over');
     } else {
-      await sendCheckOutConfirmation(sailorName, boat.name, expectedReturn);
+      await sendCheckOutConfirmation(sailorName, boat.name, expectedReturnUTC);
     }
     
     return new Response(JSON.stringify({ 
