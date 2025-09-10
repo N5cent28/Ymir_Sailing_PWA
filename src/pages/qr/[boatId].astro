@@ -641,8 +641,13 @@ console.log('- activeCheckIns:', activeCheckIns);
       // Set default return time (2 hours from now)
       const now = new Date();
       const returnTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-      // Convert to local time for datetime-local input
-      const returnDateTime = returnTime.toISOString().slice(0, 16);
+      // Convert to local time for datetime-local input (YYYY-MM-DDTHH:MM format)
+      const year = returnTime.getFullYear();
+      const month = String(returnTime.getMonth() + 1).padStart(2, '0');
+      const day = String(returnTime.getDate()).padStart(2, '0');
+      const hours = String(returnTime.getHours()).padStart(2, '0');
+      const minutes = String(returnTime.getMinutes()).padStart(2, '0');
+      const returnDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
       document.getElementById('takeOverReturn').value = returnDateTime;
       });
       
@@ -794,8 +799,13 @@ console.log('- activeCheckIns:', activeCheckIns);
         if (returnInput) {
           const now = new Date();
           const returnTime = new Date(now.getTime() + 2 * 60 * 60 * 1000); // 2 hours from now
-          // Convert to local time for datetime-local input
-          const returnDateTime = returnTime.toISOString().slice(0, 16);
+          // Convert to local time for datetime-local input (YYYY-MM-DDTHH:MM format)
+          const year = returnTime.getFullYear();
+          const month = String(returnTime.getMonth() + 1).padStart(2, '0');
+          const day = String(returnTime.getDate()).padStart(2, '0');
+          const hours = String(returnTime.getHours()).padStart(2, '0');
+          const minutes = String(returnTime.getMinutes()).padStart(2, '0');
+          const returnDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
           returnInput.value = returnDateTime;
         }
       }

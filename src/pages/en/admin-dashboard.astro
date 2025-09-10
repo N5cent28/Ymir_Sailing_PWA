@@ -65,6 +65,12 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
             Admin Dashboard
           </h1>
           <div class="admin-info flex items-center space-x-4">
+            <button 
+              id="testNotificationBtn"
+              class="px-4 py-2 bg-yellow-600 bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-colors text-sm"
+            >
+              🧪 Test Notifications
+            </button>
             <span class="text-sm">Logged in as Admin</span>
             <a 
               href="/en/admin-login" 
@@ -450,6 +456,53 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
     function logout() {
       localStorage.removeItem('adminMember');
       window.location.href = '/en/admin-login';
+    }
+
+    // Test notification button
+    const testNotificationBtn = document.getElementById('testNotificationBtn');
+    if (testNotificationBtn) {
+      testNotificationBtn.addEventListener('click', async () => {
+        try {
+          // Check if notifications are supported
+          if (!('Notification' in window)) {
+            alert('This browser does not support notifications');
+            return;
+          }
+
+          // Check permission
+          let permission = Notification.permission;
+          if (permission === 'default') {
+            permission = await Notification.requestPermission();
+          }
+
+          if (permission === 'granted') {
+            // Show test notification
+            const notification = new Notification('🧪 Test Notification', {
+              body: 'This is a test notification from Ymir Sailing Club!',
+              icon: '/icon-192.svg',
+              badge: '/icon-192.svg',
+              vibrate: [100, 50, 100],
+              data: {
+                type: 'test',
+                timestamp: new Date().toISOString()
+              }
+            });
+
+            // Also trigger the notification check API
+            const response = await fetch('/api/notification-check?action=test&memberNumber=1234');
+            const result = await response.json();
+            
+            if (result.success) {
+              console.log('Test notification sent via API');
+            }
+          } else {
+            alert('Notification permission denied. Please enable notifications in your browser settings.');
+          }
+        } catch (error) {
+          console.error('Error testing notifications:', error);
+          alert('Error testing notifications: ' + error.message);
+        }
+      });
     }
 
     // Quick export functionality
