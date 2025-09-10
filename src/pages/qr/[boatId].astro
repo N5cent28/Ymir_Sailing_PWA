@@ -32,9 +32,24 @@ export async function getStaticPaths() {
 const { boatId } = Astro.params;
 const { boatName } = Astro.props;
 
-// Get boat status from database
-const boat = await getBoatStatus(boatId);
-const activeCheckIns = await getActiveCheckIns(boatId);
+// Get boat status from database (handle build time when DB is not available)
+let boat = null;
+let activeCheckIns = [];
+
+try {
+  boat = await getBoatStatus(boatId);
+  activeCheckIns = await getActiveCheckIns(boatId);
+} catch (error) {
+  console.log('Database not available during build time:', error.message);
+  // Use fallback data for build time
+  boat = {
+    id: boatId,
+    name: boatName,
+    status: 'operational',
+    boat_type: 'individual'
+  };
+  activeCheckIns = [];
+}
 
 // Debug logging for page load
 console.log('🔍 PAGE LOAD DEBUG:');

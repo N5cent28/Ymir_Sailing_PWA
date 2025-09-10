@@ -1,14 +1,22 @@
 import pkg from 'pg';
 const { Pool } = pkg;
 
-// Create a connection pool
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-});
+// Create a connection pool only if DATABASE_URL is available
+let pool = null;
+if (process.env.DATABASE_URL) {
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  });
+}
 
 // Initialize database tables
 async function initializeDatabase() {
+  if (!pool) {
+    console.log('Database not available during build time');
+    return;
+  }
+  
   const client = await pool.connect();
   try {
     await client.query(`
@@ -215,6 +223,9 @@ initializeDatabase().catch(console.error);
 
 // Helper function to get a client from the pool
 async function getClient() {
+  if (!pool) {
+    throw new Error('Database not available - DATABASE_URL not set');
+  }
   return await pool.connect();
 }
 
@@ -557,19 +568,6 @@ export async function updateTripNotes(checkInId, notes, weatherConditions) {
       'UPDATE check_ins SET trip_notes = $1, weather_conditions = $2 WHERE id = $3',
       [notes, weatherConditions, checkInId]
     );
-  } finally {
-    client.release();
-  }
-}
-
-export async function updateCheckInTime(checkInId, newReturnTime) {
-  const client = await getClient();
-  try {
-    await client.query(
-      'UPDATE check_ins SET expected_return = $1 WHERE id = $2',
-      [newReturnTime, checkInId]
-    );
-    return { success: true };
   } finally {
     client.release();
   }
