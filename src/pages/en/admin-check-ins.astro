@@ -101,8 +101,22 @@ try {
               <tbody class="bg-white divide-y divide-gray-200">
                 {activeCheckIns.map((checkIn) => {
                   const isOverdueCheck = isOverdue(checkIn.expected_return);
-                  const departureTime = new Date(checkIn.departure_time).toLocaleString();
-                  const expectedReturn = new Date(checkIn.expected_return).toLocaleString();
+                  const departureTime = new Date(checkIn.departure_time).toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZoneName: 'short'
+                  });
+                  const expectedReturn = new Date(checkIn.expected_return).toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZoneName: 'short'
+                  });
                   
                   return (
                     <tr class="hover:bg-gray-50" data-checkin-id={checkIn.id}>

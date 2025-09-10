@@ -641,7 +641,8 @@ console.log('- activeCheckIns:', activeCheckIns);
         // Set default return time (2 hours from now)
         const now = new Date();
         const returnTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-        const returnDateTime = new Date(returnTime.getTime() - returnTime.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        // Store in UTC by using toISOString() directly
+        const returnDateTime = returnTime.toISOString().slice(0, 16);
         document.getElementById('takeOverReturn').value = returnDateTime;
       });
       
@@ -793,7 +794,8 @@ console.log('- activeCheckIns:', activeCheckIns);
         if (returnInput) {
           const now = new Date();
           const returnTime = new Date(now.getTime() + 2 * 60 * 60 * 1000); // 2 hours from now
-          const returnDateTime = new Date(returnTime.getTime() - returnTime.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+          // Store in UTC by using toISOString() directly
+          const returnDateTime = returnTime.toISOString().slice(0, 16);
           returnInput.value = returnDateTime;
         }
       }

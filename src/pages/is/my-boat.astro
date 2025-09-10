@@ -219,8 +219,25 @@ import MaintenanceModal from '../../components/MaintenanceModal.astro';
       function showActiveBoat(boat) {
         hideAll();
         
-        const departureTime = new Date(boat.departure_time).toLocaleString('is-IS');
-        const expectedReturn = new Date(boat.expected_return).toLocaleString('is-IS');
+        // Format times in user's local timezone with clear timezone info
+        const departureTime = new Date(boat.departure_time).toLocaleString('is-IS', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          timeZoneName: 'short'
+        });
+        const expectedReturn = new Date(boat.expected_return).toLocaleString('is-IS', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          timeZoneName: 'short'
+        });
         
         boatInfo.innerHTML = `
           <div class="grid grid-cols-1 gap-3">
