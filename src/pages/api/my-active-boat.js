@@ -1,4 +1,4 @@
-import { getActiveCheckInsWithBoatNames } from '../../lib/database-postgres.js';
+import { getAllActiveCheckIns } from '../../lib/database-postgres.js';
 
 export async function GET({ request }) {
   try {
@@ -15,7 +15,7 @@ export async function GET({ request }) {
     }
     
     // Get all active check-ins with boat names
-    const activeCheckIns = await getActiveCheckInsWithBoatNames();
+    const activeCheckIns = await getAllActiveCheckIns();
     
     // Find the active check-in for this member
     const activeBoat = activeCheckIns.find(checkIn => 
