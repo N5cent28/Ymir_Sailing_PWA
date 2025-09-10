@@ -5,6 +5,7 @@ export default {
     extend: {
       colors: {
         'ocean-green': '#059669',
+        'ocean-blue': '#2563eb',
         'sail-white': '#f8fafc',
         'anchor-gray': '#475569',
       },
