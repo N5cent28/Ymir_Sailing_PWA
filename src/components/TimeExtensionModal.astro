@@ -43,7 +43,6 @@
               data-minutes="15"
             >
               <div class="text-lg font-semibold">15 min</div>
-              <div class="text-sm text-gray-600">Quick extension</div>
             </button>
             
             <button 
@@ -51,7 +50,6 @@
               data-minutes="30"
             >
               <div class="text-lg font-semibold">30 min</div>
-              <div class="text-sm text-gray-600">Standard extension</div>
             </button>
             
             <button 
@@ -59,37 +57,10 @@
               data-minutes="60"
             >
               <div class="text-lg font-semibold">1 hour</div>
-              <div class="text-sm text-gray-600">Extended sail</div>
             </button>
           </div>
         </div>
         
-        <!-- Custom Time Input -->
-        <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            Or enter custom time:
-          </label>
-          <div class="flex space-x-2">
-            <input
-              type="number"
-              id="customHours"
-              min="0"
-              max="1"
-              placeholder="0"
-              class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean-blue"
-            />
-            <span class="flex items-center text-gray-600">hours</span>
-            <input
-              type="number"
-              id="customMinutes"
-              min="0"
-              max="59"
-              placeholder="0"
-              class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean-blue"
-            />
-            <span class="flex items-center text-gray-600">minutes</span>
-          </div>
-        </div>
         
         <!-- Reason (Optional) -->
         <div class="mb-6">
@@ -99,9 +70,13 @@
           <textarea
             id="extensionReason"
             rows="2"
+            maxlength="100"
             placeholder="e.g., Weather conditions, mechanical issue, enjoying the sail..."
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean-blue"
           ></textarea>
+          <div class="text-xs text-gray-500 mt-1">
+            <span id="reasonCharCount">0</span>/100 characters
+          </div>
         </div>
         
         <!-- New Return Time Display -->
@@ -140,13 +115,13 @@
   
   // Extension option buttons
   const extensionOptions = document.querySelectorAll('.extension-option');
-  const customHours = document.getElementById('customHours');
-  const customMinutes = document.getElementById('customMinutes');
   const newReturnTime = document.getElementById('newReturnTime');
   const confirmButton = document.getElementById('confirmExtension');
   const cancelButton = document.getElementById('cancelExtension');
   const closeButton = document.getElementById('closeTimeExtensionModal');
   const modal = document.getElementById('timeExtensionModal');
+  const reasonTextarea = document.getElementById('extensionReason');
+  const reasonCharCount = document.getElementById('reasonCharCount');
   
   // Handle extension option selection
   extensionOptions.forEach(option => {
@@ -166,23 +141,17 @@
     });
   });
   
-  // Handle custom time input
-  customHours.addEventListener('input', updateCustomTime);
-  customMinutes.addEventListener('input', updateCustomTime);
-  
-  function updateCustomTime() {
-    const hours = parseInt(customHours.value) || 0;
-    const minutes = parseInt(customMinutes.value) || 0;
-    selectedMinutes = (hours * 60) + minutes;
+  // Handle reason character counting
+  reasonTextarea.addEventListener('input', () => {
+    const count = reasonTextarea.value.length;
+    reasonCharCount.textContent = count;
     
-    // Clear preset selections
-    extensionOptions.forEach(opt => {
-      opt.classList.remove('border-ocean-blue', 'bg-blue-50');
-      opt.classList.add('border-gray-200');
-    });
-    
-    updateNewReturnTime();
-  }
+    if (count > 100) {
+      reasonCharCount.classList.add('text-red-500');
+    } else {
+      reasonCharCount.classList.remove('text-red-500');
+    }
+  });
   
   function updateNewReturnTime() {
     if (selectedMinutes > 0 && currentExpectedReturn) {
@@ -253,9 +222,9 @@
   
   function resetForm() {
     selectedMinutes = 0;
-    customHours.value = '';
-    customMinutes.value = '';
-    document.getElementById('extensionReason').value = '';
+    reasonTextarea.value = '';
+    reasonCharCount.textContent = '0';
+    reasonCharCount.classList.remove('text-red-500');
     newReturnTime.textContent = 'Select an option above';
     confirmButton.disabled = true;
     

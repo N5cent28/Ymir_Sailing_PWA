@@ -1,7 +1,7 @@
 // Time Extension API
 // Handles extending boat return times
 
-import { updateCheckInTime, getActiveCheckIns } from '../../lib/database-postgres.js';
+import { updateCheckInTime, getActiveCheckIns, createNotification } from '../../lib/database-postgres.js';
 import { sendPushNotification } from '../../lib/notifications.js';
 
 export async function POST({ request }) {
@@ -77,6 +77,17 @@ export async function POST({ request }) {
         reason: reason || null
       }
     );
+    
+    // Create admin notification for the extension
+    if (reason) {
+      await createNotification(checkIn.boat_id, 'time_extension', 
+        `Member ${checkIn.member_number} extended ${checkIn.boat_name} by ${timeString}. Reason: ${reason}`
+      );
+    } else {
+      await createNotification(checkIn.boat_id, 'time_extension', 
+        `Member ${checkIn.member_number} extended ${checkIn.boat_name} by ${timeString}`
+      );
+    }
     
     // Log the extension for admin tracking
     console.log(`Time extension: Member ${checkIn.member_number} extended ${checkIn.boat_name} by ${timeString}${reason ? ` (Reason: ${reason})` : ''}`);

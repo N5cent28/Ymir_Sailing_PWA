@@ -169,6 +169,7 @@ import TimeExtensionModal from '../../components/TimeExtensionModal.astro';
 
     let currentCheckInId = null;
     let currentBoatId = null;
+    let currentBoat = null;
 
     // Handle find boat button click
     findBoatBtn.addEventListener('click', async () => {
@@ -205,14 +206,12 @@ import TimeExtensionModal from '../../components/TimeExtensionModal.astro';
       if (currentCheckInId && currentBoatId) {
         // Get boat info from the displayed data
         const boatNameElement = document.querySelector('#boatInfo .text-gray-900');
-        const expectedReturnElement = document.querySelectorAll('#boatInfo .text-gray-900')[2];
         
-        if (boatNameElement && expectedReturnElement) {
+        if (boatNameElement) {
           const boatName = boatNameElement.textContent;
-          const expectedReturn = expectedReturnElement.textContent;
           
-          // Parse the expected return time
-          const returnDate = new Date(expectedReturn);
+          // Use the raw expected return time from the boat data (stored in UTC)
+          const returnDate = new Date(currentBoat.expected_return);
           
           // Open the extension modal
           if (window.openTimeExtensionModal) {
@@ -319,6 +318,7 @@ import TimeExtensionModal from '../../components/TimeExtensionModal.astro';
       
       currentCheckInId = boat.id;
       currentBoatId = boat.boat_id;
+      currentBoat = boat;
       activeBoat.classList.remove('hidden');
     }
 
