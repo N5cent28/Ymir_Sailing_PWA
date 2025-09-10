@@ -1,7 +1,7 @@
 // Time Extension API
 // Handles extending boat return times
 
-import { updateCheckInTime, getActiveCheckIns, createNotification } from '../../lib/database-postgres.js';
+import { updateCheckInTime, getAllActiveCheckIns, createNotification } from '../../lib/database-postgres.js';
 import { sendPushNotification } from '../../lib/notifications.js';
 
 export async function POST({ request }) {
@@ -31,7 +31,7 @@ export async function POST({ request }) {
     }
     
     // Get current check-in info
-    const activeCheckIns = await getActiveCheckIns();
+    const activeCheckIns = await getAllActiveCheckIns();
     const checkIn = activeCheckIns.find(c => c.id === parseInt(checkInId));
     
     if (!checkIn) {
@@ -130,7 +130,7 @@ export async function GET({ request }) {
     }
     
     // Get check-in info
-    const activeCheckIns = await getActiveCheckIns();
+    const activeCheckIns = await getAllActiveCheckIns();
     const checkIn = activeCheckIns.find(c => c.id === parseInt(checkInId));
     
     if (!checkIn) {
