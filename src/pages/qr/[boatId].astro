@@ -445,8 +445,8 @@ console.log('- activeCheckIns:', activeCheckIns);
         console.log('🌍 User timezone detected:', userTimezone);
         
         // Set timezone for both forms
-        const userTimezoneInput = document.getElementById('userTimezone');
-        const takeOverUserTimezoneInput = document.getElementById('takeOverUserTimezone');
+        const userTimezoneInput = document.getElementById('userTimezone') as HTMLInputElement | null;
+        const takeOverUserTimezoneInput = document.getElementById('takeOverUserTimezone') as HTMLInputElement | null;
         
         if (userTimezoneInput) {
           userTimezoneInput.value = userTimezone;
@@ -460,7 +460,7 @@ console.log('- activeCheckIns:', activeCheckIns);
       setUserTimezone();
       
       // Get boatId from a data attribute instead of template literal
-      let boatId = document.querySelector('[data-boat-id]')?.getAttribute('data-boat-id');
+      let boatId = document.querySelector('[data-boat-id]')?.getAttribute('data-boat-id') || null;
       
       // Fallback: try to get boatId from URL if data attribute is not available
       if (!boatId) {

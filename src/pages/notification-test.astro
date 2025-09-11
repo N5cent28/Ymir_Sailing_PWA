@@ -1,0 +1,157 @@
+---
+// Simple Notification Test Page
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Notification Test">
+  <div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-2xl mx-auto px-4">
+      <div class="bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-6 text-center">🔔 Notification Test</h1>
+        
+        <div class="space-y-6">
+          <!-- Status -->
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h2 class="text-lg font-semibold text-blue-900 mb-3">Current Status</h2>
+            <div id="status" class="text-sm text-blue-800">
+              <p>Checking notification support...</p>
+            </div>
+          </div>
+          
+          <!-- Test Button -->
+          <div class="text-center">
+            <button 
+              id="testBtn" 
+              class="px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-lg font-semibold"
+            >
+              🔔 Send Test Notification
+            </button>
+            <p class="text-sm text-gray-600 mt-2">
+              Click to send a test notification to your device
+            </p>
+          </div>
+          
+          <!-- Instructions -->
+          <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-yellow-900 mb-2">What to expect:</h3>
+            <ul class="text-sm text-yellow-800 space-y-1">
+              <li>• Browser will ask for notification permission (if not already granted)</li>
+              <li>• A notification should appear in your system notification area</li>
+              <li>• Look for it in the top-right corner (Windows/Mac) or notification panel</li>
+              <li>• The notification will auto-close after 5 seconds</li>
+            </ul>
+          </div>
+          
+          <!-- Troubleshooting -->
+          <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Troubleshooting:</h3>
+            <ul class="text-sm text-gray-700 space-y-1">
+              <li>• Make sure your browser allows notifications for this site</li>
+              <li>• Check your system's "Do Not Disturb" settings</li>
+              <li>• Try refreshing the page and testing again</li>
+              <li>• Check the browser console (F12) for any error messages</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  // Check notification status
+  function updateStatus() {
+    const statusDiv = document.getElementById('status');
+    
+    if (!('Notification' in window)) {
+      statusDiv.innerHTML = '<p class="text-red-600">❌ Notifications not supported in this browser</p>';
+      return false;
+    }
+    
+    const permission = Notification.permission;
+    let statusHTML = '<p class="text-green-600">✅ Notifications supported</p>';
+    
+    if (permission === 'granted') {
+      statusHTML += '<p class="text-green-600">✅ Permission granted - ready to test!</p>';
+    } else if (permission === 'denied') {
+      statusHTML += '<p class="text-red-600">❌ Permission denied - check browser settings</p>';
+    } else {
+      statusHTML += '<p class="text-yellow-600">⚠️ Permission not set - will ask when you test</p>';
+    }
+    
+    statusDiv.innerHTML = statusHTML;
+    return permission === 'granted';
+  }
+  
+  // Test notification
+  document.getElementById('testBtn').addEventListener('click', async () => {
+    const button = document.getElementById('testBtn');
+    const originalText = button.innerHTML;
+    
+    try {
+      button.innerHTML = '⏳ Sending...';
+      button.disabled = true;
+      
+      if (!('Notification' in window)) {
+        alert('❌ Notifications not supported in this browser');
+        return;
+      }
+      
+      let permission = Notification.permission;
+      if (permission === 'default') {
+        permission = await Notification.requestPermission();
+      }
+      
+      if (permission === 'granted') {
+        console.log('🔔 Creating test notification...');
+        
+        const notification = new Notification('🧪 Test Notification', {
+          body: 'Hello! This is a test notification from Ymir Sailing Club.',
+          icon: '/icon-192.svg',
+          badge: '/icon-192.svg',
+          vibrate: [100, 50, 100],
+          tag: 'test-notification',
+          requireInteraction: false
+        });
+        
+        notification.onclick = function() {
+          console.log('Notification clicked!');
+          window.focus();
+          notification.close();
+        };
+        
+        notification.onshow = function() {
+          console.log('✅ Notification displayed!');
+        };
+        
+        notification.onerror = function(error) {
+          console.error('❌ Notification error:', error);
+        };
+        
+        // Auto-close after 5 seconds
+        setTimeout(() => {
+          notification.close();
+        }, 5000);
+        
+        alert('✅ Test notification sent! Check your system notification area.');
+        updateStatus();
+        
+      } else {
+        alert('❌ Notification permission denied. Please enable notifications in your browser settings.');
+        updateStatus();
+      }
+      
+    } catch (error) {
+      console.error('Error:', error);
+      alert('❌ Error: ' + error.message);
+    } finally {
+      button.innerHTML = originalText;
+      button.disabled = false;
+    }
+  });
+  
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    updateStatus();
+  });
+</script>

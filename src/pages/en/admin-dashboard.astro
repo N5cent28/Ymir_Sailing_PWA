@@ -477,19 +477,31 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
     if (testNotificationBtn) {
       testNotificationBtn.addEventListener('click', async () => {
         try {
+          // Update button to show loading state
+          const originalText = testNotificationBtn.innerHTML;
+          testNotificationBtn.innerHTML = '⏳ Testing...';
+          testNotificationBtn.disabled = true;
+
           // Check if notifications are supported
           if (!('Notification' in window)) {
             alert('This browser does not support notifications');
             return;
           }
 
+          console.log('🔔 Testing push notifications...');
+          console.log('Current permission:', Notification.permission);
+
           // Check permission
           let permission = Notification.permission;
           if (permission === 'default') {
+            console.log('Requesting notification permission...');
             permission = await Notification.requestPermission();
+            console.log('Permission result:', permission);
           }
 
           if (permission === 'granted') {
+            console.log('✅ Permission granted, creating notification...');
+            
             // Show test notification
             const notification = new Notification('🧪 Test Notification', {
               body: 'This is a test notification from Ymir Sailing Club!',
@@ -502,19 +514,54 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
               }
             });
 
+            // Add event listeners to the notification
+            notification.onclick = function() {
+              console.log('Notification clicked!');
+              window.focus();
+              notification.close();
+            };
+
+            notification.onshow = function() {
+              console.log('✅ Notification displayed successfully!');
+            };
+
+            notification.onerror = function(error) {
+              console.error('❌ Notification error:', error);
+            };
+
+            // Auto-close after 5 seconds
+            setTimeout(() => {
+              notification.close();
+            }, 5000);
+
             // Also trigger the notification check API
-            const response = await fetch('/api/notification-check?action=test&memberNumber=1234');
-            const result = await response.json();
-            
-            if (result.success) {
-              console.log('Test notification sent via API');
+            try {
+              const response = await fetch('/api/notification-check?action=test&memberNumber=1234');
+              const result = await response.json();
+              
+              if (result.success) {
+                console.log('✅ Test notification sent via API');
+              } else {
+                console.log('⚠️ API test failed:', result.error);
+              }
+            } catch (apiError) {
+              console.log('⚠️ API test error:', apiError);
             }
+
+            // Show success message
+            alert('✅ Test notification sent! Check your system notifications area (top-right corner on most systems).');
+            
           } else {
-            alert('Notification permission denied. Please enable notifications in your browser settings.');
+            console.log('❌ Permission denied:', permission);
+            alert('❌ Notification permission denied. Please enable notifications in your browser settings and try again.');
           }
         } catch (error) {
-          console.error('Error testing notifications:', error);
-          alert('Error testing notifications: ' + error.message);
+          console.error('❌ Error testing notifications:', error);
+          alert('❌ Error testing notifications: ' + error.message);
+        } finally {
+          // Reset button
+          testNotificationBtn.innerHTML = originalText;
+          testNotificationBtn.disabled = false;
         }
       });
     }
