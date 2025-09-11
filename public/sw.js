@@ -36,15 +36,21 @@ self.addEventListener("push", (event) => {
     body: notificationData.body || "New notification from Ymir Sailing Club",
     icon: "/icon-192.svg",
     badge: "/icon-192.svg",
-    vibrate: [100, 50, 100],
+    // Enhanced mobile wake-up and sound configuration
+    vibrate: [200, 100, 200, 100, 200], // More noticeable vibration pattern
+    requireInteraction: true, // Keeps notification visible until user interacts
+    silent: false, // Ensures sound plays
+    tag: notificationData.data?.type || 'ymir-notification', // Prevents duplicate notifications
+    renotify: true, // Allows re-notification with same tag
+    timestamp: Date.now(),
     data: { 
       dateOfArrival: Date.now(), 
       primaryKey: 1,
       ...notificationData.data 
     },
     actions: [
-      { action: "view", title: "View", icon: "/icon-192.svg" },
-      { action: "close", title: "Close", icon: "/icon-192.svg" }
+      { action: "view", title: "View Details", icon: "/icon-192.svg" },
+      { action: "dismiss", title: "Dismiss" }
     ]
   };
   

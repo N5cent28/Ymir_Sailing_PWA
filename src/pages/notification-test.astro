@@ -109,9 +109,11 @@ import Layout from '../layouts/Layout.astro';
           body: 'Hello! This is a test notification from Ymir Sailing Club.',
           icon: '/icon-192.svg',
           badge: '/icon-192.svg',
-          vibrate: [100, 50, 100],
+          vibrate: [200, 100, 200, 100, 200], // More noticeable vibration
           tag: 'test-notification',
-          requireInteraction: false
+          requireInteraction: true, // Keeps notification visible until user interacts
+          silent: false, // Ensures sound plays
+          renotify: true // Allows re-notification
         });
         
         notification.onclick = function() {

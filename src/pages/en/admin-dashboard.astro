@@ -514,14 +514,16 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
           if (permission === 'granted') {
             console.log('✅ Permission granted, creating notification...');
             
-            // Show test notification
+            // Show test notification with enhanced mobile wake-up features
             const notification = new Notification('🧪 Test Notification', {
               body: 'This is a test notification from Ymir Sailing Club!',
               icon: '/icon-192.svg',
               badge: '/icon-192.svg',
-              vibrate: [100, 50, 100],
+              vibrate: [200, 100, 200, 100, 200], // More noticeable vibration
               tag: 'admin-test-notification',
-              requireInteraction: false,
+              requireInteraction: true, // Keeps notification visible until user interacts
+              silent: false, // Ensures sound plays
+              renotify: true, // Allows re-notification
               data: {
                 type: 'test',
                 timestamp: new Date().toISOString()

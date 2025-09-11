@@ -23,13 +23,51 @@ export async function sendPushNotification(title, body, data = {}, targetMemberN
         endpoint: subscription.endpoint,
         title,
         body,
-        data
+        data,
+        // Mobile wake-up and sound configuration
+        mobileConfig: {
+          wakeUp: true,
+          sound: true,
+          vibration: true,
+          priority: 'high'
+        }
       });
     }
     
-    // TODO: Implement actual push notification sending
-    // You would use a service like Firebase Cloud Messaging or web-push library
-    // to send to each subscription endpoint
+    // TODO: Implement actual push notification sending using web-push library
+    // This would send real notifications that wake phones and make sounds
+    /*
+    const webpush = require('web-push');
+    
+    for (const subscription of subscriptions) {
+      const payload = JSON.stringify({
+        title: title,
+        body: body,
+        icon: '/icon-192.svg',
+        badge: '/icon-192.svg',
+        data: data,
+        // Mobile-specific options for wake-up and sound
+        requireInteraction: true,  // Keeps notification visible until user interacts
+        silent: false,            // Ensures sound plays
+        vibrate: [200, 100, 200], // Vibration pattern
+        tag: data.type || 'ymir-notification', // Prevents duplicate notifications
+        renotify: true,          // Allows re-notification with same tag
+        actions: [
+          {
+            action: 'view',
+            title: 'View Details',
+            icon: '/icon-192.svg'
+          },
+          {
+            action: 'dismiss',
+            title: 'Dismiss'
+          }
+        ]
+      });
+      
+      await webpush.sendNotification(subscription, payload);
+    }
+    */
     
     return { success: true, messageId: 'logged', sentTo: subscriptions.length };
     
