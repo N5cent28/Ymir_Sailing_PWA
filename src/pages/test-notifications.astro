@@ -1,0 +1,186 @@
+---
+// Test Notifications Page
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Test Push Notifications">
+  <div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-2xl mx-auto px-4">
+      <div class="bg-white rounded-lg shadow-lg p-6">
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">🧪 Push Notification Test</h1>
+        
+        <div class="space-y-6">
+          <!-- Status Section -->
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h2 class="text-lg font-semibold text-blue-900 mb-3">Notification Status</h2>
+            <div id="statusInfo" class="text-sm text-blue-800">
+              <p>Checking notification support...</p>
+            </div>
+          </div>
+          
+          <!-- Test Buttons -->
+          <div class="space-y-4">
+            <h2 class="text-lg font-semibold text-gray-900">Test Notifications</h2>
+            
+            <button 
+              id="testBasicNotification" 
+              class="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+            >
+              🔔 Test Basic Notification
+            </button>
+            
+            <button 
+              id="testServiceWorkerNotification" 
+              class="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+            >
+              ⚙️ Test Service Worker Notification
+            </button>
+            
+            <button 
+              id="testAPINotification" 
+              class="w-full px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold"
+            >
+              🌐 Test API Notification
+            </button>
+          </div>
+          
+          <!-- Results -->
+          <div id="results" class="bg-gray-50 border border-gray-200 rounded-lg p-4 hidden">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Test Results</h3>
+            <div id="resultContent" class="text-sm text-gray-700"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  // Check notification support and status
+  function checkNotificationStatus() {
+    const statusInfo = document.getElementById('statusInfo');
+    
+    if (!('Notification' in window)) {
+      statusInfo.innerHTML = '<p class="text-red-600">❌ Notifications not supported in this browser</p>';
+      return false;
+    }
+    
+    if (!('serviceWorker' in navigator)) {
+      statusInfo.innerHTML = '<p class="text-red-600">❌ Service Worker not supported in this browser</p>';
+      return false;
+    }
+    
+    const permission = Notification.permission;
+    let statusHTML = '<p class="text-green-600">✅ Notifications supported</p>';
+    statusHTML += `<p class="text-green-600">✅ Service Worker supported</p>`;
+    statusHTML += `<p>Permission status: <span class="font-semibold">${permission}</span></p>`;
+    
+    if (permission === 'granted') {
+      statusHTML += '<p class="text-green-600">✅ Ready to receive notifications!</p>';
+    } else if (permission === 'denied') {
+      statusHTML += '<p class="text-red-600">❌ Notifications blocked. Please enable in browser settings.</p>';
+    } else {
+      statusHTML += '<p class="text-yellow-600">⚠️ Permission not granted yet. Click a test button to request permission.</p>';
+    }
+    
+    statusInfo.innerHTML = statusHTML;
+    return permission === 'granted';
+  }
+  
+  // Show results
+  function showResult(message, isError = false) {
+    const results = document.getElementById('results');
+    const resultContent = document.getElementById('resultContent');
+    
+    resultContent.innerHTML = `<p class="${isError ? 'text-red-600' : 'text-green-600'}">${message}</p>`;
+    results.classList.remove('hidden');
+  }
+  
+  // Test basic notification
+  document.getElementById('testBasicNotification').addEventListener('click', async () => {
+    try {
+      if (!('Notification' in window)) {
+        showResult('❌ Notifications not supported', true);
+        return;
+      }
+      
+      let permission = Notification.permission;
+      if (permission === 'default') {
+        permission = await Notification.requestPermission();
+      }
+      
+      if (permission === 'granted') {
+        const notification = new Notification('🧪 Basic Test Notification', {
+          body: 'This is a basic browser notification test!',
+          icon: '/icon-192.svg',
+          badge: '/icon-192.svg'
+        });
+        
+        showResult('✅ Basic notification sent successfully!');
+        checkNotificationStatus();
+      } else {
+        showResult('❌ Notification permission denied', true);
+      }
+    } catch (error) {
+      showResult(`❌ Error: ${error.message}`, true);
+    }
+  });
+  
+  // Test service worker notification
+  document.getElementById('testServiceWorkerNotification').addEventListener('click', async () => {
+    try {
+      if (!('serviceWorker' in navigator)) {
+        showResult('❌ Service Worker not supported', true);
+        return;
+      }
+      
+      const registration = await navigator.serviceWorker.ready;
+      
+      let permission = Notification.permission;
+      if (permission === 'default') {
+        permission = await Notification.requestPermission();
+      }
+      
+      if (permission === 'granted') {
+        await registration.showNotification('⚙️ Service Worker Test', {
+          body: 'This notification was sent through the service worker!',
+          icon: '/icon-192.svg',
+          badge: '/icon-192.svg',
+          vibrate: [100, 50, 100],
+          data: {
+            type: 'test',
+            timestamp: new Date().toISOString()
+          }
+        });
+        
+        showResult('✅ Service Worker notification sent successfully!');
+        checkNotificationStatus();
+      } else {
+        showResult('❌ Notification permission denied', true);
+      }
+    } catch (error) {
+      showResult(`❌ Error: ${error.message}`, true);
+    }
+  });
+  
+  // Test API notification
+  document.getElementById('testAPINotification').addEventListener('click', async () => {
+    try {
+      const response = await fetch('/api/notification-check?action=test&memberNumber=1234');
+      const result = await response.json();
+      
+      if (result.success) {
+        showResult('✅ API notification test completed! Check console for details.');
+      } else {
+        showResult(`❌ API test failed: ${result.error}`, true);
+      }
+    } catch (error) {
+      showResult(`❌ Error: ${error.message}`, true);
+    }
+  });
+  
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    checkNotificationStatus();
+  });
+</script>
