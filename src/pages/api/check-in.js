@@ -126,11 +126,14 @@ export async function POST({ request }) {
     const [year, month, day] = datePart.split('-');
     const [hour, minute] = timePart.split(':');
     
+    console.log('Parsed components:', { year, month, day, hour, minute });
+    
     // Create a UTC date representing this time in the club timezone
     // Since Atlantic/Reykjavik is UTC+0, the time is the same as UTC
     const expectedReturnUTC = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
     
     console.log('Final expected return (UTC):', expectedReturnUTC);
+    console.log('Final expected return (UTC toISOString):', expectedReturnUTC.toISOString());
     console.log('Current timezone offset:', new Date().getTimezoneOffset());
     console.log('Browser timezone:', Intl.DateTimeFormat().resolvedOptions().timeZone);
     
