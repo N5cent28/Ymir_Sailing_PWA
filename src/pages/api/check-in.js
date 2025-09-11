@@ -1,6 +1,5 @@
 import { createCheckIn, getBoatStatus, createNotification, getMemberByNumber, getActiveCheckIns, updateCheckoutChecklist, completeCheckIn } from '../../lib/database-postgres.js';
 import { sendCheckOutConfirmation, sendTakeOverNotification } from '../../lib/notifications.js';
-import { timezoneManager } from '../../lib/timezone.js';
 
 export async function POST({ request }) {
   try {
@@ -108,13 +107,8 @@ export async function POST({ request }) {
     console.log('Expected return (Date object getTime):', expectedReturnDate.getTime());
     console.log('Expected return (Date object getTimezoneOffset):', expectedReturnDate.getTimezoneOffset());
     
-    console.log('Club timezone:', timezoneManager.clubTimezone);
-    console.log('Club timezone offset (minutes):', timezoneManager.getTimezoneOffset());
-    console.log('Club timezone offset (hours):', timezoneManager.getTimezoneOffset() / 60);
-    
-    // Test the timezone manager functions
-    console.log('timezoneManager.toClubTime(expectedReturnDate):', timezoneManager.toClubTime(expectedReturnDate));
-    console.log('timezoneManager.toUTC(expectedReturnDate, clubTimezone):', timezoneManager.toUTC(expectedReturnDate, timezoneManager.clubTimezone));
+    console.log('Browser timezone:', Intl.DateTimeFormat().resolvedOptions().timeZone);
+    console.log('Current timezone offset (minutes):', new Date().getTimezoneOffset());
     
     // CORRECT APPROACH: Convert from user's local timezone to UTC
     // The datetime-local input gives us "YYYY-MM-DDTHH:MM" in the user's local timezone
@@ -125,7 +119,6 @@ export async function POST({ request }) {
     const expectedReturnUTC = expectedReturnDate.toISOString();
     
     console.log('Final expected return (UTC):', expectedReturnUTC);
-    console.log('Final expected return (UTC toISOString):', expectedReturnUTC.toISOString());
     console.log('Current timezone offset:', new Date().getTimezoneOffset());
     console.log('Browser timezone:', Intl.DateTimeFormat().resolvedOptions().timeZone);
     
