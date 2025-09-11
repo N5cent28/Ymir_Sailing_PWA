@@ -2,7 +2,7 @@
 // Admin Check-ins Management Page
 import Layout from '../../layouts/Layout.astro';
 import { getAllActiveCheckIns } from '../../lib/database-postgres.js';
-import { isOverdue, formatTimeForDisplay, getTimeUntilReturn } from '../../lib/frontend-timezone.js';
+import { timezoneManager } from '../../lib/timezone.js';
 
 // Get all active check-ins across all boats
 let activeCheckIns = [];
@@ -55,7 +55,7 @@ try {
             <div class="flex-1">
               <h3 class="text-lg font-semibold text-gray-900">Overdue Boats</h3>
               <p class="text-3xl font-bold text-orange-600">
-                {activeCheckIns.filter(checkIn => isOverdue(checkIn.expected_return)).length}
+                {activeCheckIns.filter(checkIn => timezoneManager.isOverdue(checkIn.expected_return)).length}
               </p>
             </div>
             <div class="text-orange-500">
@@ -100,7 +100,7 @@ try {
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
                 {activeCheckIns.map((checkIn) => {
-                  const isOverdueCheck = isOverdue(checkIn.expected_return);
+                  const isOverdueCheck = timezoneManager.isOverdue(checkIn.expected_return);
                   const departureTime = new Date(checkIn.departure_time).toLocaleString('en-US', {
                     year: 'numeric',
                     month: '2-digit',

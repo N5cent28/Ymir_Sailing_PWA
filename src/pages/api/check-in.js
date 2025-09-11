@@ -96,6 +96,7 @@ export async function POST({ request }) {
     // Convert expectedReturn from local time to UTC
     // The datetime-local input gives us "YYYY-MM-DDTHH:MM" in local time
     // We need to create a Date object and convert to UTC
+    // IMPORTANT: datetime-local input is already in local time, so we don't need to adjust for timezone
     const expectedReturnDate = new Date(expectedReturn);
     const expectedReturnUTC = expectedReturnDate.toISOString();
     
