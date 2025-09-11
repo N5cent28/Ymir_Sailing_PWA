@@ -1,5 +1,6 @@
 import { createCheckIn, getBoatStatus, createNotification, getMemberByNumber, getActiveCheckIns, updateCheckoutChecklist, completeCheckIn } from '../../lib/database-postgres.js';
 import { sendCheckOutConfirmation, sendTakeOverNotification } from '../../lib/notifications.js';
+import { timezoneManager } from '../../lib/timezone.js';
 
 export async function POST({ request }) {
   try {
@@ -93,20 +94,38 @@ export async function POST({ request }) {
     
     console.log('🔍 Creating check-in...');
     
-    // Convert expectedReturn from local time to UTC
+    // Convert expectedReturn from local time to UTC using timezone manager
     // The datetime-local input gives us "YYYY-MM-DDTHH:MM" in local time
-    // We need to convert this to UTC properly
+    // We need to properly convert this to UTC using the club timezone
     const expectedReturnDate = new Date(expectedReturn);
     
-    // The datetime-local input is in browser's local timezone, so we convert directly to UTC
-    // This should work correctly now
-    const expectedReturnUTC = expectedReturnDate.toISOString();
-    
+    console.log('🔍 DETAILED TIMEZONE DEBUG:');
     console.log('Expected return (local input):', expectedReturn);
     console.log('Expected return (Date object):', expectedReturnDate);
-    console.log('Expected return (UTC):', expectedReturnUTC);
+    console.log('Expected return (Date object toString):', expectedReturnDate.toString());
+    console.log('Expected return (Date object toISOString):', expectedReturnDate.toISOString());
+    console.log('Expected return (Date object toLocaleString):', expectedReturnDate.toLocaleString());
+    console.log('Expected return (Date object getTime):', expectedReturnDate.getTime());
+    console.log('Expected return (Date object getTimezoneOffset):', expectedReturnDate.getTimezoneOffset());
+    
+    console.log('Club timezone:', timezoneManager.clubTimezone);
+    console.log('Club timezone offset (minutes):', timezoneManager.getTimezoneOffset());
+    console.log('Club timezone offset (hours):', timezoneManager.getTimezoneOffset() / 60);
+    
+    // Test the timezone manager functions
+    console.log('timezoneManager.toClubTime(expectedReturnDate):', timezoneManager.toClubTime(expectedReturnDate));
+    console.log('timezoneManager.toUTC(expectedReturnDate, clubTimezone):', timezoneManager.toUTC(expectedReturnDate, timezoneManager.clubTimezone));
+    
+    // Use timezone manager to convert from club timezone to UTC
+    const expectedReturnUTC = timezoneManager.toUTC(expectedReturnDate, timezoneManager.clubTimezone);
+    
+    console.log('Final expected return (UTC):', expectedReturnUTC);
     console.log('Current timezone offset:', new Date().getTimezoneOffset());
     console.log('Browser timezone:', Intl.DateTimeFormat().resolvedOptions().timeZone);
+    
+    // Manual calculation for comparison
+    const manualUTC = new Date(expectedReturnDate.getTime() - (expectedReturnDate.getTimezoneOffset() * 60000));
+    console.log('Manual UTC calculation:', manualUTC.toISOString());
     
     // Create check-in with member info
     const checkInId = await createCheckIn(boatId, sailorName, departureTime, expectedReturnUTC, memberNumber, phone);
