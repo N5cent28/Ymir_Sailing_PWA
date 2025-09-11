@@ -1,14 +1,22 @@
 import { createCheckIn, getBoatStatus, createNotification, getMemberByNumber, getActiveCheckIns, updateCheckoutChecklist, completeCheckIn } from '../../lib/database-postgres.js';
 import { sendCheckOutConfirmation, sendTakeOverNotification } from '../../lib/notifications.js';
 
+// Helper function to get timezone offset in minutes
+function getTimezoneOffset(timezone) {
+  const now = new Date();
+  const utc = new Date(now.getTime() + (now.getTimezoneOffset() * 60000));
+  const target = new Date(utc.toLocaleString('en-US', { timeZone: timezone }));
+  return (target.getTime() - utc.getTime()) / 60000;
+}
+
 export async function POST({ request }) {
   try {
     console.log('🔍 Check-in API called');
     
     const body = await request.json();
-    const { boatId, sailorName, memberNumber, phone, expectedReturn, takeOver, previousCheckInId, safetyChecklist } = body;
+    const { boatId, sailorName, memberNumber, phone, expectedReturn, takeOver, previousCheckInId, safetyChecklist, userTimezone } = body;
     
-    console.log('Request body:', { boatId, sailorName, memberNumber, phone, expectedReturn, takeOver, previousCheckInId, safetyChecklist });
+    console.log('Request body:', { boatId, sailorName, memberNumber, phone, expectedReturn, takeOver, previousCheckInId, safetyChecklist, userTimezone });
     
     // Validate required fields
     if (!boatId || !sailorName || !expectedReturn) {
@@ -93,41 +101,52 @@ export async function POST({ request }) {
     
     console.log('🔍 Creating check-in...');
     
-    // Convert expectedReturn from local time to UTC
-    // The datetime-local input gives us "YYYY-MM-DDTHH:MM" in browser's local timezone
-    // We need to convert this directly to UTC for database storage
-    const expectedReturnDate = new Date(expectedReturn);
+    // Convert expectedReturn from user's local time to UTC
+    // The datetime-local input gives us "YYYY-MM-DDTHH:MM" in the user's local timezone
+    // But the server runs in UTC, so we need to handle timezone conversion properly
     
     console.log('🔍 DETAILED TIMEZONE DEBUG:');
     console.log('Expected return (local input):', expectedReturn);
-    console.log('Expected return (Date object):', expectedReturnDate);
-    console.log('Expected return (Date object toString):', expectedReturnDate.toString());
-    console.log('Expected return (Date object toISOString):', expectedReturnDate.toISOString());
-    console.log('Expected return (Date object toLocaleString):', expectedReturnDate.toLocaleString());
-    console.log('Expected return (Date object getTime):', expectedReturnDate.getTime());
-    console.log('Expected return (Date object getTimezoneOffset):', expectedReturnDate.getTimezoneOffset());
+    console.log('Server timezone:', Intl.DateTimeFormat().resolvedOptions().timeZone);
+    console.log('Server timezone offset (minutes):', new Date().getTimezoneOffset());
     
-    console.log('Browser timezone:', Intl.DateTimeFormat().resolvedOptions().timeZone);
-    console.log('Current timezone offset (minutes):', new Date().getTimezoneOffset());
+    // The datetime-local input is in user's local timezone, but server interprets it as UTC
+    // We need to get the user's timezone from the request or assume a default
+    const detectedUserTimezone = userTimezone || 'America/Chicago'; // Use provided timezone or default
     
-    // CORRECT APPROACH: Convert from user's local timezone to UTC
-    // The datetime-local input gives us "YYYY-MM-DDTHH:MM" in the user's local timezone
-    // We need to convert this to UTC for database storage
+    // Parse the datetime-local input and treat it as if it's in the user's timezone
+    const [datePart, timePart] = expectedReturn.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hour, minute] = timePart.split(':').map(Number);
     
-    // The datetime-local input is already in the user's local timezone
-    // We just need to convert it to UTC using the standard JavaScript method
-    const expectedReturnUTC = expectedReturnDate.toISOString();
+    // Create a date object in the user's timezone
+    // We'll use a simpler approach: create the date as if it's in the user's timezone
     
-    console.log('Final expected return (UTC):', expectedReturnUTC);
-    console.log('Current timezone offset:', new Date().getTimezoneOffset());
-    console.log('Browser timezone:', Intl.DateTimeFormat().resolvedOptions().timeZone);
+    // Create a date in the user's timezone by using the Intl API
+    const userDate = new Date(year, month - 1, day, hour, minute);
     
-    // Manual calculation for comparison
-    const manualUTC = new Date(expectedReturnDate.getTime() - (expectedReturnDate.getTimezoneOffset() * 60000));
-    console.log('Manual UTC calculation:', manualUTC.toISOString());
+    // Get the timezone offset for the user's timezone
+    const userTimezoneOffset = getTimezoneOffset(detectedUserTimezone);
+    
+    // Convert to UTC by subtracting the user's timezone offset
+    const expectedReturnUTC = new Date(userDate.getTime() - (userTimezoneOffset * 60000));
+    
+    console.log('Parsed date components:', { year, month, day, hour, minute });
+    console.log('User timezone:', detectedUserTimezone);
+    console.log('User timezone offset (minutes):', userTimezoneOffset);
+    console.log('Expected return (Date object):', expectedReturnUTC);
+    console.log('Expected return (Date object toString):', expectedReturnUTC.toString());
+    console.log('Expected return (Date object toISOString):', expectedReturnUTC.toISOString());
+    
+    // Verify the conversion is working correctly
+    const verificationDate = new Date(expectedReturnUTC.toISOString());
+    console.log('Verification - UTC back to local:', verificationDate.toLocaleString());
+    console.log('Verification - UTC back to local (with timezone):', verificationDate.toLocaleString('en-US', { timeZoneName: 'short' }));
+    
+    const expectedReturnUTCString = expectedReturnUTC.toISOString();
     
     // Create check-in with member info
-    const checkInId = await createCheckIn(boatId, sailorName, departureTime, expectedReturnUTC, memberNumber, phone);
+    const checkInId = await createCheckIn(boatId, sailorName, departureTime, expectedReturnUTCString, memberNumber, phone);
     console.log('✅ Check-in created with ID:', checkInId);
     
     // Update safety checklist status if provided
@@ -188,9 +207,9 @@ export async function POST({ request }) {
     
     // Send push notification
     if (takeOver) {
-      await sendCheckOutConfirmation(sailorName, boat.name, expectedReturnUTC, 'take_over');
+      await sendCheckOutConfirmation(sailorName, boat.name, expectedReturnUTCString, 'take_over');
     } else {
-      await sendCheckOutConfirmation(sailorName, boat.name, expectedReturnUTC);
+      await sendCheckOutConfirmation(sailorName, boat.name, expectedReturnUTCString);
     }
     
     return new Response(JSON.stringify({ 

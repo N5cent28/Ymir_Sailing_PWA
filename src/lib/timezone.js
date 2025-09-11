@@ -69,12 +69,39 @@ export class TimezoneManager {
   }
 
   /**
-   * Format time for display in club timezone
+   * Format time for display in user's local timezone
    * @param {Date|string} date - The date to format
    * @param {Object} options - Intl.DateTimeFormat options
    * @returns {string} Formatted time string
    */
   formatTime(date, options = {}) {
+    if (!date) return '';
+    
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) return '';
+    
+    const defaultOptions = {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZoneName: 'short',
+      ...options
+    };
+    
+    // Use user's local timezone for display
+    return dateObj.toLocaleString('en-US', defaultOptions);
+  }
+
+  /**
+   * Format time for display in club timezone (legacy function)
+   * @param {Date|string} date - The date to format
+   * @param {Object} options - Intl.DateTimeFormat options
+   * @returns {string} Formatted time string
+   */
+  formatTimeInClubTimezone(date, options = {}) {
     if (!date) return '';
     
     const dateObj = new Date(date);
@@ -233,6 +260,80 @@ export class TimezoneManager {
     }
     
     return new Date(ts.getTime() + (offsetHours * 60 * 60 * 1000));
+  }
+
+  /**
+   * Get user's timezone from browser
+   * @returns {string} User's timezone (e.g., 'America/Chicago')
+   */
+  getUserTimezone() {
+    if (typeof Intl !== 'undefined' && Intl.DateTimeFormat) {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    }
+    return 'UTC';
+  }
+
+  /**
+   * Get user's timezone offset in minutes
+   * @returns {number} Timezone offset in minutes
+   */
+  getUserTimezoneOffset() {
+    return new Date().getTimezoneOffset();
+  }
+
+  /**
+   * Format time for display in user's timezone with specific locale
+   * @param {Date|string} date - The date to format
+   * @param {string} locale - Locale for formatting (default: 'en-US')
+   * @param {Object} options - Intl.DateTimeFormat options
+   * @returns {string} Formatted time string
+   */
+  formatTimeForUser(date, locale = 'en-US', options = {}) {
+    if (!date) return '';
+    
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) return '';
+    
+    const defaultOptions = {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZoneName: 'short',
+      ...options
+    };
+    
+    return dateObj.toLocaleString(locale, defaultOptions);
+  }
+
+  /**
+   * Convert UTC time to user's local timezone for display
+   * @param {Date|string} utcDate - UTC date to convert
+   * @param {string} locale - Locale for formatting (default: 'en-US')
+   * @param {Object} options - Intl.DateTimeFormat options
+   * @returns {string} Formatted time string in user's timezone
+   */
+  displayInUserTimezone(utcDate, locale = 'en-US', options = {}) {
+    if (!utcDate) return '';
+    
+    const dateObj = new Date(utcDate);
+    if (isNaN(dateObj.getTime())) return '';
+    
+    const defaultOptions = {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZoneName: 'short',
+      ...options
+    };
+    
+    // The Date object automatically converts UTC to local time for display
+    return dateObj.toLocaleString(locale, defaultOptions);
   }
 }
 
