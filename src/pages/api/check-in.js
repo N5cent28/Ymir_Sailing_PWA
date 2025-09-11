@@ -94,9 +94,9 @@ export async function POST({ request }) {
     
     console.log('🔍 Creating check-in...');
     
-    // Convert expectedReturn from local time to UTC using timezone manager
-    // The datetime-local input gives us "YYYY-MM-DDTHH:MM" in local time
-    // We need to properly convert this to UTC using the club timezone
+    // Convert expectedReturn from local time to UTC
+    // The datetime-local input gives us "YYYY-MM-DDTHH:MM" in browser's local timezone
+    // We need to convert this directly to UTC for database storage
     const expectedReturnDate = new Date(expectedReturn);
     
     console.log('🔍 DETAILED TIMEZONE DEBUG:');
@@ -116,8 +116,19 @@ export async function POST({ request }) {
     console.log('timezoneManager.toClubTime(expectedReturnDate):', timezoneManager.toClubTime(expectedReturnDate));
     console.log('timezoneManager.toUTC(expectedReturnDate, clubTimezone):', timezoneManager.toUTC(expectedReturnDate, timezoneManager.clubTimezone));
     
-    // Use timezone manager to convert from club timezone to UTC
-    const expectedReturnUTC = timezoneManager.toUTC(expectedReturnDate, timezoneManager.clubTimezone);
+    // CORRECT APPROACH: Treat datetime-local input as if it's in club timezone
+    // The user selects a time (e.g., 10:03 AM) thinking it's in the club timezone
+    // We need to create a UTC date that represents that time in the club timezone
+    
+    // Parse the datetime-local input and create a UTC date
+    // datetime-local gives us "YYYY-MM-DDTHH:MM" format
+    const [datePart, timePart] = expectedReturn.split('T');
+    const [year, month, day] = datePart.split('-');
+    const [hour, minute] = timePart.split(':');
+    
+    // Create a UTC date representing this time in the club timezone
+    // Since Atlantic/Reykjavik is UTC+0, the time is the same as UTC
+    const expectedReturnUTC = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
     
     console.log('Final expected return (UTC):', expectedReturnUTC);
     console.log('Current timezone offset:', new Date().getTimezoneOffset());

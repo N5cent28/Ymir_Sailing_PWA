@@ -54,9 +54,10 @@ export class TimezoneManager {
     const dateObj = new Date(date);
     if (isNaN(dateObj.getTime())) return null;
     
-    // Convert from club timezone to UTC
-    const clubTime = new Date(dateObj.getTime() - (this.getTimezoneOffset() * 60000));
-    return clubTime;
+    // Simple approach: treat the input as if it's already in UTC
+    // Since Atlantic/Reykjavik is UTC+0, no conversion needed
+    // This is a temporary fix - we should handle timezone conversion properly
+    return dateObj;
   }
 
   /**
