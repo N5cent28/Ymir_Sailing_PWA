@@ -472,13 +472,14 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
       window.location.href = '/en/admin-login';
     }
 
-    // Test notification button
-    const testNotificationBtn = document.getElementById('testNotificationBtn');
-    console.log('🔍 Looking for test notification button:', testNotificationBtn);
-    
-    if (testNotificationBtn) {
-      console.log('✅ Test notification button found, adding event listener');
-      testNotificationBtn.addEventListener('click', async () => {
+    // Test notification button - wait for DOM to be ready
+    function initializeNotificationButton() {
+      const testNotificationBtn = document.getElementById('testNotificationBtn');
+      console.log('🔍 Looking for test notification button:', testNotificationBtn);
+      
+      if (testNotificationBtn) {
+        console.log('✅ Test notification button found, adding event listener');
+        testNotificationBtn.addEventListener('click', async () => {
         try {
           // Update button to show loading state
           const originalText = testNotificationBtn.innerHTML;
@@ -572,6 +573,13 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
     } else {
       console.log('❌ Test notification button not found! Check if button exists in HTML');
     }
+    }
+
+    // Try to initialize immediately (in case DOM is already ready)
+    initializeNotificationButton();
+    
+    // Also try when DOM is ready (in case it's not ready yet)
+    document.addEventListener('DOMContentLoaded', initializeNotificationButton);
 
     // Quick export functionality
     async function quickExport(type, format) {
