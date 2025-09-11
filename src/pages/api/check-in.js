@@ -1,5 +1,6 @@
 import { createCheckIn, getBoatStatus, createNotification, getMemberByNumber, getActiveCheckIns, updateCheckoutChecklist, completeCheckIn } from '../../lib/database-postgres.js';
 import { sendCheckOutConfirmation, sendTakeOverNotification } from '../../lib/notifications.js';
+import { timezoneManager } from '../../lib/timezone.js';
 
 export async function POST({ request }) {
   try {
@@ -93,20 +94,20 @@ export async function POST({ request }) {
     
     console.log('🔍 Creating check-in...');
     
-    // Convert expectedReturn from local time to UTC
+    // Convert expectedReturn from local time to UTC using timezone manager
     // The datetime-local input gives us "YYYY-MM-DDTHH:MM" in local time
-    // We need to create a Date object and convert to UTC
-    // IMPORTANT: datetime-local input is already in local time, so we don't need to adjust for timezone
+    // We need to properly convert this to UTC using the club timezone
     const expectedReturnDate = new Date(expectedReturn);
-    const expectedReturnUTC = expectedReturnDate.toISOString();
     
-    console.log('Expected return (local):', expectedReturn);
+    // Use timezone manager to convert from club timezone to UTC
+    const expectedReturnUTC = timezoneManager.toUTC(expectedReturnDate, timezoneManager.clubTimezone);
+    
+    console.log('Expected return (local input):', expectedReturn);
+    console.log('Expected return (Date object):', expectedReturnDate);
+    console.log('Club timezone:', timezoneManager.clubTimezone);
     console.log('Expected return (UTC):', expectedReturnUTC);
     console.log('Current timezone offset:', new Date().getTimezoneOffset());
     console.log('Browser timezone:', Intl.DateTimeFormat().resolvedOptions().timeZone);
-    console.log('Date object created:', expectedReturnDate);
-    console.log('Date object local string:', expectedReturnDate.toLocaleString());
-    console.log('Date object UTC string:', expectedReturnDate.toISOString());
     
     // Create check-in with member info
     const checkInId = await createCheckIn(boatId, sailorName, departureTime, expectedReturnUTC, memberNumber, phone);
