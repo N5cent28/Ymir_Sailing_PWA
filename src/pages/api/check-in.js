@@ -116,21 +116,13 @@ export async function POST({ request }) {
     console.log('timezoneManager.toClubTime(expectedReturnDate):', timezoneManager.toClubTime(expectedReturnDate));
     console.log('timezoneManager.toUTC(expectedReturnDate, clubTimezone):', timezoneManager.toUTC(expectedReturnDate, timezoneManager.clubTimezone));
     
-    // CORRECT APPROACH: Treat datetime-local input as if it's in club timezone
-    // The user selects a time (e.g., 10:03 AM) thinking it's in the club timezone
-    // We need to create a UTC date that represents that time in the club timezone
+    // CORRECT APPROACH: Convert from user's local timezone to UTC
+    // The datetime-local input gives us "YYYY-MM-DDTHH:MM" in the user's local timezone
+    // We need to convert this to UTC for database storage
     
-    // Parse the datetime-local input and create a UTC date
-    // datetime-local gives us "YYYY-MM-DDTHH:MM" format
-    const [datePart, timePart] = expectedReturn.split('T');
-    const [year, month, day] = datePart.split('-');
-    const [hour, minute] = timePart.split(':');
-    
-    console.log('Parsed components:', { year, month, day, hour, minute });
-    
-    // Create a UTC date representing this time in the club timezone
-    // Since Atlantic/Reykjavik is UTC+0, the time is the same as UTC
-    const expectedReturnUTC = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
+    // The datetime-local input is already in the user's local timezone
+    // We just need to convert it to UTC using the standard JavaScript method
+    const expectedReturnUTC = expectedReturnDate.toISOString();
     
     console.log('Final expected return (UTC):', expectedReturnUTC);
     console.log('Final expected return (UTC toISOString):', expectedReturnUTC.toISOString());
