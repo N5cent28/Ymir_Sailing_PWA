@@ -604,18 +604,18 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
             testSystemBtn.innerHTML = '⏳ Testing System...';
             testSystemBtn.disabled = true;
 
-            console.log('🔍 Testing notification system...');
+            console.log('🔍 Testing admin notification system...');
             
-            // Call the notification check API
-            const response = await fetch('/api/notification-check?action=check');
+            // Send admin-only test notification
+            const response = await fetch('/api/notification-check?action=admin-test');
             const result = await response.json();
             
             if (result.success) {
-              console.log('✅ Notification system test completed');
-              alert('✅ Notification system test completed! Check console for details.');
+              console.log('✅ Admin notification test completed');
+              alert('✅ Admin notification test completed! Check console for details.');
             } else {
-              console.error('❌ Notification system test failed:', result.error);
-              alert('❌ Notification system test failed: ' + result.error);
+              console.error('❌ Admin notification test failed:', result.error);
+              alert('❌ Admin notification test failed: ' + result.error);
             }
             
           } catch (error) {

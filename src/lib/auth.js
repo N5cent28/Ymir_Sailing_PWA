@@ -59,8 +59,47 @@ export function setUserSession(member) {
   localStorage.setItem(SESSION_KEY, JSON.stringify(member));
   localStorage.setItem(SESSION_EXPIRY_KEY, expiryTime.toString());
   
+  // Link any existing push subscriptions to this member
+  linkPushSubscriptionToMember(member.member_number);
+  
   // Dispatch custom event for other components to listen to
   window.dispatchEvent(new CustomEvent('userLogin', { detail: member }));
+}
+
+/**
+ * Link existing push subscriptions to the logged-in member
+ * @param {string} memberNumber - Member number to link subscriptions to
+ */
+async function linkPushSubscriptionToMember(memberNumber) {
+  try {
+    // Get the current push subscription from the service worker
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      
+      if (subscription) {
+        // Update the subscription in the database with the member number
+        const response = await fetch('/api/push-subscription', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            subscription: subscription,
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString(),
+            memberNumber: memberNumber
+          })
+        });
+        
+        if (response.ok) {
+          console.log(`📱 Linked push subscription to member ${memberNumber}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.log('Could not link push subscription to member:', error);
+  }
 }
 
 /**

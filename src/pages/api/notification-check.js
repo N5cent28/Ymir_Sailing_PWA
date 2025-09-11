@@ -22,6 +22,36 @@ export async function GET({ request }) {
       });
     }
     
+    if (action === 'admin-test') {
+      // Send test notification to all admins only
+      const { sendPushNotification } = await import('../../lib/notifications.js');
+      const { getAdmins } = await import('../../lib/database-postgres.js');
+      
+      const admins = await getAdmins();
+      console.log(`🔔 Sending admin test notification to ${admins.length} admin(s)`);
+      
+      for (const admin of admins) {
+        await sendPushNotification(
+          '🧪 Admin Test Notification',
+          'This is a test notification for administrators only. The notification system is working correctly!',
+          {
+            type: 'admin_test',
+            memberNumber: admin.member_number,
+            timestamp: new Date().toISOString()
+          },
+          admin.member_number
+        );
+      }
+      
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: `Admin test notification sent to ${admins.length} admin(s)` 
+      }), { 
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
     if (action === 'check') {
       // Run the full notification check
       await checkAndSendNotifications();

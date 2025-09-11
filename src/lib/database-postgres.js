@@ -1310,6 +1310,33 @@ export async function deletePushSubscription(endpoint) {
   }
 }
 
+export async function getAdmins() {
+  const client = await getClient();
+  try {
+    const result = await client.query(
+      `SELECT member_number, name, email, phone FROM members WHERE is_admin = TRUE ORDER BY name`
+    );
+    return result.rows;
+  } finally {
+    client.release();
+  }
+}
+
+export async function updatePushSubscriptionMember(endpoint, memberNumber) {
+  const client = await getClient();
+  try {
+    await client.query(
+      `UPDATE push_subscriptions 
+       SET member_number = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE endpoint = $2`,
+      [memberNumber, endpoint]
+    );
+    console.log(`📱 Updated push subscription for endpoint ${endpoint.substring(0, 50)}... to member ${memberNumber}`);
+  } finally {
+    client.release();
+  }
+}
+
 export async function getMemberActivity(memberNumber) {
   const client = await getClient();
   try {
