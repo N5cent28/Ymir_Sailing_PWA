@@ -101,7 +101,7 @@ async function sendPreCheckInWarning(checkIn, minutesUntilReturn) {
     extensionOptions,
     action: 'extend_time',
     url: `/en/my-boat?extend=${checkIn.id}`
-  });
+  }, checkIn.member_number);
 }
 
 /**
@@ -112,7 +112,7 @@ async function sendOverdueNotifications(checkIn, overdueMinutes) {
   
   // 30 minutes overdue
   if (overdueMinutes >= 30 && overdueMinutes < 60) {
-    await sendOverdueAlert(checkIn.sailor_name, checkIn.boat_name, overdueMinutes);
+    await sendOverdueAlert(checkIn.sailor_name, checkIn.boat_name, overdueMinutes, checkIn.member_number);
   }
   
   // 1 hour overdue
@@ -129,7 +129,8 @@ async function sendOverdueNotifications(checkIn, overdueMinutes) {
         overdueMinutes,
         action: 'check_in_now',
         url: `/en/my-boat`
-      }
+      },
+      checkIn.member_number
     );
   }
   
@@ -147,7 +148,8 @@ async function sendOverdueNotifications(checkIn, overdueMinutes) {
         overdueMinutes,
         action: 'emergency_contact',
         url: `/en/contact`
-      }
+      },
+      checkIn.member_number
     );
     
     // Send admin alert
@@ -170,7 +172,8 @@ async function sendOverdueNotifications(checkIn, overdueMinutes) {
         action: 'emergency_contact',
         url: `/en/contact`,
         priority: 'critical'
-      }
+      },
+      checkIn.member_number
     );
     
     // Send additional admin alert

@@ -3,7 +3,7 @@
 
 export async function POST({ request }) {
   try {
-    const { subscription, userAgent, timestamp } = await request.json();
+    const { subscription, userAgent, timestamp, memberNumber } = await request.json();
     
     if (!subscription) {
       return new Response(JSON.stringify({ 
@@ -15,10 +15,24 @@ export async function POST({ request }) {
       });
     }
     
-    // For now, just log the subscription
-    // In production, you'd store this in a database
-    console.log('📱 Push subscription received:', {
+    // Import database functions
+    const { storePushSubscription } = await import('../../lib/database-postgres.js');
+    
+    // Store subscription in database with member number
+    const subscriptionData = {
       endpoint: subscription.endpoint,
+      p256dh: subscription.keys?.p256dh || null,
+      auth: subscription.keys?.auth || null,
+      userAgent: userAgent || 'Unknown',
+      memberNumber: memberNumber || null,
+      timestamp: timestamp || new Date().toISOString()
+    };
+    
+    await storePushSubscription(subscriptionData);
+    
+    console.log('📱 Push subscription stored:', {
+      endpoint: subscription.endpoint,
+      memberNumber: memberNumber || 'Anonymous',
       userAgent: userAgent,
       timestamp: timestamp,
       keys: subscription.keys ? {
@@ -26,15 +40,6 @@ export async function POST({ request }) {
         auth: subscription.keys.auth ? 'present' : 'missing'
       } : 'missing'
     });
-    
-    // TODO: Store subscription in database
-    // You would typically store:
-    // - subscription.endpoint
-    // - subscription.keys.p256dh
-    // - subscription.keys.auth
-    // - userAgent
-    // - timestamp
-    // - member number (if available)
     
     return new Response(JSON.stringify({ 
       success: true, 

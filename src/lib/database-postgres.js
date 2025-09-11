@@ -111,6 +111,18 @@ async function initializeDatabase() {
         UNIQUE(member_number1, member_number2)
       );
       
+      CREATE TABLE IF NOT EXISTS push_subscriptions (
+        id SERIAL PRIMARY KEY,
+        endpoint TEXT NOT NULL UNIQUE,
+        p256dh TEXT,
+        auth TEXT,
+        user_agent TEXT,
+        member_number VARCHAR(50),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (member_number) REFERENCES members (member_number)
+      );
+      
       CREATE TABLE IF NOT EXISTS planned_outings (
         id SERIAL PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
@@ -1234,6 +1246,65 @@ export async function getBoatMaintenanceHistory(boatId) {
       [boatId]
     );
     return result.rows;
+  } finally {
+    client.release();
+  }
+}
+
+// Push Subscription Management
+export async function storePushSubscription(subscriptionData) {
+  const client = await getClient();
+  try {
+    const { endpoint, p256dh, auth, userAgent, memberNumber, timestamp } = subscriptionData;
+    
+    // First, try to update existing subscription for this endpoint
+    const updateResult = await client.query(
+      `UPDATE push_subscriptions 
+       SET p256dh = $1, auth = $2, user_agent = $3, member_number = $4, updated_at = $5
+       WHERE endpoint = $6`,
+      [p256dh, auth, userAgent, memberNumber, timestamp, endpoint]
+    );
+    
+    // If no rows were updated, insert a new subscription
+    if (updateResult.rowCount === 0) {
+      await client.query(
+        `INSERT INTO push_subscriptions (endpoint, p256dh, auth, user_agent, member_number, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [endpoint, p256dh, auth, userAgent, memberNumber, timestamp, timestamp]
+      );
+    }
+  } finally {
+    client.release();
+  }
+}
+
+export async function getPushSubscriptions(memberNumber = null) {
+  const client = await getClient();
+  try {
+    let query = `SELECT * FROM push_subscriptions`;
+    let params = [];
+    
+    if (memberNumber) {
+      query += ` WHERE member_number = $1`;
+      params.push(memberNumber);
+    }
+    
+    query += ` ORDER BY updated_at DESC`;
+    
+    const result = await client.query(query, params);
+    return result.rows;
+  } finally {
+    client.release();
+  }
+}
+
+export async function deletePushSubscription(endpoint) {
+  const client = await getClient();
+  try {
+    await client.query(
+      `DELETE FROM push_subscriptions WHERE endpoint = $1`,
+      [endpoint]
+    );
   } finally {
     client.release();
   }

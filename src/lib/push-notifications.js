@@ -91,6 +91,18 @@ export class PushNotificationManager {
 
   async sendSubscriptionToServer(subscription) {
     try {
+      // Get current user's member number if available
+      let memberNumber = null;
+      try {
+        const { getCurrentUser } = await import('./auth.js');
+        const currentUser = getCurrentUser();
+        if (currentUser) {
+          memberNumber = currentUser.member_number;
+        }
+      } catch (error) {
+        console.log('Could not get current user for push subscription:', error);
+      }
+
       const response = await fetch('/api/push-subscription', {
         method: 'POST',
         headers: {
@@ -99,7 +111,8 @@ export class PushNotificationManager {
         body: JSON.stringify({
           subscription: subscription,
           userAgent: navigator.userAgent,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          memberNumber: memberNumber
         })
       });
 
@@ -107,7 +120,7 @@ export class PushNotificationManager {
         throw new Error('Failed to send subscription to server');
       }
 
-      console.log('Subscription sent to server successfully');
+      console.log('Subscription sent to server successfully', memberNumber ? `for member ${memberNumber}` : 'as anonymous');
     } catch (error) {
       console.error('Error sending subscription to server:', error);
     }

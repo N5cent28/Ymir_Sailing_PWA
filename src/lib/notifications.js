@@ -1,60 +1,45 @@
 // Push Notification System
-// This can be integrated with Firebase Cloud Messaging or other push services
+// Handles sending push notifications to specific users
 
-export async function sendPushNotification(title, body, data = {}) {
-  // TODO: Integrate with actual push notification service
-  // For now, just log the notification
-  console.log(`Push notification: ${title} - ${body}`, data);
-  
-  // Example Firebase Cloud Messaging integration:
-  /*
-  const admin = require('firebase-admin');
-  
-  if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.applicationDefault(),
-      projectId: process.env.FIREBASE_PROJECT_ID,
-    });
+export async function sendPushNotification(title, body, data = {}, targetMemberNumber = null) {
+  try {
+    // Import database functions
+    const { getPushSubscriptions } = await import('./database-postgres.js');
+    
+    // Get push subscriptions for the target member (or all if no target specified)
+    const subscriptions = await getPushSubscriptions(targetMemberNumber);
+    
+    if (subscriptions.length === 0) {
+      console.log(`No push subscriptions found for member ${targetMemberNumber || 'all users'}`);
+      return { success: false, message: 'No subscriptions found' };
+    }
+    
+    console.log(`Sending push notification to ${subscriptions.length} subscription(s): ${title} - ${body}`);
+    
+    // For now, just log the notification details
+    // In production, you would send to each subscription endpoint
+    for (const subscription of subscriptions) {
+      console.log(`📱 Would send to ${subscription.member_number || 'Anonymous'}:`, {
+        endpoint: subscription.endpoint,
+        title,
+        body,
+        data
+      });
+    }
+    
+    // TODO: Implement actual push notification sending
+    // You would use a service like Firebase Cloud Messaging or web-push library
+    // to send to each subscription endpoint
+    
+    return { success: true, messageId: 'logged', sentTo: subscriptions.length };
+    
+  } catch (error) {
+    console.error('Error sending push notification:', error);
+    return { success: false, error: error.message };
   }
-  
-  const message = {
-    notification: {
-      title: title,
-      body: body,
-    },
-    data: data,
-    webpush: {
-      headers: {
-        Urgency: 'high',
-      },
-      notification: {
-        title: title,
-        body: body,
-        icon: '/icon-192.svg',
-        badge: '/icon-192.svg',
-        actions: [
-          {
-            action: 'view',
-            title: 'View Details',
-          },
-          {
-            action: 'close',
-            title: 'Close',
-          },
-        ],
-      },
-    },
-    topic: 'ymir-sailing-club', // or use specific tokens
-  };
-  
-  const response = await admin.messaging().send(message);
-  return response;
-  */
-  
-  return { success: true, messageId: 'logged' };
 }
 
-export async function sendExtensionReminder(sailorName, boatName, minutesUntilReturn, extensionOptions) {
+export async function sendExtensionReminder(sailorName, boatName, minutesUntilReturn, extensionOptions, memberNumber = null) {
   const title = 'Time Extension Reminder';
   const body = `Hi ${sailorName}, your return time for ${boatName} is in ${minutesUntilReturn} minutes. Would you like to extend?`;
   
@@ -64,10 +49,10 @@ export async function sendExtensionReminder(sailorName, boatName, minutesUntilRe
     boatName,
     minutesUntilReturn,
     extensionOptions
-  });
+  }, memberNumber);
 }
 
-export async function sendOverdueAlert(sailorName, boatName, overdueMinutes) {
+export async function sendOverdueAlert(sailorName, boatName, overdueMinutes, memberNumber = null) {
   const hoursOverdue = Math.floor(overdueMinutes / 60);
   const title = 'Boat Return Overdue';
   const body = `Hi ${sailorName}, you are ${hoursOverdue} hour${hoursOverdue > 1 ? 's' : ''} overdue returning ${boatName}. Please return the boat as soon as possible.`;
@@ -78,7 +63,7 @@ export async function sendOverdueAlert(sailorName, boatName, overdueMinutes) {
     boatName,
     overdueMinutes,
     hoursOverdue
-  });
+  }, memberNumber);
 }
 
 export async function sendAdminOverdueAlert(sailorName, boatName, overdueMinutes) {
