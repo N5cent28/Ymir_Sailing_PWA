@@ -264,6 +264,7 @@ const items = navItems[currentLang as keyof typeof navItems];
 
   // Listen for the beforeinstallprompt event
   window.addEventListener('beforeinstallprompt', (e) => {
+    console.log('beforeinstallprompt event fired');
     // Prevent the mini-infobar from appearing on mobile
     e.preventDefault();
     // Stash the event so it can be triggered later
@@ -271,6 +272,18 @@ const items = navItems[currentLang as keyof typeof navItems];
     // Show the install buttons
     showInstallButtons();
   });
+
+  // Fallback: Check if PWA can be installed after a delay
+  setTimeout(() => {
+    if (!deferredPrompt && !window.matchMedia('(display-mode: standalone)').matches) {
+      console.log('Checking PWA installability...');
+      // Check if the app meets PWA criteria
+      if ('serviceWorker' in navigator && window.matchMedia('(display-mode: browser)').matches) {
+        console.log('PWA appears installable, showing install button');
+        showInstallButtons();
+      }
+    }
+  }, 2000);
 
   // Handle install button clicks
   function handleInstallClick() {
@@ -285,6 +298,20 @@ const items = navItems[currentLang as keyof typeof navItems];
         // Hide the install buttons
         hideInstallButtons();
       });
+    } else {
+      // Fallback: Show instructions for manual installation
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      
+      if (isMobile) {
+        if (isIOS) {
+          alert('To install this app on iOS:\n1. Tap the Share button (square with arrow)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm');
+        } else {
+          alert('To install this app on Android:\n1. Tap the menu (⋮) in your browser\n2. Tap "Add to Home screen" or "Install app"\n3. Tap "Add" or "Install" to confirm');
+        }
+      } else {
+        alert('To install this app:\n1. Look for the install icon in your browser\'s address bar\n2. Or go to your browser menu and look for "Install" or "Add to Home Screen"');
+      }
     }
   }
 
