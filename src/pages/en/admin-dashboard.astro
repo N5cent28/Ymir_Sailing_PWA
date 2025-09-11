@@ -474,7 +474,10 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
 
     // Test notification button
     const testNotificationBtn = document.getElementById('testNotificationBtn');
+    console.log('🔍 Looking for test notification button:', testNotificationBtn);
+    
     if (testNotificationBtn) {
+      console.log('✅ Test notification button found, adding event listener');
       testNotificationBtn.addEventListener('click', async () => {
         try {
           // Update button to show loading state
@@ -508,6 +511,8 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
               icon: '/icon-192.svg',
               badge: '/icon-192.svg',
               vibrate: [100, 50, 100],
+              tag: 'admin-test-notification',
+              requireInteraction: false,
               data: {
                 type: 'test',
                 timestamp: new Date().toISOString()
@@ -564,6 +569,8 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
           testNotificationBtn.disabled = false;
         }
       });
+    } else {
+      console.log('❌ Test notification button not found! Check if button exists in HTML');
     }
 
     // Quick export functionality
