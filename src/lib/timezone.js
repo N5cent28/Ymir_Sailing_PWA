@@ -164,6 +164,27 @@ export class TimezoneManager {
   }
 
   /**
+   * Get overdue hours (timezone-aware)
+   * @param {Date|string} expectedReturn - Expected return time
+   * @param {Date|string} currentTime - Current time (default: now)
+   * @returns {number} Hours overdue (0 if not overdue)
+   */
+  getOverdueHours(expectedReturn, currentTime = new Date()) {
+    if (!expectedReturn) return 0;
+    
+    const expected = this.toClubTime(expectedReturn);
+    const current = this.toClubTime(currentTime);
+    
+    if (!expected || !current) return 0;
+    
+    const diff = current - expected;
+    
+    if (diff <= 0) return 0; // Not overdue
+    
+    return Math.floor(diff / (1000 * 60 * 60));
+  }
+
+  /**
    * Get club configuration
    * @returns {Object} Club configuration
    */

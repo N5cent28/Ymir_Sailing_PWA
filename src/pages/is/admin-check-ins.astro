@@ -142,7 +142,7 @@ try {
                         </div>
                         {isOverdueCheck && (
                           <div class="text-xs text-red-500">
-                            {Math.floor((new Date() - new Date(checkIn.expected_return)) / (1000 * 60 * 60))}kl seint
+                            {timezoneManager.getOverdueHours(checkIn.expected_return)}kl seint
                           </div>
                         )}
                       </td>
