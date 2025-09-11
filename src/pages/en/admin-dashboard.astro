@@ -410,17 +410,25 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
                   This will permanently delete notifications older than the selected retention period.
                 </p>
                 
-                <!-- Test Notification Button -->
+                <!-- Test Notification Buttons -->
                 <div class="mt-4 pt-4 border-t border-gray-200">
                   <h5 class="font-medium text-gray-700 mb-2">Test Notifications</h5>
-                  <button 
-                    id="testNotificationBtn" 
-                    class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                  >
-                    🔔 Test Push Notification
-                  </button>
+                  <div class="space-y-2">
+                    <button 
+                      id="testNotificationBtn" 
+                      class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                    >
+                      🔔 Test Push Notification
+                    </button>
+                    <button 
+                      id="testNotificationSystemBtn" 
+                      class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                    >
+                      🔍 Test Notification System
+                    </button>
+                  </div>
                   <p class="text-xs text-gray-500 mt-1">
-                    Send a test notification to verify push notification system is working.
+                    Test individual notifications or run the full notification check system.
                   </p>
                 </div>
               </div>
@@ -566,7 +574,7 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
           alert('❌ Error testing notifications: ' + error.message);
         } finally {
           // Reset button
-          testNotificationBtn.innerHTML = originalText;
+          testNotificationBtn.innerHTML = '🔔 Test Push Notification';
           testNotificationBtn.disabled = false;
         }
       });
@@ -580,6 +588,50 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
     
     // Also try when DOM is ready (in case it's not ready yet)
     document.addEventListener('DOMContentLoaded', initializeNotificationButton);
+
+    // Test notification system button
+    function initializeNotificationSystemButton() {
+      const testSystemBtn = document.getElementById('testNotificationSystemBtn');
+      console.log('🔍 Looking for test notification system button:', testSystemBtn);
+      
+      if (testSystemBtn) {
+        console.log('✅ Test notification system button found, adding event listener');
+        testSystemBtn.addEventListener('click', async () => {
+          try {
+            const originalText = testSystemBtn.innerHTML;
+            testSystemBtn.innerHTML = '⏳ Testing System...';
+            testSystemBtn.disabled = true;
+
+            console.log('🔍 Testing notification system...');
+            
+            // Call the notification check API
+            const response = await fetch('/api/notification-check?action=check');
+            const result = await response.json();
+            
+            if (result.success) {
+              console.log('✅ Notification system test completed');
+              alert('✅ Notification system test completed! Check console for details.');
+            } else {
+              console.error('❌ Notification system test failed:', result.error);
+              alert('❌ Notification system test failed: ' + result.error);
+            }
+            
+          } catch (error) {
+            console.error('❌ Error testing notification system:', error);
+            alert('❌ Error testing notification system: ' + error.message);
+          } finally {
+            testSystemBtn.innerHTML = '🔍 Test Notification System';
+            testSystemBtn.disabled = false;
+          }
+        });
+      } else {
+        console.log('❌ Test notification system button not found!');
+      }
+    }
+
+    // Initialize notification system button
+    initializeNotificationSystemButton();
+    document.addEventListener('DOMContentLoaded', initializeNotificationSystemButton);
 
     // Quick export functionality
     async function quickExport(type, format) {
