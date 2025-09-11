@@ -1,6 +1,5 @@
 import { createCheckIn, getBoatStatus, createNotification, getMemberByNumber, getActiveCheckIns, updateCheckoutChecklist, completeCheckIn } from '../../lib/database-postgres.js';
 import { sendCheckOutConfirmation, sendTakeOverNotification } from '../../lib/notifications.js';
-import { timezoneManager } from '../../lib/timezone.js';
 
 export async function POST({ request }) {
   try {
@@ -94,17 +93,17 @@ export async function POST({ request }) {
     
     console.log('🔍 Creating check-in...');
     
-    // Convert expectedReturn from local time to UTC using timezone manager
+    // Convert expectedReturn from local time to UTC
     // The datetime-local input gives us "YYYY-MM-DDTHH:MM" in local time
-    // We need to properly convert this to UTC using the club timezone
+    // We need to convert this to UTC properly
     const expectedReturnDate = new Date(expectedReturn);
     
-    // Use timezone manager to convert from club timezone to UTC
-    const expectedReturnUTC = timezoneManager.toUTC(expectedReturnDate, timezoneManager.clubTimezone);
+    // The datetime-local input is in browser's local timezone, so we convert directly to UTC
+    // This should work correctly now
+    const expectedReturnUTC = expectedReturnDate.toISOString();
     
     console.log('Expected return (local input):', expectedReturn);
     console.log('Expected return (Date object):', expectedReturnDate);
-    console.log('Club timezone:', timezoneManager.clubTimezone);
     console.log('Expected return (UTC):', expectedReturnUTC);
     console.log('Current timezone offset:', new Date().getTimezoneOffset());
     console.log('Browser timezone:', Intl.DateTimeFormat().resolvedOptions().timeZone);
