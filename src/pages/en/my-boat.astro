@@ -275,6 +275,11 @@ import TimeExtensionModal from '../../components/TimeExtensionModal.astro';
     function showActiveBoat(boat) {
       hideAll();
       
+      // DEBUG: Log raw database values
+      console.log('🔍 MY-BOAT PAGE DEBUG:');
+      console.log('Raw expected_return:', boat.expected_return);
+      console.log('Raw departure_time:', boat.departure_time);
+      
       // Format times in user's local timezone with clear timezone info
       const departureTime = new Date(boat.departure_time).toLocaleString('en-US', {
         year: 'numeric',
@@ -285,7 +290,13 @@ import TimeExtensionModal from '../../components/TimeExtensionModal.astro';
         second: '2-digit',
         timeZoneName: 'short'
       });
-      const expectedReturn = new Date(boat.expected_return).toLocaleString('en-US', {
+      
+      // DEBUG: Log after Date conversion and formatting
+      const expectedReturnDate = new Date(boat.expected_return);
+      console.log('Date object (expected_return):', expectedReturnDate);
+      console.log('Date object (departure_time):', new Date(boat.departure_time));
+      
+      const expectedReturn = expectedReturnDate.toLocaleString('en-US', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
@@ -294,6 +305,9 @@ import TimeExtensionModal from '../../components/TimeExtensionModal.astro';
         second: '2-digit',
         timeZoneName: 'short'
       });
+      
+      console.log('Formatted expectedReturn:', expectedReturn);
+      console.log('Formatted departureTime:', departureTime);
       
       boatInfo.innerHTML = `
         <div class="grid grid-cols-1 gap-3">

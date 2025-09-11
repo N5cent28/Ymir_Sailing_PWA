@@ -283,5 +283,36 @@ try {
     // Debug: Log that functions are loaded
     console.log('Force check-in functions loaded successfully');
     console.log('forceCheckIn function available:', typeof window.forceCheckIn);
+    
+    // DEBUG: Log timezone calculations for active check-ins
+    console.log('🔍 ADMIN PAGE DEBUG:');
+    console.log('Active check-ins data:', {activeCheckIns});
+    
+    activeCheckIns.forEach((checkIn, index) => {
+      console.log(`\n--- Check-in ${index + 1} (${checkIn.sailor_name}) ---`);
+      console.log('Raw expected_return:', checkIn.expected_return);
+      console.log('Raw departure_time:', checkIn.departure_time);
+      
+      const expectedReturnDate = new Date(checkIn.expected_return);
+      const departureDate = new Date(checkIn.departure_time);
+      
+      console.log('Date object (expected_return):', expectedReturnDate);
+      console.log('Date object (departure_time):', departureDate);
+      
+      const expectedReturn = expectedReturnDate.toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short'
+      });
+      
+      console.log('Formatted expectedReturn:', expectedReturn);
+      
+      // Test timezone manager
+      console.log('timezoneManager.isOverdue():', timezoneManager.isOverdue(checkIn.expected_return));
+      console.log('timezoneManager.getOverdueHours():', timezoneManager.getOverdueHours(checkIn.expected_return));
+    });
   </script>
 </Layout> 

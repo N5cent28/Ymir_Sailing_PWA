@@ -604,6 +604,11 @@ console.log('- activeCheckIns:', activeCheckIns);
       }
       
       function showEasyCheckIn(checkIn) {
+        // DEBUG: Log raw database values
+        console.log('🔍 CHECK-IN FORM DEBUG:');
+        console.log('Raw expected_return:', checkIn.expected_return);
+        console.log('Raw departure_time:', checkIn.departure_time);
+        
         const departureTime = new Date(checkIn.departure_time).toLocaleString('en-US', {
           year: 'numeric',
           month: '2-digit',
@@ -613,7 +618,13 @@ console.log('- activeCheckIns:', activeCheckIns);
           second: '2-digit',
           timeZoneName: 'short'
         });
-        const expectedReturn = new Date(checkIn.expected_return).toLocaleString('en-US', {
+        
+        // DEBUG: Log after Date conversion and formatting
+        const expectedReturnDate = new Date(checkIn.expected_return);
+        console.log('Date object (expected_return):', expectedReturnDate);
+        console.log('Date object (departure_time):', new Date(checkIn.departure_time));
+        
+        const expectedReturn = expectedReturnDate.toLocaleString('en-US', {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
@@ -622,6 +633,9 @@ console.log('- activeCheckIns:', activeCheckIns);
           second: '2-digit',
           timeZoneName: 'short'
         });
+        
+        console.log('Formatted expectedReturn:', expectedReturn);
+        console.log('Formatted departureTime:', departureTime);
         
         activeCheckInInfo.innerHTML = `
           <div class="text-sm">
