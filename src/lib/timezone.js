@@ -5,16 +5,16 @@
 
 // Club configuration - can be overridden by environment variables
 const CLUB_CONFIG = {
-  timezone: process.env.CLUB_TIMEZONE || 'America/Chicago',
-  country: process.env.CLUB_COUNTRY || 'US',
-  city: process.env.CLUB_CITY || 'Madison',
+  timezone: process.env.CLUB_TIMEZONE || 'Atlantic/Reykjavik',
+  country: process.env.CLUB_COUNTRY || 'IS',
+  city: process.env.CLUB_CITY || 'Reykjavik',
   coordinates: {
-    latitude: parseFloat(process.env.CLUB_LATITUDE) || 43.0731,
-    longitude: parseFloat(process.env.CLUB_LONGITUDE) || -89.4012
+    latitude: parseFloat(process.env.CLUB_LATITUDE) || 64.1466,
+    longitude: parseFloat(process.env.CLUB_LONGITUDE) || -21.9426
   },
-  dateFormat: process.env.DATE_FORMAT || 'MM/DD/YYYY',
-  timeFormat: process.env.TIME_FORMAT || '12h',
-  locale: process.env.LOCALE || 'en-US'
+  dateFormat: process.env.DATE_FORMAT || 'DD/MM/YYYY',
+  timeFormat: process.env.TIME_FORMAT || '24h',
+  locale: process.env.LOCALE || 'is-IS'
 };
 
 export class TimezoneManager {
