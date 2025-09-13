@@ -193,33 +193,6 @@ const notifications = await getRecentNotifications(20);
         <div class="bg-sail-white rounded-lg p-6 shadow-lg mb-8">
           <h3 class="text-xl font-bold text-ocean-green mb-6">Maintenance Tools</h3>
           <div class="grid md:grid-cols-2 gap-6">
-            <!-- Message Cleanup -->
-            <div class="border rounded-lg p-4">
-              <h4 class="font-semibold text-gray-900 mb-2">Message Cleanup</h4>
-              <p class="text-sm text-gray-600 mb-4">
-                Remove old messages to free up storage space and improve performance.
-              </p>
-              <div class="space-y-3">
-                <div class="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    id="cleanupDays"
-                    value="30"
-                    min="1"
-                    max="365"
-                    class="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                  />
-                  <span class="text-sm text-gray-600">days old</span>
-                </div>
-                <button
-                  onclick="cleanupMessages()"
-                  class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
-                >
-                  🧹 Clean Up Messages
-                </button>
-                <div id="cleanupResult" class="text-sm hidden"></div>
-              </div>
-            </div>
 
             <!-- Database Stats -->
             <div class="border rounded-lg p-4">
@@ -343,47 +316,6 @@ const notifications = await getRecentNotifications(20);
       }
     }
 
-    async function cleanupMessages() {
-      const daysOld = parseInt(document.getElementById('cleanupDays').value);
-      const resultDiv = document.getElementById('cleanupResult');
-      
-      if (!confirm(`Are you sure you want to delete all messages older than ${daysOld} days? This action cannot be undone.`)) {
-        return;
-      }
-      
-      try {
-        const response = await fetch('/api/cleanup-messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            daysOld: daysOld,
-            adminMemberNumber: currentMember.member_number
-          })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          resultDiv.innerHTML = `<span class="text-green-600">✅ ${data.message}</span>`;
-        } else {
-          resultDiv.innerHTML = `<span class="text-red-600">❌ Error: ${data.error}</span>`;
-        }
-        
-        resultDiv.classList.remove('hidden');
-        
-        // Hide result after 5 seconds
-        setTimeout(() => {
-          resultDiv.classList.add('hidden');
-        }, 5000);
-        
-      } catch (error) {
-        console.error('Error:', error);
-        resultDiv.innerHTML = '<span class="text-red-600">❌ Error: Failed to cleanup messages</span>';
-        resultDiv.classList.remove('hidden');
-      }
-    }
 
     // Load initial data
     loadActiveCheckinsCount();

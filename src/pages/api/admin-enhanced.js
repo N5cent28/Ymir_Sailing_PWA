@@ -10,7 +10,9 @@ import {
   getActiveCheckIns,
   getRecentNotifications,
   cleanupOldNotifications,
-  getNotificationStats
+  getNotificationStats,
+  cleanupOldMessages,
+  getMessageStats
 } from '../../lib/database-postgres.js';
 
 // Boat definitions for export functionality
@@ -213,6 +215,28 @@ export async function GET({ url }) {
           success: true, 
           deletedCount,
           retentionDays
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+      case 'message_stats':
+        const messageStats = await getMessageStats();
+        return new Response(JSON.stringify({ 
+          success: true, 
+          stats: messageStats
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+      case 'cleanup_messages':
+        const messageRetentionDays = parseInt(url.searchParams.get('days')) || 30;
+        const deletedMessageCount = await cleanupOldMessages(messageRetentionDays);
+        return new Response(JSON.stringify({ 
+          success: true, 
+          deletedCount: deletedMessageCount,
+          retentionDays: messageRetentionDays
         }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' }

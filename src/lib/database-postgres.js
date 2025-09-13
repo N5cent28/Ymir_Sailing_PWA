@@ -963,10 +963,37 @@ export async function getUnreadMessageCount(memberNumber) {
 export async function cleanupOldMessages(daysOld = 30) {
   const client = await getClient();
   try {
-    await client.query(
+    console.log(`Cleaning up messages older than ${daysOld} days...`);
+    const result = await client.query(
       'DELETE FROM messages WHERE sent_at < CURRENT_TIMESTAMP - INTERVAL \'$1 days\'',
       [daysOld]
     );
+    console.log(`Cleaned up ${result.rowCount || 0} old messages`);
+    return result.rowCount || 0;
+  } catch (error) {
+    console.error('Error cleaning up messages:', error);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function getMessageStats() {
+  const client = await getClient();
+  try {
+    console.log('Fetching message stats...');
+    const result = await client.query(`
+      SELECT 
+        COUNT(*) as total,
+        MIN(sent_at) as oldest,
+        MAX(sent_at) as newest
+      FROM messages
+    `);
+    console.log('Message stats:', result.rows[0]);
+    return result.rows[0];
+  } catch (error) {
+    console.error('Error fetching message stats:', error);
+    throw error;
   } finally {
     client.release();
   }
