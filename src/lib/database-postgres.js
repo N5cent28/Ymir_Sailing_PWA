@@ -514,11 +514,16 @@ export async function getRecentNotifications(limit = 10) {
 export async function cleanupOldNotifications(retentionDays = 30) {
   const client = await getClient();
   try {
+    console.log(`Cleaning up notifications older than ${retentionDays} days...`);
     const result = await client.query(
       'DELETE FROM notifications WHERE sent_at < CURRENT_TIMESTAMP - INTERVAL \'$1 days\'',
       [retentionDays]
     );
+    console.log(`Cleaned up ${result.rowCount || 0} old notifications`);
     return result.rowCount || 0;
+  } catch (error) {
+    console.error('Error cleaning up notifications:', error);
+    throw error;
   } finally {
     client.release();
   }
@@ -527,6 +532,7 @@ export async function cleanupOldNotifications(retentionDays = 30) {
 export async function getNotificationStats() {
   const client = await getClient();
   try {
+    console.log('Fetching notification stats...');
     const result = await client.query(`
       SELECT 
         COUNT(*) as total,
@@ -534,7 +540,11 @@ export async function getNotificationStats() {
         MAX(sent_at) as newest
       FROM notifications
     `);
+    console.log('Notification stats:', result.rows[0]);
     return result.rows[0];
+  } catch (error) {
+    console.error('Error fetching notification stats:', error);
+    throw error;
   } finally {
     client.release();
   }
@@ -1476,11 +1486,18 @@ export async function syncBoatStatusesWithMaintenance() {
       );
       
       if (existingIssue.rows.length === 0) {
+        // Get or create system admin for the reported_by field
+        let reportedBy = '000';
+        await client.query(
+          'INSERT INTO members (member_number, name, is_admin) VALUES ($1, $2, $3) ON CONFLICT (member_number) DO NOTHING',
+          ['000', 'System Admin', true]
+        );
+        
         // Create a maintenance issue for this boat
         await client.query(
           `INSERT INTO maintenance_issues (boat_id, reported_by, issue_type, description, severity, status)
            VALUES ($1, $2, $3, $4, $5, 'open')`,
-          [boat.id, 'system', 'status_sync', `Boat status: ${boat.status}${boat.notes ? ` - ${boat.notes}` : ''}`, 'medium']
+          [boat.id, reportedBy, 'status_sync', `Boat status: ${boat.status}${boat.notes ? ` - ${boat.notes}` : ''}`, 'medium']
         );
       }
     }
