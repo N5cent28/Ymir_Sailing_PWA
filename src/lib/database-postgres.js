@@ -516,13 +516,13 @@ export async function cleanupOldNotifications(retentionDays = 30) {
   try {
     console.log(`🧹 CLEANUP DEBUG: Starting notification cleanup`);
     console.log(`🧹 CLEANUP DEBUG: retentionDays = ${retentionDays} (type: ${typeof retentionDays})`);
-    console.log(`🧹 CLEANUP DEBUG: SQL query: DELETE FROM notifications WHERE sent_at < CURRENT_TIMESTAMP - INTERVAL '$1 day'`);
+    
+    // Try a different SQL approach - use explicit date arithmetic
+    const sqlQuery = 'DELETE FROM notifications WHERE sent_at < CURRENT_TIMESTAMP - ($1 || \' days\')::INTERVAL';
+    console.log(`🧹 CLEANUP DEBUG: SQL query: ${sqlQuery}`);
     console.log(`🧹 CLEANUP DEBUG: Parameters array: [${retentionDays}]`);
     
-    const result = await client.query(
-      'DELETE FROM notifications WHERE sent_at < CURRENT_TIMESTAMP - INTERVAL \'$1 day\'',
-      [retentionDays]
-    );
+    const result = await client.query(sqlQuery, [retentionDays]);
     
     console.log(`🧹 CLEANUP DEBUG: Query executed successfully`);
     console.log(`🧹 CLEANUP DEBUG: result.rowCount = ${result.rowCount}`);
@@ -975,13 +975,13 @@ export async function cleanupOldMessages(daysOld = 30) {
   try {
     console.log(`🧹 MESSAGE CLEANUP DEBUG: Starting message cleanup`);
     console.log(`🧹 MESSAGE CLEANUP DEBUG: daysOld = ${daysOld} (type: ${typeof daysOld})`);
-    console.log(`🧹 MESSAGE CLEANUP DEBUG: SQL query: DELETE FROM messages WHERE sent_at < CURRENT_TIMESTAMP - INTERVAL '$1 day'`);
+    
+    // Try a different SQL approach - use explicit date arithmetic
+    const sqlQuery = 'DELETE FROM messages WHERE sent_at < CURRENT_TIMESTAMP - ($1 || \' days\')::INTERVAL';
+    console.log(`🧹 MESSAGE CLEANUP DEBUG: SQL query: ${sqlQuery}`);
     console.log(`🧹 MESSAGE CLEANUP DEBUG: Parameters array: [${daysOld}]`);
     
-    const result = await client.query(
-      'DELETE FROM messages WHERE sent_at < CURRENT_TIMESTAMP - INTERVAL \'$1 day\'',
-      [daysOld]
-    );
+    const result = await client.query(sqlQuery, [daysOld]);
     
     console.log(`🧹 MESSAGE CLEANUP DEBUG: Query executed successfully`);
     console.log(`🧹 MESSAGE CLEANUP DEBUG: result.rowCount = ${result.rowCount}`);
