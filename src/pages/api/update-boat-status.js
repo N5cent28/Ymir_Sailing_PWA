@@ -2,7 +2,7 @@ import { updateBoatStatus, createNotification } from '../../lib/database-postgre
 
 export async function POST({ request }) {
   try {
-    const { boatId, status, notes } = await request.json();
+    const { boatId, status, notes, adminMemberNumber } = await request.json();
     
     // Validate required fields
     if (!boatId || !status) {
@@ -25,8 +25,8 @@ export async function POST({ request }) {
       });
     }
     
-    // Update boat status
-    await updateBoatStatus(boatId, status, notes);
+    // Update boat status (this will check for active check-ins and handle admin member)
+    await updateBoatStatus(boatId, status, notes, adminMemberNumber);
     
     // Create notification
     const statusText = status.replace('_', ' ');
@@ -44,6 +44,18 @@ export async function POST({ request }) {
     
   } catch (error) {
     console.error('Update boat status error:', error);
+    
+    // Check if it's an active check-in error
+    if (error.message.includes('currently checked out')) {
+      return new Response(JSON.stringify({ 
+        error: error.message,
+        hasActiveCheckIn: true
+      }), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
     return new Response(JSON.stringify({ 
       error: 'Internal server error' 
     }), { 

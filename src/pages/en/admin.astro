@@ -306,8 +306,15 @@ const notifications = await getRecentNotifications(20);
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ boatId, status, notes })
+          body: JSON.stringify({ 
+            boatId, 
+            status, 
+            notes,
+            adminMemberNumber: '000' // Use system admin for status changes
+          })
         });
+        
+        const data = await response.json();
         
         if (response.ok) {
           // Show success feedback
@@ -319,7 +326,12 @@ const notifications = await getRecentNotifications(20);
           // Revert to original value on error
           selectElement.value = originalValue;
           selectElement.disabled = false;
-          alert('Error updating boat status');
+          
+          if (data.hasActiveCheckIn) {
+            alert('Cannot change boat status: ' + data.error + '\n\nPlease force check-in from the Active Boats page first.');
+          } else {
+            alert('Error updating boat status: ' + (data.error || 'Unknown error'));
+          }
         }
       } catch (error) {
         console.error('Error:', error);

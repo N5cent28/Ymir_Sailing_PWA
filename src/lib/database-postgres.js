@@ -255,9 +255,22 @@ export async function getBoatStatus(boatId) {
   }
 }
 
-export async function updateBoatStatus(boatId, status, notes = null) {
+export async function updateBoatStatus(boatId, status, notes = null, adminMemberNumber = null) {
   const client = await getClient();
   try {
+    // Check for active check-ins before changing status
+    if (status === 'maintenance' || status === 'out_of_service') {
+      const activeCheckIns = await client.query(
+        'SELECT id, sailor_name, member_number FROM check_ins WHERE boat_id = $1 AND actual_return IS NULL',
+        [boatId]
+      );
+      
+      if (activeCheckIns.rows.length > 0) {
+        const activeCheckIn = activeCheckIns.rows[0];
+        throw new Error(`Cannot change boat status to ${status}. Boat is currently checked out by ${activeCheckIn.sailor_name}. Please force check-in from the Active Boats page first.`);
+      }
+    }
+    
     // Update boat status
     await client.query(
       'UPDATE boats SET status = $1, notes = $2 WHERE id = $3',
@@ -273,11 +286,32 @@ export async function updateBoatStatus(boatId, status, notes = null) {
       );
       
       if (existingIssue.rows.length === 0) {
+        // Get an admin member for the reported_by field, or use the provided admin member
+        let reportedBy = adminMemberNumber;
+        
+        if (!reportedBy) {
+          // Try to get the first admin member
+          const adminMembers = await client.query(
+            'SELECT member_number FROM members WHERE is_admin = TRUE LIMIT 1'
+          );
+          
+          if (adminMembers.rows.length > 0) {
+            reportedBy = adminMembers.rows[0].member_number;
+          } else {
+            // If no admin members exist, create a system admin
+            reportedBy = '000';
+            await client.query(
+              'INSERT INTO members (member_number, name, is_admin) VALUES ($1, $2, $3) ON CONFLICT (member_number) DO NOTHING',
+              ['000', 'System Admin', true]
+            );
+          }
+        }
+        
         // Create a new maintenance issue
         await client.query(
           `INSERT INTO maintenance_issues (boat_id, reported_by, issue_type, description, severity, status)
            VALUES ($1, $2, $3, $4, $5, 'open')`,
-          [boatId, 'system', 'status_change', `Boat status changed to ${status}${notes ? `: ${notes}` : ''}`, 'medium']
+          [boatId, reportedBy, 'status_change', `Boat status changed to ${status}${notes ? `: ${notes}` : ''}`, 'medium']
         );
       }
     } else if (status === 'operational') {
@@ -305,7 +339,7 @@ export async function createCheckIn(boatId, sailorName, departureTime, expectedR
     );
     
     // Update boat status to 'checked_out'
-    await updateBoatStatus(boatId, 'checked_out');
+    await updateBoatStatus(boatId, 'checked_out', null, null);
     
     // Get boat name for better notification
     const boatResult = await client.query('SELECT name FROM boats WHERE id = $1', [boatId]);
@@ -342,7 +376,7 @@ export async function completeCheckIn(checkInId, skipHoursCalculation = false) {
     );
     
     // Update boat status
-    await updateBoatStatus(boat_id, 'operational');
+    await updateBoatStatus(boat_id, 'operational', null, null);
     
     // ✅ FIXED: Calculate and record boat hours only if not skipping
     if (!skipHoursCalculation && member_number) {
@@ -1029,7 +1063,7 @@ export async function reportMaintenanceIssue(issueData) {
     
     // Update boat status if needed
     if (severity === 'high') {
-      await updateBoatStatus(boat_id, 'maintenance');
+      await updateBoatStatus(boat_id, 'maintenance', null, null);
     }
     
     return result.rows[0].id;
@@ -1120,7 +1154,7 @@ export async function updateMaintenanceIssue(issueId, updateData) {
         );
         
         if (openIssuesResult.rows[0].count == 0) {
-          await updateBoatStatus(boatId, 'operational');
+          await updateBoatStatus(boatId, 'operational', null, null);
         }
       }
     }
