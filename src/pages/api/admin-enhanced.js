@@ -210,7 +210,9 @@ export async function GET({ url }) {
         
       case 'cleanup_notifications':
         const retentionDays = parseInt(url.searchParams.get('days')) || 30;
+        console.log(`🔧 API DEBUG: cleanup_notifications called with days=${url.searchParams.get('days')}, parsed=${retentionDays}`);
         const deletedCount = await cleanupOldNotifications(retentionDays);
+        console.log(`🔧 API DEBUG: cleanup_notifications completed, deletedCount=${deletedCount}`);
         return new Response(JSON.stringify({ 
           success: true, 
           deletedCount,
@@ -232,7 +234,9 @@ export async function GET({ url }) {
         
       case 'cleanup_messages':
         const messageRetentionDays = parseInt(url.searchParams.get('days')) || 30;
+        console.log(`🔧 API DEBUG: cleanup_messages called with days=${url.searchParams.get('days')}, parsed=${messageRetentionDays}`);
         const deletedMessageCount = await cleanupOldMessages(messageRetentionDays);
+        console.log(`🔧 API DEBUG: cleanup_messages completed, deletedCount=${deletedMessageCount}`);
         return new Response(JSON.stringify({ 
           success: true, 
           deletedCount: deletedMessageCount,

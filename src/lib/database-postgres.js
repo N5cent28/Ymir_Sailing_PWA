@@ -514,15 +514,25 @@ export async function getRecentNotifications(limit = 10) {
 export async function cleanupOldNotifications(retentionDays = 30) {
   const client = await getClient();
   try {
-    console.log(`Cleaning up notifications older than ${retentionDays} days...`);
+    console.log(`🧹 CLEANUP DEBUG: Starting notification cleanup`);
+    console.log(`🧹 CLEANUP DEBUG: retentionDays = ${retentionDays} (type: ${typeof retentionDays})`);
+    console.log(`🧹 CLEANUP DEBUG: SQL query: DELETE FROM notifications WHERE sent_at < CURRENT_TIMESTAMP - INTERVAL '$1 day'`);
+    console.log(`🧹 CLEANUP DEBUG: Parameters array: [${retentionDays}]`);
+    
     const result = await client.query(
       'DELETE FROM notifications WHERE sent_at < CURRENT_TIMESTAMP - INTERVAL \'$1 day\'',
       [retentionDays]
     );
+    
+    console.log(`🧹 CLEANUP DEBUG: Query executed successfully`);
+    console.log(`🧹 CLEANUP DEBUG: result.rowCount = ${result.rowCount}`);
     console.log(`Cleaned up ${result.rowCount || 0} old notifications`);
     return result.rowCount || 0;
   } catch (error) {
-    console.error('Error cleaning up notifications:', error);
+    console.error('❌ CLEANUP ERROR: Error cleaning up notifications:', error);
+    console.error('❌ CLEANUP ERROR: Error message:', error.message);
+    console.error('❌ CLEANUP ERROR: Error code:', error.code);
+    console.error('❌ CLEANUP ERROR: Error detail:', error.detail);
     throw error;
   } finally {
     client.release();
@@ -963,15 +973,25 @@ export async function getUnreadMessageCount(memberNumber) {
 export async function cleanupOldMessages(daysOld = 30) {
   const client = await getClient();
   try {
-    console.log(`Cleaning up messages older than ${daysOld} days...`);
+    console.log(`🧹 MESSAGE CLEANUP DEBUG: Starting message cleanup`);
+    console.log(`🧹 MESSAGE CLEANUP DEBUG: daysOld = ${daysOld} (type: ${typeof daysOld})`);
+    console.log(`🧹 MESSAGE CLEANUP DEBUG: SQL query: DELETE FROM messages WHERE sent_at < CURRENT_TIMESTAMP - INTERVAL '$1 day'`);
+    console.log(`🧹 MESSAGE CLEANUP DEBUG: Parameters array: [${daysOld}]`);
+    
     const result = await client.query(
       'DELETE FROM messages WHERE sent_at < CURRENT_TIMESTAMP - INTERVAL \'$1 day\'',
       [daysOld]
     );
+    
+    console.log(`🧹 MESSAGE CLEANUP DEBUG: Query executed successfully`);
+    console.log(`🧹 MESSAGE CLEANUP DEBUG: result.rowCount = ${result.rowCount}`);
     console.log(`Cleaned up ${result.rowCount || 0} old messages`);
     return result.rowCount || 0;
   } catch (error) {
-    console.error('Error cleaning up messages:', error);
+    console.error('❌ MESSAGE CLEANUP ERROR: Error cleaning up messages:', error);
+    console.error('❌ MESSAGE CLEANUP ERROR: Error message:', error.message);
+    console.error('❌ MESSAGE CLEANUP ERROR: Error code:', error.code);
+    console.error('❌ MESSAGE CLEANUP ERROR: Error detail:', error.detail);
     throw error;
   } finally {
     client.release();
