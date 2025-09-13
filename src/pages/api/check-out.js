@@ -38,13 +38,8 @@ export async function POST({ request }) {
       await updateTripNotes(checkInId, tripNotes, weatherConditions);
     }
     
-    // Complete check-in
+    // Complete check-in (this will create the notification)
     await completeCheckIn(checkInId);
-    
-    // Create notification
-    await createNotification(checkIn.boat_id, 'check_in', 
-      `${checkIn.sailor_name} returned ${checkIn.boat_name || 'boat'} at ${new Date().toLocaleString()}`
-    );
     
     // Send push notification
     await sendCheckInConfirmation(checkIn.sailor_name, checkIn.boat_name || 'boat');

@@ -307,8 +307,12 @@ export async function createCheckIn(boatId, sailorName, departureTime, expectedR
     // Update boat status to 'checked_out'
     await updateBoatStatus(boatId, 'checked_out');
     
-    // Create notification
-    await createNotification(boatId, 'check_out', `${sailorName} checked out ${boatId}`);
+    // Get boat name for better notification
+    const boatResult = await client.query('SELECT name FROM boats WHERE id = $1', [boatId]);
+    const boatName = boatResult.rows[0]?.name || 'Unknown Boat';
+    
+    // Create notification with boat name and ID
+    await createNotification(boatId, 'check_out', `${sailorName} checked out ${boatName} (${boatId})`);
     
     return result.rows[0].id;
   } finally {
@@ -345,8 +349,12 @@ export async function completeCheckIn(checkInId, skipHoursCalculation = false) {
       await calculateAndUpdateBoatHours(member_number, checkInId);
     }
     
-    // Create notification
-    await createNotification(boat_id, 'check_in', `${sailor_name} returned ${boat_id}`);
+    // Get boat name for better notification
+    const boatResult = await client.query('SELECT name FROM boats WHERE id = $1', [boat_id]);
+    const boatName = boatResult.rows[0]?.name || 'Unknown Boat';
+    
+    // Create notification with boat name and ID
+    await createNotification(boat_id, 'check_in', `${sailor_name} returned ${boatName} (${boat_id})`);
     
     return true;
   } finally {

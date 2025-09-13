@@ -169,7 +169,7 @@ export async function POST({ request }) {
         
         // Create notification for the previous sailor's check-in
         await createNotification(boatId, 'check_in', 
-          `Previous sailor automatically checked in when ${sailorName} took over ${boat.name}`
+          `Previous sailor automatically checked in when ${sailorName} took over ${boat.name} (${boatId})`
         );
         console.log('✅ TAKEOVER: Created check-in notification');
       } catch (error) {
@@ -181,10 +181,10 @@ export async function POST({ request }) {
       console.log('- previousCheckInId:', previousCheckInId);
     }
     
-    // Create notification
+    // Create notification (only for take-over, regular check-out is handled in createCheckIn)
     if (takeOver) {
       await createNotification(boatId, 'take_over', 
-        `${sailorName} took over ${boat.name} from previous sailor at ${new Date(departureTime).toLocaleString()}`
+        `${sailorName} took over ${boat.name} (${boatId}) from previous sailor at ${new Date(departureTime).toLocaleString()}`
       );
       
       // Send notification to previous sailor if we have their info
@@ -199,10 +199,6 @@ export async function POST({ request }) {
           console.error('Error sending take over notification to previous sailor:', error);
         }
       }
-    } else {
-      await createNotification(boatId, 'check_out', 
-        `${sailorName} checked out ${boat.name} at ${new Date(departureTime).toLocaleString()}`
-      );
     }
     
     // Send push notification
