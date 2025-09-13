@@ -527,8 +527,14 @@ export async function cleanupOldNotifications(retentionDays = 30) {
 export async function getNotificationStats() {
   const client = await getClient();
   try {
-    const result = await client.query('SELECT COUNT(*) as total FROM notifications');
-    return result.rows[0].total;
+    const result = await client.query(`
+      SELECT 
+        COUNT(*) as total,
+        MIN(sent_at) as oldest,
+        MAX(sent_at) as newest
+      FROM notifications
+    `);
+    return result.rows[0];
   } finally {
     client.release();
   }

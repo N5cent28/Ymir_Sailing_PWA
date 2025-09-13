@@ -743,9 +743,11 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
         return;
       }
       
+      // Get the button element
+      const button = document.querySelector('button[onclick="cleanupNotifications()"]');
+      const originalText = button.innerHTML;
+      
       try {
-        const button = event.target;
-        const originalText = button.innerHTML;
         button.innerHTML = '⏳ Cleaning up...';
         button.disabled = true;
         
@@ -758,14 +760,14 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
           // Reload stats
           loadNotificationStats();
         } else {
-          throw new Error('Cleanup failed');
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Cleanup failed');
         }
       } catch (error) {
         console.error('Cleanup error:', error);
-        alert('Cleanup failed. Please try again.');
+        alert('Cleanup failed: ' + error.message);
       } finally {
-        const button = event.target;
-        button.innerHTML = '🗑️ Cleanup Old Notifications';
+        button.innerHTML = originalText;
         button.disabled = false;
       }
     }
