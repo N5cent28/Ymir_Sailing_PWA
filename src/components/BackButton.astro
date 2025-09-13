@@ -19,10 +19,10 @@ if (!backHref) {
       backHref = '/en/admin-dashboard';
       break;
     case 'profile':
-      backHref = '/en/';
+      backHref = '/en';
       break;
     default:
-      backHref = '/en/';
+      backHref = '/en';
   }
 }
 ---
@@ -73,7 +73,7 @@ if (!backHref) {
     
     // Only update if we're not already on the stored page
     if (previousPage !== currentPage) {
-      sessionStorage.setItem('previousPage', previousPage || '/en/');
+      sessionStorage.setItem('previousPage', previousPage || '/en');
     }
   });
 </script> 

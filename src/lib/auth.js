@@ -212,7 +212,7 @@ export function requireAdmin(returnUrl = null) {
   
   if (!user.is_admin) {
     alert('Admin access required');
-    window.location.href = returnUrl || '/en/';
+    window.location.href = returnUrl || '/en';
     return null;
   }
   

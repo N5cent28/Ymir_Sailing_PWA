@@ -151,9 +151,14 @@ import BackButton from '../../components/BackButton.astro';
                   </div>
                 </div>
                 <div class="bg-white border rounded-lg p-6">
-                  <h4 class="text-lg font-semibold mb-4">Total Sailing Experience</h4>
-                  <div class="text-4xl font-bold text-ocean-blue mb-2" id="otherTotalHoursDisplay">0</div>
-                  <div class="text-anchor-gray">Total hours across all boat classes</div>
+                  <h4 class="text-lg font-semibold mb-4">Active Checkout</h4>
+                  <div id="otherActiveCheckoutContent">
+                    <div class="text-center py-8">
+                      <div class="text-4xl mb-4">🚤</div>
+                      <p class="text-anchor-gray text-lg">No active crafts</p>
+                      <p class="text-sm text-gray-500 mt-2">This member doesn't currently have any boats checked out</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -278,9 +283,13 @@ import BackButton from '../../components/BackButton.astro';
                   </div>
                 </div>
                 <div class="bg-white border rounded-lg p-6">
-                  <h4 class="text-lg font-semibold mb-4">Total Sailing Experience</h4>
-                  <div class="text-4xl font-bold text-ocean-blue mb-2" id="totalHoursDisplay">0</div>
-                  <div class="text-anchor-gray">Total hours across all boat classes</div>
+                  <h4 class="text-lg font-semibold mb-4">My Active Checkout</h4>
+                  <div id="activeCheckoutContent">
+                    <div class="text-center py-8">
+                      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-ocean-blue mx-auto mb-4"></div>
+                      <p class="text-anchor-gray">Loading active checkout...</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1324,9 +1333,105 @@ import BackButton from '../../components/BackButton.astro';
         if (data.boatHours) {
           displayBoatHours(data.boatHours, data.totalHours);
         }
+        
+        // Also load active checkout
+        await loadActiveCheckout(memberNumber);
       } catch (err) {
         console.error('Error loading boat hours:', err);
       }
+    }
+
+    // Load active checkout
+    async function loadActiveCheckout(memberNumber) {
+      try {
+        const response = await fetch(`/api/my-active-boat?memberNumber=${memberNumber}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          displayActiveCheckout(data.activeBoat);
+        }
+      } catch (err) {
+        console.error('Error loading active checkout:', err);
+        displayActiveCheckout(null, 'Error loading active checkout');
+      }
+    }
+
+    // Display active checkout
+    function displayActiveCheckout(activeBoat, errorMessage = null) {
+      const activeCheckoutContent = document.getElementById('activeCheckoutContent');
+      
+      if (errorMessage) {
+        activeCheckoutContent.innerHTML = `
+          <div class="text-center py-8">
+            <div class="text-4xl mb-4">⚠️</div>
+            <p class="text-red-600">${errorMessage}</p>
+          </div>
+        `;
+        return;
+      }
+      
+      if (!activeBoat) {
+        activeCheckoutContent.innerHTML = `
+          <div class="text-center py-8">
+            <div class="text-4xl mb-4">🚤</div>
+            <p class="text-anchor-gray text-lg">No active crafts</p>
+            <p class="text-sm text-gray-500 mt-2">You don't currently have any boats checked out</p>
+          </div>
+        `;
+        return;
+      }
+      
+      // Calculate time elapsed
+      const departureTime = new Date(activeBoat.departure_time);
+      const now = new Date();
+      const elapsedMs = now - departureTime;
+      const elapsedHours = Math.floor(elapsedMs / (1000 * 60 * 60));
+      const elapsedMinutes = Math.floor((elapsedMs % (1000 * 60 * 60)) / (1000 * 60));
+      
+      // Calculate time remaining
+      const expectedReturn = new Date(activeBoat.expected_return);
+      const remainingMs = expectedReturn - now;
+      const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+      const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+      
+      const isOverdue = remainingMs < 0;
+      const timeRemainingText = isOverdue 
+        ? `Overdue by ${Math.abs(remainingHours)}h ${Math.abs(remainingMinutes)}m`
+        : `${remainingHours}h ${remainingMinutes}m remaining`;
+      
+      activeCheckoutContent.innerHTML = `
+        <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h5 class="text-xl font-semibold text-blue-900">${activeBoat.boat_name}</h5>
+              <p class="text-sm text-blue-700">Checked out at ${departureTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+            </div>
+            <div class="text-right">
+              <div class="text-2xl">🚤</div>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="bg-white rounded-lg p-3 text-center">
+              <div class="text-lg font-bold text-blue-600">${elapsedHours}h ${elapsedMinutes}m</div>
+              <div class="text-xs text-blue-800">Time elapsed</div>
+            </div>
+            <div class="bg-white rounded-lg p-3 text-center">
+              <div class="text-lg font-bold ${isOverdue ? 'text-red-600' : 'text-green-600'}">${timeRemainingText}</div>
+              <div class="text-xs ${isOverdue ? 'text-red-800' : 'text-green-800'}">${isOverdue ? 'Overdue' : 'Time remaining'}</div>
+            </div>
+          </div>
+          
+          <div class="text-center">
+            <a href="/en/my-boat" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+              Manage Checkout
+            </a>
+          </div>
+        </div>
+      `;
     }
 
     // Display boat hours
@@ -1337,11 +1442,14 @@ import BackButton from '../../components/BackButton.astro';
       document.getElementById('keelboatHours').textContent = boatHours.Keelboat ? boatHours.Keelboat.toFixed(1) : '0';
       document.getElementById('paddlingHours').textContent = boatHours.Paddling ? boatHours.Paddling.toFixed(1) : '0';
       
-      // Update total hours display
-      document.getElementById('totalHoursDisplay').textContent = totalHours ? totalHours.toFixed(1) : '0';
+      // Calculate total from all boat classes (this should be the correct total)
+      const calculatedTotal = (boatHours.SoloDinghy || 0) + (boatHours.Dinghy || 0) + (boatHours.Keelboat || 0) + (boatHours.Paddling || 0);
       
-      // Also update the stats card at the top
-      document.getElementById('totalHours').textContent = totalHours ? totalHours.toFixed(1) : '0';
+      // Update total hours display - use calculated total instead of API total
+      document.getElementById('totalHoursDisplay').textContent = calculatedTotal.toFixed(1);
+      
+      // Also update the stats card at the top with the calculated total
+      document.getElementById('totalHours').textContent = calculatedTotal.toFixed(1);
     }
 
     // Load trip photos
@@ -1858,9 +1966,96 @@ import BackButton from '../../components/BackButton.astro';
         if (data.boatHours) {
           displayOtherBoatHours(data.boatHours, data.totalHours);
         }
+        
+        // Also load their active checkout
+        await loadOtherActiveCheckout(memberNumber);
       } catch (error) {
         console.error('Error loading other boat hours:', error);
       }
+    }
+
+    // Load other member's active checkout
+    async function loadOtherActiveCheckout(memberNumber) {
+      try {
+        const response = await fetch(`/api/my-active-boat?memberNumber=${memberNumber}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          displayOtherActiveCheckout(data.activeBoat);
+        }
+      } catch (err) {
+        console.error('Error loading other active checkout:', err);
+        displayOtherActiveCheckout(null, 'Error loading active checkout');
+      }
+    }
+
+    // Display other member's active checkout
+    function displayOtherActiveCheckout(activeBoat, errorMessage = null) {
+      const otherActiveCheckoutContent = document.getElementById('otherActiveCheckoutContent');
+      
+      if (errorMessage) {
+        otherActiveCheckoutContent.innerHTML = `
+          <div class="text-center py-8">
+            <div class="text-4xl mb-4">⚠️</div>
+            <p class="text-red-600">${errorMessage}</p>
+          </div>
+        `;
+        return;
+      }
+      
+      if (!activeBoat) {
+        otherActiveCheckoutContent.innerHTML = `
+          <div class="text-center py-8">
+            <div class="text-4xl mb-4">🚤</div>
+            <p class="text-anchor-gray text-lg">No active crafts</p>
+            <p class="text-sm text-gray-500 mt-2">This member doesn't currently have any boats checked out</p>
+          </div>
+        `;
+        return;
+      }
+      
+      // Calculate time elapsed
+      const departureTime = new Date(activeBoat.departure_time);
+      const now = new Date();
+      const elapsedMs = now - departureTime;
+      const elapsedHours = Math.floor(elapsedMs / (1000 * 60 * 60));
+      const elapsedMinutes = Math.floor((elapsedMs % (1000 * 60 * 60)) / (1000 * 60));
+      
+      // Calculate time remaining
+      const expectedReturn = new Date(activeBoat.expected_return);
+      const remainingMs = expectedReturn - now;
+      const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+      const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+      
+      const isOverdue = remainingMs < 0;
+      const timeRemainingText = isOverdue 
+        ? `Overdue by ${Math.abs(remainingHours)}h ${Math.abs(remainingMinutes)}m`
+        : `${remainingHours}h ${remainingMinutes}m remaining`;
+      
+      otherActiveCheckoutContent.innerHTML = `
+        <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h5 class="text-xl font-semibold text-blue-900">${activeBoat.boat_name}</h5>
+              <p class="text-sm text-blue-700">Checked out at ${departureTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+            </div>
+            <div class="text-right">
+              <div class="text-2xl">🚤</div>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-white rounded-lg p-3 text-center">
+              <div class="text-lg font-bold text-blue-600">${elapsedHours}h ${elapsedMinutes}m</div>
+              <div class="text-xs text-blue-800">Time elapsed</div>
+            </div>
+            <div class="bg-white rounded-lg p-3 text-center">
+              <div class="text-lg font-bold ${isOverdue ? 'text-red-600' : 'text-green-600'}">${timeRemainingText}</div>
+              <div class="text-xs ${isOverdue ? 'text-red-800' : 'text-green-800'}">${isOverdue ? 'Overdue' : 'Time remaining'}</div>
+            </div>
+          </div>
+        </div>
+      `;
     }
 
     // Display other member's boat hours
@@ -1869,8 +2064,12 @@ import BackButton from '../../components/BackButton.astro';
       document.getElementById('otherDinghyHours').textContent = boatHours.Dinghy ? boatHours.Dinghy.toFixed(1) : '0';
       document.getElementById('otherKeelboatHours').textContent = boatHours.Keelboat ? boatHours.Keelboat.toFixed(1) : '0';
       document.getElementById('otherPaddlingHours').textContent = boatHours.Paddling ? boatHours.Paddling.toFixed(1) : '0';
-      document.getElementById('otherTotalHoursDisplay').textContent = totalHours ? totalHours.toFixed(1) : '0';
-      document.getElementById('otherMemberHours').textContent = totalHours ? totalHours.toFixed(1) : '0';
+      
+      // Calculate total from all boat classes (this should be the correct total)
+      const calculatedTotal = (boatHours.SoloDinghy || 0) + (boatHours.Dinghy || 0) + (boatHours.Keelboat || 0) + (boatHours.Paddling || 0);
+      
+      // Note: otherTotalHoursDisplay was removed when we replaced the section, but keep otherMemberHours for the stats card
+      document.getElementById('otherMemberHours').textContent = calculatedTotal.toFixed(1);
     }
 
     // Display other member's trips
