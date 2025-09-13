@@ -516,7 +516,7 @@ export async function cleanupOldNotifications(retentionDays = 30) {
   try {
     console.log(`Cleaning up notifications older than ${retentionDays} days...`);
     const result = await client.query(
-      'DELETE FROM notifications WHERE sent_at < CURRENT_TIMESTAMP - INTERVAL \'$1 days\'',
+      'DELETE FROM notifications WHERE sent_at < CURRENT_TIMESTAMP - INTERVAL \'$1 day\'',
       [retentionDays]
     );
     console.log(`Cleaned up ${result.rowCount || 0} old notifications`);
@@ -965,7 +965,7 @@ export async function cleanupOldMessages(daysOld = 30) {
   try {
     console.log(`Cleaning up messages older than ${daysOld} days...`);
     const result = await client.query(
-      'DELETE FROM messages WHERE sent_at < CURRENT_TIMESTAMP - INTERVAL \'$1 days\'',
+      'DELETE FROM messages WHERE sent_at < CURRENT_TIMESTAMP - INTERVAL \'$1 day\'',
       [daysOld]
     );
     console.log(`Cleaned up ${result.rowCount || 0} old messages`);
