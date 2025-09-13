@@ -1428,8 +1428,10 @@ import BackButton from '../../components/BackButton.astro';
       // Calculate time remaining (both times are in UTC from database)
       const expectedReturn = new Date(activeBoat.expected_return);
       const remainingMs = expectedReturn - now;
-      const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
-      const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+      
+      // Fix the calculation for overdue times - use absolute value for proper calculation
+      const remainingHours = Math.floor(Math.abs(remainingMs) / (1000 * 60 * 60));
+      const remainingMinutes = Math.floor((Math.abs(remainingMs) % (1000 * 60 * 60)) / (1000 * 60));
       
       console.log('- elapsedMs:', elapsedMs);
       console.log('- remainingMs:', remainingMs);
@@ -1439,6 +1441,11 @@ import BackButton from '../../components/BackButton.astro';
       const timeRemainingText = isOverdue 
         ? `Overdue by ${Math.abs(remainingHours)}h ${Math.abs(remainingMinutes)}m`
         : `${remainingHours}h ${remainingMinutes}m remaining`;
+      
+      // Debug the calculation
+      console.log('- remainingHours:', remainingHours);
+      console.log('- remainingMinutes:', remainingMinutes);
+      console.log('- timeRemainingText:', timeRemainingText);
       
       activeCheckoutContent.innerHTML = `
         <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-6">
@@ -2063,8 +2070,10 @@ import BackButton from '../../components/BackButton.astro';
       // Calculate time remaining (both times are in UTC from database)
       const expectedReturn = new Date(activeBoat.expected_return);
       const remainingMs = expectedReturn - now;
-      const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
-      const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+      
+      // Fix the calculation for overdue times - use absolute value for proper calculation
+      const remainingHours = Math.floor(Math.abs(remainingMs) / (1000 * 60 * 60));
+      const remainingMinutes = Math.floor((Math.abs(remainingMs) % (1000 * 60 * 60)) / (1000 * 60));
       
       const isOverdue = remainingMs < 0;
       const timeRemainingText = isOverdue 
