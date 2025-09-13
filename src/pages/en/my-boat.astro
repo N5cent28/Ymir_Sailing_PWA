@@ -257,7 +257,7 @@ import TimeExtensionModal from '../../components/TimeExtensionModal.astro';
         const result = await response.json();
         
         if (result.success) {
-          showSuccess();
+          showCheckInSuccess(result);
         } else {
           showError(result.error || 'Failed to check in boat');
         }
@@ -388,6 +388,48 @@ import TimeExtensionModal from '../../components/TimeExtensionModal.astro';
       }, 5000); // Hide success message after 5 seconds
     }
 
+    function showCheckInSuccess(result) {
+      // Create a more prominent success display
+      const successContainer = document.createElement('div');
+      successContainer.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+      successContainer.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6 text-center">
+          <div class="text-6xl mb-4">✅</div>
+          <h2 class="text-2xl font-bold text-green-600 mb-4">Check-in Successful!</h2>
+          <p class="text-gray-700 mb-6">${result.message}</p>
+          <div class="space-y-3">
+            <a href="/en/profile?memberNumber=${result.memberNumber}" class="block w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              View My Profile
+            </a>
+            <a href="/en" class="block w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+              Go Home
+            </a>
+            <button onclick="this.closest('.fixed').remove()" class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+              Continue
+            </button>
+          </div>
+          <div class="mt-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+            <p class="text-orange-800 mb-3 text-sm">Notice any issues with the boat?</p>
+            <button 
+              onclick="openMaintenanceModalFromMyBoat(); this.closest('.fixed').remove();"
+              class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm"
+            >
+              🔧 Report Maintenance Issue
+            </button>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(successContainer);
+      
+      // Auto-remove after 10 seconds if user doesn't interact
+      setTimeout(() => {
+        if (successContainer.parentNode) {
+          successContainer.remove();
+        }
+      }, 10000);
+    }
+
     function hideAll() {
       loading.classList.add('hidden');
       activeBoat.classList.add('hidden');
@@ -409,9 +451,36 @@ import TimeExtensionModal from '../../components/TimeExtensionModal.astro';
     });
 
     // Maintenance modal callback
-    window.onMaintenanceReported = function() {
-      alert('Maintenance issue reported successfully! The boat status has been updated.');
-      // Don't reload the page - keep the current state
+    window.onMaintenanceReported = function(issueId) {
+      // Show a better success message
+      const successOverlay = document.createElement('div');
+      successOverlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+      successOverlay.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6 text-center">
+          <div class="text-6xl mb-4">🔧</div>
+          <h2 class="text-2xl font-bold text-green-600 mb-4">Issue Reported Successfully!</h2>
+          <p class="text-gray-700 mb-4">Your maintenance issue has been reported to the admin team.</p>
+          <p class="text-sm text-gray-500 mb-6">Issue ID: #${issueId}</p>
+          <div class="space-y-3">
+            <button onclick="this.closest('.fixed').remove()" class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+              Continue with Check-in
+            </button>
+            <button onclick="this.closest('.fixed').remove(); location.reload();" class="block w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              Refresh Page
+            </button>
+          </div>
+          <p class="text-xs text-gray-500 mt-4">You can now complete your boat check-in process.</p>
+        </div>
+      `;
+      
+      document.body.appendChild(successOverlay);
+      
+      // Auto-remove after 8 seconds
+      setTimeout(() => {
+        if (successOverlay.parentNode) {
+          successOverlay.remove();
+        }
+      }, 8000);
     };
 
     // Function to open maintenance modal

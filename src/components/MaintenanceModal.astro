@@ -87,6 +87,38 @@
     document.getElementById('maintenanceModal').classList.add('hidden');
     document.getElementById('maintenanceForm').reset();
   }
+
+  function showMaintenanceSuccess(issueId) {
+    // Create a success overlay
+    const successOverlay = document.createElement('div');
+    successOverlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    successOverlay.innerHTML = `
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6 text-center">
+        <div class="text-6xl mb-4">🔧</div>
+        <h2 class="text-2xl font-bold text-green-600 mb-4">Issue Reported Successfully!</h2>
+        <p class="text-gray-700 mb-4">Your maintenance issue has been reported to the admin team.</p>
+        <p class="text-sm text-gray-500 mb-6">Issue ID: #${issueId}</p>
+        <div class="space-y-3">
+          <button onclick="this.closest('.fixed').remove()" class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+            Continue with Check-in
+          </button>
+          <button onclick="this.closest('.fixed').remove(); window.location.reload();" class="block w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            Refresh Page
+          </button>
+        </div>
+        <p class="text-xs text-gray-500 mt-4">You can now complete your boat check-in process.</p>
+      </div>
+    `;
+    
+    document.body.appendChild(successOverlay);
+    
+    // Auto-remove after 8 seconds
+    setTimeout(() => {
+      if (successOverlay.parentNode) {
+        successOverlay.remove();
+      }
+    }, 8000);
+  }
   
   document.getElementById('maintenanceForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -115,7 +147,8 @@
       const data = await response.json();
       
       if (data.success) {
-        alert('Maintenance issue reported successfully!');
+        // Show success message with better UI
+        showMaintenanceSuccess(data.issueId);
         closeMaintenanceModal();
         
         // Trigger any custom callback if defined
