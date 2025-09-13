@@ -1406,18 +1406,34 @@ import BackButton from '../../components/BackButton.astro';
         return;
       }
       
-      // Calculate time elapsed
+      // Calculate time elapsed (both times are in UTC from database)
       const departureTime = new Date(activeBoat.departure_time);
       const now = new Date();
+      
+      // Debug logging to understand the timezone issue
+      console.log('🔍 TIMEZONE DEBUG:');
+      console.log('- departure_time (raw):', activeBoat.departure_time);
+      console.log('- departure_time (parsed):', departureTime.toISOString());
+      console.log('- departure_time (local):', departureTime.toLocaleString());
+      console.log('- expected_return (raw):', activeBoat.expected_return);
+      console.log('- expected_return (parsed):', new Date(activeBoat.expected_return).toISOString());
+      console.log('- expected_return (local):', new Date(activeBoat.expected_return).toLocaleString());
+      console.log('- current time (UTC):', now.toISOString());
+      console.log('- current time (local):', now.toLocaleString());
+      
       const elapsedMs = now - departureTime;
       const elapsedHours = Math.floor(elapsedMs / (1000 * 60 * 60));
       const elapsedMinutes = Math.floor((elapsedMs % (1000 * 60 * 60)) / (1000 * 60));
       
-      // Calculate time remaining
+      // Calculate time remaining (both times are in UTC from database)
       const expectedReturn = new Date(activeBoat.expected_return);
       const remainingMs = expectedReturn - now;
       const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
       const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+      
+      console.log('- elapsedMs:', elapsedMs);
+      console.log('- remainingMs:', remainingMs);
+      console.log('- isOverdue:', remainingMs < 0);
       
       const isOverdue = remainingMs < 0;
       const timeRemainingText = isOverdue 
@@ -2037,14 +2053,14 @@ import BackButton from '../../components/BackButton.astro';
         return;
       }
       
-      // Calculate time elapsed
+      // Calculate time elapsed (both times are in UTC from database)
       const departureTime = new Date(activeBoat.departure_time);
       const now = new Date();
       const elapsedMs = now - departureTime;
       const elapsedHours = Math.floor(elapsedMs / (1000 * 60 * 60));
       const elapsedMinutes = Math.floor((elapsedMs % (1000 * 60 * 60)) / (1000 * 60));
       
-      // Calculate time remaining
+      // Calculate time remaining (both times are in UTC from database)
       const expectedReturn = new Date(activeBoat.expected_return);
       const remainingMs = expectedReturn - now;
       const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
