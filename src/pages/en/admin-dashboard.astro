@@ -479,6 +479,9 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
       localStorage.removeItem('adminMember');
       window.location.href = '/en/admin-login';
     }
+    
+    // Make logout globally available
+    window.logout = logout;
 
     // Test notification button - wait for DOM to be ready
     function initializeNotificationButton() {
@@ -766,5 +769,8 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
         button.disabled = false;
       }
     }
+    
+    // Make cleanupNotifications globally available
+    window.cleanupNotifications = cleanupNotifications;
   </script>
 </Layout> 

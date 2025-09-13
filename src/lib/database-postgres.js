@@ -514,10 +514,11 @@ export async function getRecentNotifications(limit = 10) {
 export async function cleanupOldNotifications(retentionDays = 30) {
   const client = await getClient();
   try {
-    await client.query(
+    const result = await client.query(
       'DELETE FROM notifications WHERE sent_at < CURRENT_TIMESTAMP - INTERVAL \'$1 days\'',
       [retentionDays]
     );
+    return result.rowCount || 0;
   } finally {
     client.release();
   }
