@@ -789,9 +789,17 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
             new Date(stats.oldest).toLocaleDateString() : 'None';
           document.getElementById('newest-message').textContent = stats.newest ? 
             new Date(stats.newest).toLocaleDateString() : 'None';
+        } else {
+          console.error('Failed to load message stats:', response.status);
+          document.getElementById('total-messages').textContent = 'Error';
+          document.getElementById('oldest-message').textContent = 'Error';
+          document.getElementById('newest-message').textContent = 'Error';
         }
       } catch (error) {
         console.error('Error loading message stats:', error);
+        document.getElementById('total-messages').textContent = 'Error';
+        document.getElementById('oldest-message').textContent = 'Error';
+        document.getElementById('newest-message').textContent = 'Error';
       }
     }
     
@@ -840,6 +848,16 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
         return;
       }
       
+      // Get admin member info
+      const adminMember = localStorage.getItem('adminMember');
+      if (!adminMember) {
+        alert('Admin authentication required. Please log in again.');
+        window.location.href = '/en/admin-login';
+        return;
+      }
+      
+      const member = JSON.parse(adminMember);
+      
       // Get the button element
       const button = document.querySelector('button[onclick="cleanupMessages()"]');
       const originalText = button.innerHTML;
@@ -848,7 +866,16 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
         button.innerHTML = '⏳ Cleaning up...';
         button.disabled = true;
         
-        const response = await fetch(`/api/admin-enhanced?action=cleanup_messages&days=${retentionDays}`);
+        const response = await fetch('/api/cleanup-messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            daysOld: parseInt(retentionDays),
+            adminMemberNumber: member.member_number
+          })
+        });
         
         if (response.ok) {
           const data = await response.json();
