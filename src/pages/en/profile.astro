@@ -1212,16 +1212,6 @@ import BackButton from '../../components/BackButton.astro';
           if (profileData.trips) {
             document.getElementById('totalTrips').textContent = profileData.trips.length;
             
-            // Calculate total hours
-            const totalHours = profileData.trips.reduce((total, trip) => {
-              if (trip.actual_return && trip.departure_time) {
-                const duration = new Date(trip.actual_return) - new Date(trip.departure_time);
-                return total + (duration / (1000 * 60 * 60)); // Convert to hours
-              }
-              return total;
-            }, 0);
-            document.getElementById('totalHours').textContent = Math.round(totalHours);
-            
             // Display trips
             displayTrips(profileData.trips);
           }
@@ -1327,32 +1317,67 @@ import BackButton from '../../components/BackButton.astro';
     // Load boat hours
     async function loadBoatHours(memberNumber) {
       try {
+        console.log('Loading boat hours for member:', memberNumber);
         const response = await fetch(`/api/boat-hours?memberNumber=${memberNumber}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log('Boat hours API response:', data);
         
         if (data.boatHours) {
           displayBoatHours(data.boatHours, data.totalHours);
+        } else {
+          console.warn('No boat hours data received');
+          // Initialize with zero values
+          displayBoatHours({
+            SoloDinghy: 0,
+            Dinghy: 0,
+            Keelboat: 0,
+            Paddling: 0
+          }, 0);
         }
         
         // Also load active checkout
         await loadActiveCheckout(memberNumber);
       } catch (err) {
         console.error('Error loading boat hours:', err);
+        // Initialize with zero values on error
+        displayBoatHours({
+          SoloDinghy: 0,
+          Dinghy: 0,
+          Keelboat: 0,
+          Paddling: 0
+        }, 0);
+        
+        // Still try to load active checkout
+        await loadActiveCheckout(memberNumber);
       }
     }
 
     // Load active checkout
     async function loadActiveCheckout(memberNumber) {
       try {
+        console.log('Loading active checkout for member:', memberNumber);
         const response = await fetch(`/api/my-active-boat?memberNumber=${memberNumber}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log('Active checkout API response:', data);
         
         if (data.success) {
           displayActiveCheckout(data.activeBoat);
+        } else {
+          displayActiveCheckout(null, data.message || 'No active checkout found');
         }
       } catch (err) {
         console.error('Error loading active checkout:', err);
-        displayActiveCheckout(null, 'Error loading active checkout');
+        displayActiveCheckout(null, `Error loading active checkout: ${err.message}`);
       }
     }
 
@@ -1445,10 +1470,8 @@ import BackButton from '../../components/BackButton.astro';
       // Calculate total from all boat classes (this should be the correct total)
       const calculatedTotal = (boatHours.SoloDinghy || 0) + (boatHours.Dinghy || 0) + (boatHours.Keelboat || 0) + (boatHours.Paddling || 0);
       
-      // Update total hours display - use calculated total instead of API total
-      document.getElementById('totalHoursDisplay').textContent = calculatedTotal.toFixed(1);
-      
-      // Also update the stats card at the top with the calculated total
+      // Update the stats card at the top with the calculated total
+      // Note: totalHoursDisplay was removed when we replaced the section with active checkout
       document.getElementById('totalHours').textContent = calculatedTotal.toFixed(1);
     }
 
