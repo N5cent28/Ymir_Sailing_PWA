@@ -5,13 +5,30 @@ const basePath = currentLang === 'is' ? '/is' : '/en';
 const navItems = {
   en: [
     { href: '/en', label: 'Info', hasBadge: false },
-    { href: '/en/profile', label: 'My Profile', hasBadge: false },
+    { 
+      label: 'Members', 
+      hasBadge: false, 
+      isDropdown: true,
+      items: [
+        { href: '/en/profile', label: 'My Profile' },
+        { href: '/en/find-members', label: 'Find Members' }
+      ]
+    },
     { href: '/en/my-boat', label: 'My Boat', hasBadge: false },
     { href: '/en/contact', label: 'Contact', hasBadge: false },
     { href: '/en/admin-login', label: 'Admin', hasBadge: false },
   ],
   is: [
     { href: '/is', label: 'Upplýsingar', hasBadge: false },
+    { 
+      label: 'Félagar', 
+      hasBadge: false, 
+      isDropdown: true,
+      items: [
+        { href: '/is/profile', label: 'Mín Prófíll' },
+        { href: '/is/find-members', label: 'Finna Félaga' }
+      ]
+    },
     { href: '/is/my-boat', label: 'Mín Bátur', hasBadge: false },
     { href: '/is/contact', label: 'Hafðu samband', hasBadge: false },
     { href: '/is/admin-login', label: 'Stjórn', hasBadge: false },
@@ -60,20 +77,44 @@ const items = navItems[currentLang as keyof typeof navItems];
       <!-- Desktop Navigation -->
       <div class="hidden md:flex items-center space-x-8">
         {items.map((item) => (
-          <a
-            href={item.href}
-            class="text-anchor-gray hover:text-ocean-blue px-3 py-2 rounded-md text-sm font-medium transition-colors relative"
-          >
-            {item.label}
-            {item.hasBadge && (
-              <span 
-                id={`badge-${item.href.split('/').pop()}`}
-                class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden"
-              >
-                0
-              </span>
-            )}
-          </a>
+          item.isDropdown ? (
+            <!-- Dropdown Menu -->
+            <div class="relative group">
+              <button class="text-anchor-gray hover:text-ocean-blue px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center">
+                {item.label}
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+              <div class="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div class="py-1">
+                  {item.items.map((subItem) => (
+                    <a
+                      href={subItem.href}
+                      class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-ocean-blue transition-colors"
+                    >
+                      {subItem.label}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <a
+              href={item.href}
+              class="text-anchor-gray hover:text-ocean-blue px-3 py-2 rounded-md text-sm font-medium transition-colors relative"
+            >
+              {item.label}
+              {item.hasBadge && (
+                <span 
+                  id={`badge-${item.href.split('/').pop()}`}
+                  class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden"
+                >
+                  0
+                </span>
+              )}
+            </a>
+          )
         ))}
         
         <!-- Language Toggle -->
@@ -132,20 +173,44 @@ const items = navItems[currentLang as keyof typeof navItems];
   <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-200">
     <div class="px-2 pt-2 pb-3 space-y-1">
       {items.map((item) => (
-        <a
-          href={item.href}
-          class="text-anchor-gray hover:text-ocean-blue block px-3 py-2 rounded-md text-base font-medium transition-colors relative"
-        >
-          {item.label}
-          {item.hasBadge && (
-            <span 
-              id={`mobile-badge-${item.href.split('/').pop()}`}
-              class="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1 hidden"
+        item.isDropdown ? (
+          <!-- Mobile Dropdown -->
+          <div class="mobile-dropdown">
+            <button 
+              class="mobile-dropdown-toggle text-anchor-gray hover:text-ocean-blue block px-3 py-2 rounded-md text-base font-medium transition-colors w-full text-left flex items-center justify-between"
             >
-              0
-            </span>
-          )}
-        </a>
+              <span>{item.label}</span>
+              <svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            <div class="mobile-dropdown-content hidden pl-4 space-y-1">
+              {item.items.map((subItem) => (
+                <a
+                  href={subItem.href}
+                  class="text-anchor-gray hover:text-ocean-blue block px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  {subItem.label}
+                </a>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <a
+            href={item.href}
+            class="text-anchor-gray hover:text-ocean-blue block px-3 py-2 rounded-md text-base font-medium transition-colors relative"
+          >
+            {item.label}
+            {item.hasBadge && (
+              <span 
+                id={`mobile-badge-${item.href.split('/').pop()}`}
+                class="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1 hidden"
+              >
+                0
+              </span>
+            )}
+          </a>
+        )
       ))}
       
       <!-- Language Toggle for Mobile -->
@@ -311,6 +376,29 @@ const items = navItems[currentLang as keyof typeof navItems];
   // Listen for auth state changes
   window.addEventListener('userLogin', updateLogoutButtonVisibility);
   window.addEventListener('userLogout', updateLogoutButtonVisibility);
+
+  // Mobile dropdown functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const mobileDropdownToggles = document.querySelectorAll('.mobile-dropdown-toggle');
+    
+    mobileDropdownToggles.forEach(toggle => {
+      toggle.addEventListener('click', function() {
+        const dropdown = this.parentElement;
+        const content = dropdown.querySelector('.mobile-dropdown-content');
+        const arrow = this.querySelector('svg');
+        
+        // Toggle the dropdown content
+        content.classList.toggle('hidden');
+        
+        // Rotate the arrow
+        if (content.classList.contains('hidden')) {
+          arrow.style.transform = 'rotate(0deg)';
+        } else {
+          arrow.style.transform = 'rotate(180deg)';
+        }
+      });
+    });
+  });
 
   // Mobile menu toggle
   const mobileMenuButton = document.getElementById('mobile-menu-button');
