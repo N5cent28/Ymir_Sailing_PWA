@@ -1404,6 +1404,23 @@ export async function getPushSubscriptions(memberNumber = null) {
   }
 }
 
+export async function updatePushSubscriptionMember(subscriptionData) {
+  const client = await getClient();
+  try {
+    const { endpoint, p256dh, auth, userAgent, memberNumber, timestamp } = subscriptionData;
+    
+    // Update existing subscription with member number
+    await client.query(
+      `UPDATE push_subscriptions 
+       SET p256dh = $1, auth = $2, user_agent = $3, member_number = $4, updated_at = $5
+       WHERE endpoint = $6`,
+      [p256dh, auth, userAgent, memberNumber, timestamp, endpoint]
+    );
+  } finally {
+    client.release();
+  }
+}
+
 export async function deletePushSubscription(endpoint) {
   const client = await getClient();
   try {

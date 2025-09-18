@@ -61,6 +61,62 @@ export async function POST({ request }) {
   }
 }
 
+export async function PUT({ request }) {
+  try {
+    const { subscription, userAgent, timestamp, memberNumber } = await request.json();
+    
+    if (!subscription) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Missing subscription data' 
+      }), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // Import database functions
+    const { updatePushSubscriptionMember } = await import('../../lib/database-postgres.js');
+    
+    // Update existing subscription with member number
+    const subscriptionData = {
+      endpoint: subscription.endpoint,
+      p256dh: subscription.keys?.p256dh || null,
+      auth: subscription.keys?.auth || null,
+      userAgent: userAgent || 'Unknown',
+      memberNumber: memberNumber || null,
+      timestamp: timestamp || new Date().toISOString()
+    };
+    
+    await updatePushSubscriptionMember(subscriptionData);
+    
+    console.log('📱 Push subscription updated:', {
+      endpoint: subscription.endpoint,
+      memberNumber: memberNumber || 'Anonymous',
+      userAgent: userAgent,
+      timestamp: timestamp
+    });
+    
+    return new Response(JSON.stringify({ 
+      success: true, 
+      message: 'Push subscription updated successfully' 
+    }), { 
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+  } catch (error) {
+    console.error('Push subscription PUT error:', error);
+    return new Response(JSON.stringify({ 
+      success: false,
+      error: 'Internal server error' 
+    }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
 export async function DELETE({ request }) {
   try {
     const { endpoint } = await request.json();

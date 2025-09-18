@@ -78,9 +78,9 @@ async function linkPushSubscriptionToMember(memberNumber) {
       const subscription = await registration.pushManager.getSubscription();
       
       if (subscription) {
-        // Update the subscription in the database with the member number
-        const response = await fetch('/api/push-subscription', {
-          method: 'POST',
+        // First, try to update any existing subscription for this endpoint
+        const updateResponse = await fetch('/api/push-subscription', {
+          method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
@@ -92,8 +92,26 @@ async function linkPushSubscriptionToMember(memberNumber) {
           })
         });
         
-        if (response.ok) {
-          console.log(`📱 Linked push subscription to member ${memberNumber}`);
+        if (updateResponse.ok) {
+          console.log(`📱 Updated existing push subscription for member ${memberNumber}`);
+        } else {
+          // If update failed, try to create/update via POST
+          const response = await fetch('/api/push-subscription', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              subscription: subscription,
+              userAgent: navigator.userAgent,
+              timestamp: new Date().toISOString(),
+              memberNumber: memberNumber
+            })
+          });
+          
+          if (response.ok) {
+            console.log(`📱 Linked push subscription to member ${memberNumber}`);
+          }
         }
       }
     }

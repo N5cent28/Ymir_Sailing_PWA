@@ -126,6 +126,10 @@
       <button class="test-button" onclick="checkPushSubscription()">
         Check Push Subscription
       </button>
+      
+      <button class="test-button" onclick="fixSubscriptionLink()" style="background: #dc2626;">
+        🔗 Fix Subscription Link
+      </button>
     </div>
     
     <div id="status"></div>
@@ -214,6 +218,57 @@
         }
       } catch (error) {
         showStatus(`❌ Error checking push subscription: ${error.message}`, 'error');
+      }
+    };
+    
+    window.fixSubscriptionLink = async function() {
+      const memberNumber = document.getElementById('memberNumber').value.trim();
+      
+      if (!memberNumber) {
+        showStatus('❌ Please enter your member number first', 'error');
+        return;
+      }
+      
+      showStatus('Fixing subscription link...', 'info');
+      
+      try {
+        // Get current subscription
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+          showStatus('❌ This browser does not support push notifications', 'error');
+          return;
+        }
+        
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        
+        if (!subscription) {
+          showStatus('❌ No push subscription found. Please grant notification permission first.', 'error');
+          return;
+        }
+        
+        // Update subscription with member number
+        const response = await fetch('/api/push-subscription', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            subscription: subscription,
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString(),
+            memberNumber: memberNumber
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          showStatus(`✅ Subscription linked to member ${memberNumber}! Try testing notifications now.`, 'success');
+        } else {
+          showStatus(`❌ Failed to link subscription: ${data.error}`, 'error');
+        }
+      } catch (error) {
+        showStatus(`❌ Error: ${error.message}`, 'error');
       }
     };
     
