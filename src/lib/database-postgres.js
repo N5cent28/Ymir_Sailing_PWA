@@ -1445,20 +1445,6 @@ export async function getAdmins() {
   }
 }
 
-export async function updatePushSubscriptionMember(endpoint, memberNumber) {
-  const client = await getClient();
-  try {
-    await client.query(
-      `UPDATE push_subscriptions 
-       SET member_number = $1, updated_at = CURRENT_TIMESTAMP
-       WHERE endpoint = $2`,
-      [memberNumber, endpoint]
-    );
-    console.log(`📱 Updated push subscription for endpoint ${endpoint.substring(0, 50)}... to member ${memberNumber}`);
-  } finally {
-    client.release();
-  }
-}
 
 export async function getMemberActivity(memberNumber) {
   const client = await getClient();
