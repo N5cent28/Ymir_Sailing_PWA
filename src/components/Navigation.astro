@@ -84,6 +84,20 @@ const items = navItems[currentLang as keyof typeof navItems];
           {currentLang === 'en' ? 'IS' : 'EN'}
         </a>
         
+        <!-- Logout Button for Desktop (shown when logged in) -->
+        <button
+          id="logout-button-desktop"
+          class="text-red-600 hover:text-red-800 px-3 py-2 rounded-md text-sm font-medium transition-colors hidden"
+          style="display: none;"
+        >
+          <div class="flex items-center">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+            <span>{currentLang === 'en' ? 'Logout' : 'Útskrá'}</span>
+          </div>
+        </button>
+        
         <!-- PWA Install Button for Desktop -->
         <button
           id="pwa-install-button-desktop"
@@ -141,6 +155,20 @@ const items = navItems[currentLang as keyof typeof navItems];
       >
         {currentLang === 'en' ? 'IS' : 'EN'}
       </a>
+      
+      <!-- Logout Button for Mobile (shown when logged in) -->
+      <button
+        id="logout-button-mobile"
+        class="text-red-600 hover:text-red-800 block px-3 py-2 rounded-md text-base font-medium transition-colors w-full text-left hidden"
+        style="display: none;"
+      >
+        <div class="flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+          </svg>
+          <span>{currentLang === 'en' ? 'Logout' : 'Útskrá'}</span>
+        </div>
+      </button>
       
       <!-- PWA Install Button for Mobile -->
       <button
@@ -208,6 +236,81 @@ const items = navItems[currentLang as keyof typeof navItems];
 
   // Refresh count every 30 seconds
   setInterval(loadUnreadMessageCount, 30000);
+
+  // Update logout button visibility based on login status
+  function updateLogoutButtonVisibility() {
+    const user = getCurrentUser();
+    const logoutButtonDesktop = document.getElementById('logout-button-desktop');
+    const logoutButtonMobile = document.getElementById('logout-button-mobile');
+    
+    if (user) {
+      // User is logged in, show logout buttons
+      if (logoutButtonDesktop) {
+        logoutButtonDesktop.style.display = 'block';
+        logoutButtonDesktop.classList.remove('hidden');
+      }
+      if (logoutButtonMobile) {
+        logoutButtonMobile.style.display = 'block';
+        logoutButtonMobile.classList.remove('hidden');
+      }
+    } else {
+      // User is not logged in, hide logout buttons
+      if (logoutButtonDesktop) {
+        logoutButtonDesktop.style.display = 'none';
+        logoutButtonDesktop.classList.add('hidden');
+      }
+      if (logoutButtonMobile) {
+        logoutButtonMobile.style.display = 'none';
+        logoutButtonMobile.classList.add('hidden');
+      }
+    }
+  }
+
+  // Handle logout functionality
+  async function handleLogout() {
+    try {
+      // Import the auth module
+      const { clearUserSession } = await import('/src/lib/auth.js');
+      
+      // Clear user session and clean up push subscriptions
+      clearUserSession();
+      
+      // Update UI
+      updateLogoutButtonVisibility();
+      
+      // Show success message
+      const currentLang = window.location.pathname.startsWith('/is') ? 'is' : 'en';
+      const message = currentLang === 'en' ? 'Logged out successfully' : 'Útskráning tókst';
+      alert(message);
+      
+      // Redirect to home page
+      const homePath = currentLang === 'en' ? '/en' : '/is';
+      window.location.href = homePath;
+      
+    } catch (error) {
+      console.error('Logout error:', error);
+      alert('Error during logout. Please try again.');
+    }
+  }
+
+  // Add event listeners for logout buttons
+  const logoutButtonDesktop = document.getElementById('logout-button-desktop');
+  const logoutButtonMobile = document.getElementById('logout-button-mobile');
+  
+  if (logoutButtonDesktop) {
+    logoutButtonDesktop.addEventListener('click', handleLogout);
+  }
+  
+  if (logoutButtonMobile) {
+    logoutButtonMobile.addEventListener('click', handleLogout);
+  }
+
+  // Update logout button visibility on page load
+  updateLogoutButtonVisibility();
+
+  // Listen for auth state changes
+  window.addEventListener('userLogin', updateLogoutButtonVisibility);
+  window.addEventListener('userLogout', updateLogoutButtonVisibility);
 
   // Mobile menu toggle
   const mobileMenuButton = document.getElementById('mobile-menu-button');

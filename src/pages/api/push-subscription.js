@@ -61,6 +61,48 @@ export async function POST({ request }) {
   }
 }
 
+export async function DELETE({ request }) {
+  try {
+    const { endpoint } = await request.json();
+    
+    if (!endpoint) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Missing endpoint' 
+      }), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // Import database functions
+    const { deletePushSubscription } = await import('../../lib/database-postgres.js');
+    
+    // Remove subscription from database
+    await deletePushSubscription(endpoint);
+    
+    console.log('🗑️ Push subscription removed:', endpoint);
+    
+    return new Response(JSON.stringify({ 
+      success: true, 
+      message: 'Push subscription removed successfully' 
+    }), { 
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+  } catch (error) {
+    console.error('Push subscription DELETE error:', error);
+    return new Response(JSON.stringify({ 
+      success: false,
+      error: 'Internal server error' 
+    }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
 export async function GET({ request }) {
   try {
     const url = new URL(request.url);

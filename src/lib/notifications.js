@@ -1,6 +1,21 @@
 // Push Notification System
 // Handles sending push notifications to specific users
 
+import webpush from 'web-push';
+
+// Configure web-push with VAPID keys
+// These should be set as environment variables in production
+const vapidKeys = {
+  publicKey: process.env.VAPID_PUBLIC_KEY || 'BNr0dhFU7WG9GAdFO4vYzJBSYi3sPesGDeZVNayZ8KQMs2MjNMo5oNlM-KcxBiA1NrDPCktRmgfzKWdjBVw9MKY',
+  privateKey: process.env.VAPID_PRIVATE_KEY || 'U9LUuJzg9La57veQqnuwLTANvszWeM7dRp3cfW_6byI'
+};
+
+webpush.setVapidDetails(
+  'mailto:ymir-sailing-club@example.com',
+  vapidKeys.publicKey,
+  vapidKeys.privateKey
+);
+
 export async function sendPushNotification(title, body, data = {}, targetMemberNumber = null) {
   try {
     // Import database functions
@@ -16,60 +31,66 @@ export async function sendPushNotification(title, body, data = {}, targetMemberN
     
     console.log(`Sending push notification to ${subscriptions.length} subscription(s): ${title} - ${body}`);
     
-    // For now, just log the notification details
-    // In production, you would send to each subscription endpoint
-    for (const subscription of subscriptions) {
-      console.log(`📱 Would send to ${subscription.member_number || 'Anonymous'}:`, {
-        endpoint: subscription.endpoint,
-        title,
-        body,
-        data,
-        // Mobile wake-up and sound configuration
-        mobileConfig: {
-          wakeUp: true,
-          sound: true,
-          vibration: true,
-          priority: 'high'
-        }
-      });
-    }
+    const results = [];
     
-    // TODO: Implement actual push notification sending using web-push library
-    // This would send real notifications that wake phones and make sounds
-    /*
-    const webpush = require('web-push');
-    
+    // Send actual push notifications using web-push
     for (const subscription of subscriptions) {
-      const payload = JSON.stringify({
-        title: title,
-        body: body,
-        icon: '/icon-192.svg',
-        badge: '/icon-192.svg',
-        data: data,
-        // Mobile-specific options for wake-up and sound
-        requireInteraction: true,  // Keeps notification visible until user interacts
-        silent: false,            // Ensures sound plays
-        vibrate: [200, 100, 200], // Vibration pattern
-        tag: data.type || 'ymir-notification', // Prevents duplicate notifications
-        renotify: true,          // Allows re-notification with same tag
-        actions: [
-          {
-            action: 'view',
-            title: 'View Details',
-            icon: '/icon-192.svg'
-          },
-          {
-            action: 'dismiss',
-            title: 'Dismiss'
+      try {
+        const pushSubscription = {
+          endpoint: subscription.endpoint,
+          keys: {
+            p256dh: subscription.p256dh,
+            auth: subscription.auth
           }
-        ]
-      });
-      
-      await webpush.sendNotification(subscription, payload);
+        };
+        
+        const payload = JSON.stringify({
+          title: title,
+          body: body,
+          icon: '/icon-192.svg',
+          badge: '/icon-192.svg',
+          data: data,
+          // Mobile-specific options for wake-up and sound
+          requireInteraction: true,  // Keeps notification visible until user interacts
+          silent: false,            // Ensures sound plays
+          vibrate: [200, 100, 200, 100, 200], // Vibration pattern
+          tag: data.type || 'ymir-notification', // Prevents duplicate notifications
+          renotify: true,          // Allows re-notification with same tag
+          timestamp: Date.now(),
+          actions: [
+            {
+              action: 'view',
+              title: 'View Details',
+              icon: '/icon-192.svg'
+            },
+            {
+              action: 'dismiss',
+              title: 'Dismiss'
+            }
+          ]
+        });
+        
+        await webpush.sendNotification(pushSubscription, payload);
+        
+        console.log(`✅ Push notification sent to ${subscription.member_number || 'Anonymous'}`);
+        results.push({ success: true, member: subscription.member_number });
+        
+      } catch (pushError) {
+        console.error(`❌ Failed to send push notification to ${subscription.member_number}:`, pushError);
+        results.push({ success: false, member: subscription.member_number, error: pushError.message });
+      }
     }
-    */
     
-    return { success: true, messageId: 'logged', sentTo: subscriptions.length };
+    const successCount = results.filter(r => r.success).length;
+    const failureCount = results.filter(r => !r.success).length;
+    
+    return { 
+      success: successCount > 0, 
+      messageId: `sent_${Date.now()}`, 
+      sentTo: successCount,
+      failed: failureCount,
+      results: results
+    };
     
   } catch (error) {
     console.error('Error sending push notification:', error);

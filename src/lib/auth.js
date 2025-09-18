@@ -136,8 +136,59 @@ export function clearUserSession() {
   localStorage.removeItem(SESSION_KEY);
   localStorage.removeItem(SESSION_EXPIRY_KEY);
   
+  // Clean up push subscriptions and service workers
+  cleanupPushSubscriptions();
+  
   // Dispatch custom event for other components to listen to
   window.dispatchEvent(new CustomEvent('userLogout'));
+}
+
+/**
+ * Clean up push subscriptions and service workers on logout
+ * This prevents notifications from being sent to the wrong user on shared devices
+ */
+async function cleanupPushSubscriptions() {
+  try {
+    // Unsubscribe from push notifications
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      
+      if (subscription) {
+        // Unsubscribe from push notifications
+        await subscription.unsubscribe();
+        console.log('📱 Unsubscribed from push notifications');
+        
+        // Notify server to remove this subscription
+        try {
+          await fetch('/api/push-subscription', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              endpoint: subscription.endpoint
+            })
+          });
+          console.log('🗑️ Removed push subscription from server');
+        } catch (error) {
+          console.log('Could not remove subscription from server:', error);
+        }
+      }
+    }
+    
+    // Unregister service worker to completely clean up
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        await registration.unregister();
+        console.log('🔧 Unregistered service worker');
+      }
+    }
+    
+  } catch (error) {
+    console.error('Error cleaning up push subscriptions:', error);
+  }
 }
 
 /**
