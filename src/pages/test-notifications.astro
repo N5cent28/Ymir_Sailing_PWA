@@ -132,17 +132,11 @@
   </div>
 
   <script>
-    let isTesting = false;
-    
-    function showStatus(message, type = 'info') {
-      const statusDiv = document.getElementById('status');
-      statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
-    }
-    
-    async function testNotification(type) {
-      if (isTesting) return;
+    // Make functions globally available
+    window.testNotification = async function(type) {
+      if (window.isTesting) return;
       
-      isTesting = true;
+      window.isTesting = true;
       const memberNumber = document.getElementById('memberNumber').value.trim();
       
       showStatus('Sending test notification...', 'info');
@@ -160,11 +154,11 @@
       } catch (error) {
         showStatus(`❌ Error: ${error.message}`, 'error');
       } finally {
-        isTesting = false;
+        window.isTesting = false;
       }
-    }
+    };
     
-    async function checkNotificationSupport() {
+    window.checkNotificationSupport = async function() {
       if (!('Notification' in window)) {
         showStatus('❌ This browser does not support notifications', 'error');
         return;
@@ -183,9 +177,9 @@
         message += ' ⚠️ (Click "Allow" when prompted)';
         showStatus(message, 'info');
       }
-    }
+    };
     
-    async function checkServiceWorker() {
+    window.checkServiceWorker = async function() {
       if (!('serviceWorker' in navigator)) {
         showStatus('❌ This browser does not support service workers', 'error');
         return;
@@ -201,9 +195,9 @@
       } catch (error) {
         showStatus(`❌ Error checking service worker: ${error.message}`, 'error');
       }
-    }
+    };
     
-    async function checkPushSubscription() {
+    window.checkPushSubscription = async function() {
       if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
         showStatus('❌ This browser does not support push notifications', 'error');
         return;
@@ -221,10 +215,18 @@
       } catch (error) {
         showStatus(`❌ Error checking push subscription: ${error.message}`, 'error');
       }
+    };
+    
+    function showStatus(message, type = 'info') {
+      const statusDiv = document.getElementById('status');
+      statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
     }
     
+    // Initialize
+    window.isTesting = false;
+    
     // Auto-check on page load
-    window.addEventListener('load', () => {
+    document.addEventListener('DOMContentLoaded', () => {
       checkNotificationSupport();
       checkServiceWorker();
       checkPushSubscription();

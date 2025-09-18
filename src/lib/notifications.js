@@ -30,12 +30,19 @@ export async function sendPushNotification(title, body, data = {}, targetMemberN
     }
     
     console.log(`Sending push notification to ${subscriptions.length} subscription(s): ${title} - ${body}`);
+    console.log('VAPID Keys:', { publicKey: vapidKeys.publicKey.substring(0, 20) + '...', privateKey: vapidKeys.privateKey ? 'Set' : 'Not Set' });
     
     const results = [];
     
     // Send actual push notifications using web-push
     for (const subscription of subscriptions) {
       try {
+        console.log(`Processing subscription for member ${subscription.member_number}:`, {
+          endpoint: subscription.endpoint.substring(0, 50) + '...',
+          hasP256dh: !!subscription.p256dh,
+          hasAuth: !!subscription.auth
+        });
+        
         const pushSubscription = {
           endpoint: subscription.endpoint,
           keys: {
@@ -70,6 +77,7 @@ export async function sendPushNotification(title, body, data = {}, targetMemberN
           ]
         });
         
+        console.log('Sending payload:', { title, body, data });
         await webpush.sendNotification(pushSubscription, payload);
         
         console.log(`✅ Push notification sent to ${subscription.member_number || 'Anonymous'}`);
@@ -77,6 +85,12 @@ export async function sendPushNotification(title, body, data = {}, targetMemberN
         
       } catch (pushError) {
         console.error(`❌ Failed to send push notification to ${subscription.member_number}:`, pushError);
+        console.error('Push error details:', {
+          name: pushError.name,
+          message: pushError.message,
+          statusCode: pushError.statusCode,
+          headers: pushError.headers
+        });
         results.push({ success: false, member: subscription.member_number, error: pushError.message });
       }
     }
