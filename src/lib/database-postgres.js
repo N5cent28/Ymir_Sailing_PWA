@@ -1378,6 +1378,9 @@ export async function storePushSubscription(subscriptionData) {
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [endpoint, p256dh, auth, userAgent, memberNumber, timestamp, timestamp]
       );
+      console.log(`📱 New push subscription created for member ${memberNumber || 'Anonymous'}: ${endpoint.substring(0, 50)}...`);
+    } else {
+      console.log(`📱 Push subscription updated for member ${memberNumber || 'Anonymous'}: ${endpoint.substring(0, 50)}...`);
     }
   } finally {
     client.release();

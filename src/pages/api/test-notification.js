@@ -8,6 +8,32 @@ export async function GET({ request }) {
     const url = new URL(request.url);
     const memberNumber = url.searchParams.get('memberNumber');
     const type = url.searchParams.get('type') || 'test';
+    const debug = url.searchParams.get('debug') === 'true';
+    
+    // Debug: Show subscription count
+    if (debug) {
+      const { getPushSubscriptions } = await import('../../lib/database-postgres.js');
+      const allSubscriptions = await getPushSubscriptions();
+      const memberSubscriptions = memberNumber ? await getPushSubscriptions(memberNumber) : [];
+      
+      return new Response(JSON.stringify({
+        success: true,
+        debug: true,
+        totalSubscriptions: allSubscriptions.length,
+        memberSubscriptions: memberSubscriptions.length,
+        memberNumber: memberNumber,
+        allSubscriptions: allSubscriptions.map(sub => ({
+          id: sub.id,
+          member_number: sub.member_number,
+          endpoint: sub.endpoint.substring(0, 50) + '...',
+          user_agent: sub.user_agent,
+          created_at: sub.created_at
+        }))
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
     
     let title, body, data;
     

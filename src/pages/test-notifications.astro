@@ -130,6 +130,10 @@
       <button class="test-button" onclick="fixSubscriptionLink()" style="background: #dc2626;">
         🔗 Fix Subscription Link
       </button>
+      
+      <button class="test-button" onclick="debugSubscriptions()" style="background: #7c3aed;">
+        🔍 Debug Subscriptions
+      </button>
     </div>
     
     <div id="status"></div>
@@ -266,6 +270,38 @@
           showStatus(`✅ Subscription linked to member ${memberNumber}! Try testing notifications now.`, 'success');
         } else {
           showStatus(`❌ Failed to link subscription: ${data.error}`, 'error');
+        }
+      } catch (error) {
+        showStatus(`❌ Error: ${error.message}`, 'error');
+      }
+    };
+    
+    window.debugSubscriptions = async function() {
+      const memberNumber = document.getElementById('memberNumber').value.trim();
+      
+      showStatus('Checking subscription database...', 'info');
+      
+      try {
+        const url = `/api/test-notification?debug=true${memberNumber ? `&memberNumber=${memberNumber}` : ''}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.success) {
+          let message = `📊 Subscription Debug Info:\n`;
+          message += `Total subscriptions: ${data.totalSubscriptions}\n`;
+          message += `Your subscriptions: ${data.memberSubscriptions}\n`;
+          message += `Member number: ${data.memberNumber || 'Not specified'}\n\n`;
+          message += `All subscriptions:\n`;
+          
+          data.allSubscriptions.forEach((sub, index) => {
+            message += `${index + 1}. Member ${sub.member_number || 'null'} - ${sub.endpoint}\n`;
+            message += `   User Agent: ${sub.user_agent}\n`;
+            message += `   Created: ${new Date(sub.created_at).toLocaleString()}\n\n`;
+          });
+          
+          showStatus(message, 'info');
+        } else {
+          showStatus(`❌ Debug failed: ${data.error}`, 'error');
         }
       } catch (error) {
         showStatus(`❌ Error: ${error.message}`, 'error');
