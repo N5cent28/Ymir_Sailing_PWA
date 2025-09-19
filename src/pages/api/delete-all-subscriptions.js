@@ -1,7 +1,8 @@
 export async function POST({ request }) {
   try {
-    // Check if user is admin (basic check)
-    const adminMember = JSON.parse(request.headers.get('x-admin-member') || 'null');
+    // Get admin member from request body
+    const { adminMember } = await request.json();
+    
     if (!adminMember || !adminMember.is_admin) {
       return new Response(JSON.stringify({ 
         success: false, 
