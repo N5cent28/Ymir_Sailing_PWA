@@ -70,6 +70,9 @@ import Layout from '../layouts/Layout.astro';
             <button onclick="verifyVapidKeys()" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm">
               🔑 Verify VAPID Keys
             </button>
+            <button onclick="fixEncryptionKeys()" class="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm">
+              🔧 Fix Encryption Keys
+            </button>
             </div>
           </div>
         </div>
@@ -250,7 +253,7 @@ import Layout from '../layouts/Layout.astro';
       debugLog.scrollTop = debugLog.scrollHeight;
     }
     
-    function clearDebugLog() {
+    window.clearDebugLog = function() {
       const debugLog = document.getElementById('debugLog');
       debugLog.innerHTML = '<div class="text-gray-500">Debug information will appear here...</div>';
     }
@@ -442,6 +445,94 @@ import Layout from '../layouts/Layout.astro';
         
       } catch (error) {
         const message = `❌ VAPID key verification failed: ${error.message}`;
+        addDebugLog(message, 'error');
+        addDebugLog(`❌ Error details: ${error.stack}`, 'error');
+        showStatus(message, 'error');
+      }
+    };
+    
+    window.fixEncryptionKeys = async function() {
+      addDebugLog(`🔧 Starting encryption keys fix...`, 'info');
+      
+      try {
+        // Check if we have a push subscription
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+          addDebugLog(`❌ Push notifications not supported in this browser`, 'error');
+          return;
+        }
+        
+        const registration = await navigator.serviceWorker.ready;
+        const currentSubscription = await registration.pushManager.getSubscription();
+        
+        if (currentSubscription) {
+          addDebugLog(`🔍 Current subscription found, checking keys...`, 'info');
+          
+          const p256dh = currentSubscription.getKey('p256dh');
+          const auth = currentSubscription.getKey('auth');
+          
+          if (p256dh && auth) {
+            addDebugLog(`✅ Current subscription already has both keys`, 'success');
+            addDebugLog(`   P256dh: ${p256dh.byteLength} bytes`, 'success');
+            addDebugLog(`   Auth: ${auth.byteLength} bytes`, 'success');
+            showStatus(`✅ Encryption keys are already present`, 'success');
+            return;
+          }
+          
+          addDebugLog(`⚠️ Current subscription missing keys, recreating...`, 'warning');
+          await currentSubscription.unsubscribe();
+          addDebugLog(`🗑️ Unsubscribed from old subscription`, 'info');
+        }
+        
+        // Create a new subscription with proper keys
+        addDebugLog(`🔄 Creating new subscription with proper encryption keys...`, 'info');
+        
+        const clientVapidKey = 'BNr0dhFU7WG9GAdFO4vYzJBSYi3sPesGDeZVNayZ8KQMs2MjNMo5oNlM-KcxBiA1NrDPCktRmgfzKWdjBVw9MKY';
+        const newSubscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: clientVapidKey
+        });
+        
+        addDebugLog(`✅ New subscription created successfully!`, 'success');
+        addDebugLog(`   Endpoint: ${newSubscription.endpoint}`, 'info');
+        
+        const newP256dh = newSubscription.getKey('p256dh');
+        const newAuth = newSubscription.getKey('auth');
+        
+        if (newP256dh && newAuth) {
+          addDebugLog(`✅ New subscription has proper encryption keys:`, 'success');
+          addDebugLog(`   P256dh: ${newP256dh.byteLength} bytes`, 'success');
+          addDebugLog(`   Auth: ${newAuth.byteLength} bytes`, 'success');
+          
+          // Update the subscription in the database
+          addDebugLog(`💾 Updating subscription in database...`, 'info');
+          
+          const response = await fetch('/api/update-push-subscription', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              subscription: newSubscription,
+              memberNumber: '1234' // You might want to get this from the form
+            })
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            addDebugLog(`✅ Subscription updated in database successfully`, 'success');
+            showStatus(`✅ Encryption keys fixed! New subscription created with proper keys.`, 'success');
+          } else {
+            addDebugLog(`❌ Failed to update subscription in database: ${result.error}`, 'error');
+            showStatus(`⚠️ Keys fixed but database update failed: ${result.error}`, 'warning');
+          }
+        } else {
+          addDebugLog(`❌ New subscription still missing encryption keys`, 'error');
+          showStatus(`❌ Failed to create subscription with proper keys`, 'error');
+        }
+        
+      } catch (error) {
+        const message = `❌ Encryption keys fix failed: ${error.message}`;
         addDebugLog(message, 'error');
         addDebugLog(`❌ Error details: ${error.stack}`, 'error');
         showStatus(message, 'error');
