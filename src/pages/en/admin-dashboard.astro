@@ -65,12 +65,6 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
             Admin Dashboard
           </h1>
           <div class="admin-info flex items-center space-x-4">
-            <button 
-              id="testNotificationBtn"
-              class="px-4 py-2 bg-yellow-600 bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-colors text-sm"
-            >
-              🧪 Test Notifications
-            </button>
             <span class="text-sm">Logged in as Admin</span>
             <a 
               href="/en/admin-login" 
@@ -139,7 +133,7 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
         <!-- Quick Actions -->
         <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
           <h3 class="text-xl font-bold text-ocean-green mb-6">Quick Actions</h3>
-          <div class="grid md:grid-cols-3 gap-4">
+          <div class="grid md:grid-cols-4 gap-4">
             <a href="/en/members" class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
               <div class="text-blue-500 mr-4">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -197,6 +191,18 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
               <div>
                 <h4 class="font-semibold text-gray-900">Manage QR Codes</h4>
                 <p class="text-sm text-gray-600">Upload and manage boat QR codes</p>
+              </div>
+            </a>
+            
+            <a href="/test-notifications" class="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+              <div class="text-purple-500 mr-4">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5-5-5h5v-5a7.5 7.5 0 0 0-15 0v5h5l-5 5-5-5h5v-5a7.5 7.5 0 0 1 15 0v5z"></path>
+                </svg>
+              </div>
+              <div>
+                <h4 class="font-semibold text-gray-900">Test Notifications</h4>
+                <p class="text-sm text-gray-600">Test push notification system</p>
               </div>
             </a>
           </div>
@@ -450,27 +456,6 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
             </div>
           </div>
                 
-                <!-- Test Notification Buttons -->
-                <div class="mt-4 pt-4 border-t border-gray-200">
-                  <h5 class="font-medium text-gray-700 mb-2">Test Notifications</h5>
-                  <div class="space-y-2">
-                    <button 
-                      id="testNotificationBtn" 
-                      class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                    >
-                      🔔 Test Push Notification
-                    </button>
-                    <button 
-                      id="testNotificationSystemBtn" 
-                      class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                    >
-                      🔍 Test Notification System
-                    </button>
-                  </div>
-                  <p class="text-xs text-gray-500 mt-1">
-                    Test individual notifications or run the full notification check system.
-                  </p>
-                </div>
               </div>
             </div>
           </div>
@@ -523,160 +508,6 @@ const outOfServiceBoats = boatStatuses.filter(b => b.status === 'out_of_service'
     // Make logout globally available
     window.logout = logout;
 
-    // Test notification button - wait for DOM to be ready
-    function initializeNotificationButton() {
-      const testNotificationBtn = document.getElementById('testNotificationBtn');
-      console.log('🔍 Looking for test notification button:', testNotificationBtn);
-      
-      if (testNotificationBtn) {
-        console.log('✅ Test notification button found, adding event listener');
-        testNotificationBtn.addEventListener('click', async () => {
-        try {
-          // Update button to show loading state
-          const originalText = testNotificationBtn.innerHTML;
-          testNotificationBtn.innerHTML = '⏳ Testing...';
-          testNotificationBtn.disabled = true;
-
-          // Check if notifications are supported
-          if (!('Notification' in window)) {
-            alert('This browser does not support notifications');
-            return;
-          }
-
-          console.log('🔔 Testing push notifications...');
-          console.log('Current permission:', Notification.permission);
-
-          // Check permission
-          let permission = Notification.permission;
-          if (permission === 'default') {
-            console.log('Requesting notification permission...');
-            permission = await Notification.requestPermission();
-            console.log('Permission result:', permission);
-          }
-
-          if (permission === 'granted') {
-            console.log('✅ Permission granted, creating notification...');
-            
-            // Show test notification with enhanced mobile wake-up features
-            const notification = new Notification('🧪 Test Notification', {
-              body: 'This is a test notification from Ymir Sailing Club!',
-              icon: '/icon-192.svg',
-              badge: '/icon-192.svg',
-              vibrate: [200, 100, 200, 100, 200], // More noticeable vibration
-              tag: 'admin-test-notification',
-              requireInteraction: true, // Keeps notification visible until user interacts
-              silent: false, // Ensures sound plays
-              renotify: true, // Allows re-notification
-              data: {
-                type: 'test',
-                timestamp: new Date().toISOString()
-              }
-            });
-
-            // Add event listeners to the notification
-            notification.onclick = function() {
-              console.log('Notification clicked!');
-              window.focus();
-              notification.close();
-            };
-
-            notification.onshow = function() {
-              console.log('✅ Notification displayed successfully!');
-            };
-
-            notification.onerror = function(error) {
-              console.error('❌ Notification error:', error);
-            };
-
-            // Auto-close after 5 seconds
-            setTimeout(() => {
-              notification.close();
-            }, 5000);
-
-            // Also trigger the notification check API
-            try {
-              const response = await fetch('/api/notification-check?action=test&memberNumber=1234');
-              const result = await response.json();
-              
-              if (result.success) {
-                console.log('✅ Test notification sent via API');
-              } else {
-                console.log('⚠️ API test failed:', result.error);
-              }
-            } catch (apiError) {
-              console.log('⚠️ API test error:', apiError);
-            }
-
-            // Show success message
-            alert('✅ Test notification sent! Check your system notifications area (top-right corner on most systems).');
-            
-          } else {
-            console.log('❌ Permission denied:', permission);
-            alert('❌ Notification permission denied. Please enable notifications in your browser settings and try again.');
-          }
-        } catch (error) {
-          console.error('❌ Error testing notifications:', error);
-          alert('❌ Error testing notifications: ' + error.message);
-        } finally {
-          // Reset button
-          testNotificationBtn.innerHTML = '🔔 Test Push Notification';
-          testNotificationBtn.disabled = false;
-        }
-      });
-    } else {
-      console.log('❌ Test notification button not found! Check if button exists in HTML');
-    }
-    }
-
-    // Try to initialize immediately (in case DOM is already ready)
-    initializeNotificationButton();
-    
-    // Also try when DOM is ready (in case it's not ready yet)
-    document.addEventListener('DOMContentLoaded', initializeNotificationButton);
-
-    // Test notification system button
-    function initializeNotificationSystemButton() {
-      const testSystemBtn = document.getElementById('testNotificationSystemBtn');
-      console.log('🔍 Looking for test notification system button:', testSystemBtn);
-      
-      if (testSystemBtn) {
-        console.log('✅ Test notification system button found, adding event listener');
-        testSystemBtn.addEventListener('click', async () => {
-          try {
-            const originalText = testSystemBtn.innerHTML;
-            testSystemBtn.innerHTML = '⏳ Testing System...';
-            testSystemBtn.disabled = true;
-
-            console.log('🔍 Testing admin notification system...');
-            
-            // Send admin-only test notification
-            const response = await fetch('/api/notification-check?action=admin-test');
-            const result = await response.json();
-            
-            if (result.success) {
-              console.log('✅ Admin notification test completed');
-              alert('✅ Admin notification test completed! Check console for details.');
-            } else {
-              console.error('❌ Admin notification test failed:', result.error);
-              alert('❌ Admin notification test failed: ' + result.error);
-            }
-            
-          } catch (error) {
-            console.error('❌ Error testing notification system:', error);
-            alert('❌ Error testing notification system: ' + error.message);
-          } finally {
-            testSystemBtn.innerHTML = '🔍 Test Notification System';
-            testSystemBtn.disabled = false;
-          }
-        });
-      } else {
-        console.log('❌ Test notification system button not found!');
-      }
-    }
-
-    // Initialize notification system button
-    initializeNotificationSystemButton();
-    document.addEventListener('DOMContentLoaded', initializeNotificationSystemButton);
 
     // Quick export functionality
     async function quickExport(type, format) {

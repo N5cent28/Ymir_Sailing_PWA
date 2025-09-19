@@ -1,47 +1,41 @@
 # Ymir Sailing Club PWA - Deployment Guide
 
-## 🚀 Quick Deploy to Vercel (Recommended)
+## 🚀 Quick Deploy to Netlify (Recommended)
 
 ### Step 1: Prepare Your Repository
 1. Ensure your code is in a Git repository (GitHub, GitLab, etc.)
 2. Make sure all files are committed
 
-### Step 2: Deploy to Vercel
-1. Go to [vercel.com](https://vercel.com) and sign up/login
-2. Click "New Project"
-3. Import your Git repository
-4. Vercel will automatically detect it's an Astro project
-5. Click "Deploy"
+### Step 2: Deploy to Netlify
+1. Go to [netlify.com](https://netlify.com) and sign up/login
+2. Click "New site from Git"
+3. Connect your Git repository
+4. Netlify will automatically detect it's an Astro project
+5. Set build command: `npm run build`
+6. Set publish directory: `dist`
+7. Click "Deploy site"
 
 ### Step 3: Configure Environment Variables
-In your Vercel dashboard, go to Settings → Environment Variables and add:
+In your Netlify dashboard, go to Site settings → Environment variables and add:
 ```
 NODE_ENV=production
+DATABASE_URL=your_postgresql_connection_string
 ADMIN_PIN=your_admin_pin_here
 APP_URL=https://yourdomain.com
 ```
 
 ### Step 4: Set Up Custom Domain (Optional)
-1. In Vercel dashboard, go to Settings → Domains
+1. In Netlify dashboard, go to Site settings → Domain management
 2. Add your custom domain
 3. Follow DNS configuration instructions
 
 ## 🔧 Pre-Deployment Checklist
 
 ### Database Setup
-**Option A: Keep SQLite (Quick Start)**
-- Your `boats.db` file will be included in deployment
-- Note: Data resets on each deployment
-- Good for testing, not ideal for production
-
-**Option B: PostgreSQL (Recommended for Production)**
-1. Set up a PostgreSQL database (Vercel Postgres, Supabase, etc.)
-2. Update database connection in `src/lib/database.js`
-3. Run migration scripts
-
-**Option C: Vercel KV (Serverless)**
-1. Create Vercel KV database
-2. Update database functions to use KV instead of SQLite
+**PostgreSQL (Required for Production)**
+1. Set up a PostgreSQL database (Neon, Supabase, etc.)
+2. Update `DATABASE_URL` environment variable
+3. Run migration scripts if needed
 
 ### QR Code URLs Update
 **CRITICAL**: Update all QR code URLs to use your production domain:
@@ -52,165 +46,137 @@ APP_URL=https://yourdomain.com
 - `generate-qr-codes.md`
 - `ADMIN_GUIDE.md`
 
-**Replace all instances of:**
-```
-https://yourdomain.com
-```
-**With your actual domain:**
-```
-https://ymir-sailing-club.vercel.app
-```
-or your custom domain.
-
-### QR Code Generation
-After deployment, generate QR codes for each boat using your production URLs:
-
-**Individual Boats:**
-```
-https://yourdomain.com/qr/boat-1    (Quest 1)
-https://yourdomain.com/qr/boat-2    (Quest 2)
-https://yourdomain.com/qr/boat-3    (Zest 1)
-https://yourdomain.com/qr/boat-4    (Zest 2)
-https://yourdomain.com/qr/boat-5    (Zest 3)
-https://yourdomain.com/qr/boat-6    (Zest 4)
-https://yourdomain.com/qr/boat-7    (Zest 5)
-https://yourdomain.com/qr/boat-8    (Zest 6)
-https://yourdomain.com/qr/boat-9    (Topaz 1)
-https://yourdomain.com/qr/boat-10   (Topaz 2)
-https://yourdomain.com/qr/boat-11   (Laser 1)
-https://yourdomain.com/qr/boat-12   (Laser 2)
-https://yourdomain.com/qr/boat-13   (Laser 3)
-https://yourdomain.com/qr/boat-14   (Laser 4)
+**Use the update script:**
+```bash
+node update-qr-urls.js https://yourdomain.com
 ```
 
-**Shared Boats:**
+### Environment Variables Required
 ```
-https://yourdomain.com/qr/kayak         (Kayak)
-https://yourdomain.com/qr/paddle-board  (Paddle Board)
+NODE_ENV=production
+DATABASE_URL=postgresql://username:password@host:port/database
+ADMIN_PIN=your_admin_pin_here
+APP_URL=https://yourdomain.com
 ```
 
 ## 📱 PWA Configuration
 
 ### Service Worker
-Your service worker (`public/sw.js`) is already configured for PWA functionality.
+- Automatically generated during build
+- Handles offline functionality
+- Manages push notifications
 
 ### Manifest
-Your `public/manifest.json` is properly configured for:
-- App installation
-- Splash screen
-- Theme colors
-- Icons
+- Located at `public/manifest.json`
+- Defines PWA metadata
+- Icons stored in `public/` directory
 
-### Icons
-Ensure your icons are properly sized:
-- `icon-192.svg` (192x192)
-- `icon-512.svg` (512x512)
+## 🔔 Push Notifications Setup
 
-## 🔒 Security Considerations
+### VAPID Keys
+1. Generate VAPID keys for push notifications
+2. Add to environment variables:
+   ```
+   VAPID_PUBLIC_KEY=your_public_key
+   VAPID_PRIVATE_KEY=your_private_key
+   VAPID_EMAIL=your_email@domain.com
+   ```
 
-### Admin PIN
-- Change the default admin PIN before going live
-- Use a strong, memorable PIN
-- Share securely with club administrators
+### Netlify Functions
+- Push notification endpoints are serverless functions
+- Automatically deployed with your site
+- No additional configuration needed
 
-### HTTPS
-- Vercel provides automatic HTTPS
-- Ensure all QR codes use HTTPS URLs
-- Test QR code scanning on production domain
+## 🚀 Deployment Steps
 
-### Data Privacy
-- Review what data is stored
-- Consider GDPR compliance if applicable
-- Implement data retention policies
+### 1. Build Locally (Optional)
+```bash
+npm run build
+npm run preview
+```
 
-## 📊 Post-Deployment Testing
+### 2. Deploy to Netlify
+1. Connect your Git repository to Netlify
+2. Configure build settings
+3. Add environment variables
+4. Deploy
 
-### Essential Tests
-1. **QR Code Scanning**: Test each boat's QR code
-2. **Check-in/Check-out**: Test the complete workflow
-3. **Admin Functions**: Test admin panel access
-4. **Mobile Experience**: Test on various devices
-5. **Offline Functionality**: Test PWA offline features
+### 3. Post-Deployment
+1. Test all functionality
+2. Verify QR codes work
+3. Test push notifications
+4. Check admin dashboard
 
-### Performance Testing
-1. **Load Times**: Ensure fast loading on mobile
-2. **Database Performance**: Test with multiple concurrent users
-3. **Image Optimization**: Ensure QR codes load quickly
-
-## 🚨 Important Considerations
-
-### QR Code URLs
-**MOST IMPORTANT**: All QR codes must point to your production domain. If you change domains later, you'll need to regenerate all QR codes.
-
-### Database Persistence
-If using SQLite, be aware that:
-- Data may reset on deployments
-- Consider backing up data regularly
-- For production, migrate to a persistent database
-
-### SMS Notifications
-If implementing SMS notifications:
-- Set up Twilio or similar service
-- Add environment variables for API keys
-- Test notification delivery
-
-### Backup Strategy
-- Regular database backups
-- QR code image backups
-- Configuration backups
-
-## 🔄 Continuous Deployment
-
-### Automatic Deployments
-- Connect your Git repository to Vercel
-- Every push to main branch triggers deployment
-- Test changes in development branch first
-
-### Environment Management
-- Use different environments for dev/staging/production
-- Test database migrations in staging first
-- Use feature flags for new features
-
-## 📞 Support & Maintenance
-
-### Monitoring
-- Set up error tracking (Sentry, etc.)
-- Monitor uptime and performance
-- Track user analytics
-
-### Updates
-- Regular security updates
-- Feature updates based on user feedback
-- Database schema updates as needed
-
-### Documentation
-- Keep deployment guide updated
-- Document any custom configurations
-- Maintain admin user guide
-
-## 🎯 Go-Live Checklist
-
-- [ ] Deploy to production
-- [ ] Update all QR code URLs
-- [ ] Generate and print QR codes
-- [ ] Test all boat check-in/check-out flows
-- [ ] Test admin functions
-- [ ] Verify PWA installation works
-- [ ] Test on multiple devices
-- [ ] Set up monitoring
-- [ ] Train club administrators
-- [ ] Announce to club members
-
-## 🆘 Troubleshooting
+## 🔧 Troubleshooting
 
 ### Common Issues
-1. **QR codes not working**: Check URL format and HTTPS
-2. **Database errors**: Verify database file is included in deployment
-3. **PWA not installing**: Check manifest.json and service worker
-4. **Admin access issues**: Verify PIN and environment variables
+- **Build fails**: Check Node.js version (18+ required)
+- **Database errors**: Verify DATABASE_URL is correct
+- **QR codes not working**: Update URLs in all files
+- **Push notifications not working**: Check VAPID keys
+
+### Debug Steps
+1. Check Netlify function logs
+2. Verify environment variables
+3. Test database connection
+4. Check browser console for errors
+
+## 📊 Monitoring
+
+### Netlify Analytics
+- Built-in analytics available
+- Monitor site performance
+- Track user engagement
+
+### Function Logs
+- View serverless function logs
+- Debug API issues
+- Monitor notification delivery
+
+## 🔄 Updates
+
+### Automatic Deployments
+- Netlify automatically deploys on Git push
+- No manual deployment needed
+- Environment variables persist
+
+### Manual Updates
+1. Make changes locally
+2. Commit and push to Git
+3. Netlify automatically rebuilds and deploys
+
+## 📋 Production Checklist
+
+- [ ] Database configured and tested
+- [ ] Environment variables set
+- [ ] QR code URLs updated
+- [ ] VAPID keys configured
+- [ ] Custom domain set up (optional)
+- [ ] SSL certificate active
+- [ ] All functionality tested
+- [ ] Admin access verified
+- [ ] Push notifications working
+- [ ] PWA installable
+
+## 🆘 Support
+
+### Documentation
+- Check this guide for common issues
+- Review Netlify documentation
+- Check Astro documentation
 
 ### Getting Help
-- Check Vercel deployment logs
-- Review browser console for errors
-- Test locally with `npm run build && npm run preview`
-- Contact support if needed 
+1. Check Netlify function logs
+2. Verify environment variables
+3. Test locally first
+4. Check browser console
+
+## 🎉 Success!
+
+Your Ymir Sailing Club PWA should now be live and accessible at your Netlify domain!
+
+**Next steps:**
+1. Test all functionality
+2. Share with club members
+3. Monitor usage and performance
+4. Set up regular backups

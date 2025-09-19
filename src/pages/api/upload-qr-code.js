@@ -1,5 +1,6 @@
-import { put } from '@vercel/blob';
 import { getQRCodes, getQRCodeByBoatId, createQRCode, updateQRCode } from '../../lib/database-postgres.js';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
 
 export async function POST({ request }) {
   try {
@@ -32,15 +33,18 @@ export async function POST({ request }) {
     // Generate unique filename
     const fileExtension = qrCodeFile.name.split('.').pop();
     const filename = `qr-codes/${boatId}-${Date.now()}.${fileExtension}`;
+    const filePath = join(process.cwd(), 'public', filename);
 
-    // Upload to Vercel Blob
-    const blob = await put(filename, qrCodeFile, {
-      access: 'public',
-      addRandomSuffix: false
-    });
+    // Ensure directory exists
+    await mkdir(join(process.cwd(), 'public', 'qr-codes'), { recursive: true });
 
-    // Save to database
-    const qrCodeUrl = blob.url;
+    // Convert file to buffer and save
+    const arrayBuffer = await qrCodeFile.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    await writeFile(filePath, buffer);
+
+    // Save to database with public URL
+    const qrCodeUrl = `/${filename}`;
     
     // Check if QR code already exists for this boat
     const existingQR = await getQRCodeByBoatId(boatId);

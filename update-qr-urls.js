@@ -5,7 +5,7 @@ import path from 'path';
 
 // Configuration
 const OLD_DOMAIN = 'https://yourdomain.com';
-const NEW_DOMAIN = process.argv[2] || 'https://ymir-sailing-club.vercel.app';
+const NEW_DOMAIN = process.argv[2] || 'https://siglingafelagidymir.com';
 
 const FILES_TO_UPDATE = [
   'src/pages/en/qr-codes.astro',
@@ -88,5 +88,5 @@ if (totalChanges > 0) {
   console.log('ℹ️  No changes were made. Make sure you specified the correct new domain.');
   console.log('');
   console.log('Usage: node update-qr-urls.js <new-domain>');
-  console.log('Example: node update-qr-urls.js https://ymir-sailing-club.vercel.app');
+  console.log('Example: node update-qr-urls.js https://siglingafelagidymir.com');
 } 

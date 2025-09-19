@@ -1,5 +1,5 @@
 // Cron Job for Notifications
-// This endpoint can be called by Vercel Cron or external services
+// This endpoint can be called by Netlify Cron or external services
 
 import { checkAndSendNotifications } from '../../lib/notification-scheduler.js';
 

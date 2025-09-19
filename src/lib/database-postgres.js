@@ -1436,6 +1436,18 @@ export async function deletePushSubscription(endpoint) {
   }
 }
 
+export async function deleteAllPushSubscriptions() {
+  const client = await getClient();
+  try {
+    const result = await client.query(
+      `DELETE FROM push_subscriptions RETURNING endpoint`
+    );
+    return result.rows.length;
+  } finally {
+    client.release();
+  }
+}
+
 export async function getAdmins() {
   const client = await getClient();
   try {

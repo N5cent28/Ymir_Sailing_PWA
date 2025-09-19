@@ -1,162 +1,180 @@
-# 🚀 Ymir Sailing Club PWA - Deployment Guide
+# 🚀 Ymir Sailing Club PWA - Deployment Steps
 
 ## ✅ Pre-Deployment Checklist
 
 **Database**: ✅ Neon PostgreSQL connected and migrated  
-**File Storage**: ✅ Vercel Blob configured and tested  
+**File Storage**: ✅ Local file storage configured (public/qr-codes/)  
 **Code**: ✅ Pushed to GitHub and ready for deployment  
-**Build**: ✅ Fixed serverless deployment issue  
+**Build**: ✅ Netlify deployment configured  
 
 ## 📋 Deployment Steps
 
-### Step 1: Deploy to Vercel
+### Step 1: Deploy to Netlify
 
-1. **Go to [vercel.com](https://vercel.com)**
-2. **Click "New Project"**
-3. **Import your GitHub repository**: `N5cent28/Ymir_Sailing_PWA`
-4. **Vercel will auto-detect it's an Astro project**
-5. **Click "Deploy"**
+1. **Go to [netlify.com](https://netlify.com)**
+2. **Click "New site from Git"**
+3. **Connect your GitHub repository**: `N5cent28/Ymir_Sailing_PWA`
+4. **Configure build settings**:
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+5. **Click "Deploy site"**
 
 ### Step 2: Configure Environment Variables
 
-In your Vercel project dashboard, go to **Settings → Environment Variables** and add:
+In your Netlify site dashboard, go to **Site settings → Environment variables** and add:
 
 ```
 DATABASE_URL=postgres://neondb_owner:npg_XGd87KwNSAHM@ep-mute-boat-ad1q7b1p-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require
-BLOB_READ_WRITE_TOKEN=vercel_blob_rw_2c4aSUK3SUrn4zhP_iQMyLp0re9399zpQGvtcPICuVWumpp
 NODE_ENV=production
+ADMIN_PIN=your_admin_pin_here
+APP_URL=https://yourdomain.com
 ```
 
 ### Step 3: Redeploy
 
-After adding environment variables:
-1. **Go to Deployments tab**
-2. **Click "Redeploy"** on your latest deployment
-3. **Wait for deployment to complete**
+After adding environment variables, trigger a new deployment:
+1. Go to **Deploys** tab
+2. Click **Trigger deploy** → **Deploy site**
 
-### Step 4: Test Your Deployment
+### Step 4: Update QR Code URLs
 
-Your app will be available at: `https://ymir-sailing-pwa.vercel.app` (or similar)
+**CRITICAL**: Update all QR code URLs to use your production domain:
 
-**Test these features:**
-- ✅ Homepage loads
-- ✅ Member login works
-- ✅ Boat check-in/out works
-- ✅ QR codes work
-- ✅ Admin panel works
-
-### Step 5: Update QR Code URLs
-
-**After deployment, update QR code URLs to use your new domain:**
-
-Run this script to update all QR code URLs:
 ```bash
-node update-qr-urls.js https://your-vercel-domain.vercel.app
+node update-qr-urls.js https://yourdomain.com
 ```
 
-**Example QR code URLs:**
+This updates:
+- `src/pages/en/qr-codes.astro`
+- `src/pages/is/qr-codes.astro`
+- `generate-qr-codes.md`
+- `ADMIN_GUIDE.md`
+
+### Step 5: Generate QR Codes
+
+After deployment, generate QR codes for each boat:
+
 ```
-https://your-domain.vercel.app/qr/boat-1    (Quest 1)
-https://your-domain.vercel.app/qr/boat-2    (Quest 2)
-https://your-domain.vercel.app/qr/boat-3    (Zest 1)
-... (all 16 boats)
-https://your-domain.vercel.app/qr/kayak     (Kayak)
-https://your-domain.vercel.app/qr/paddle-board (Paddle Board)
-```
-
-## 🎉 Success!
-
-Your Ymir Sailing Club PWA is now:
-- ✅ **Live on Vercel** with serverless functions
-- ✅ **Using Neon PostgreSQL** for persistent data
-- ✅ **Using Vercel Blob** for file storage
-- ✅ **Optimized for mobile** with PWA features
-- ✅ **Ready for production use**
-
-## 🔧 Troubleshooting
-
-### **Node.js Version Compatibility**
-
-**⚠️ Important**: You may see this warning during build:
-```
-The local Node.js version (24) is not supported by Vercel Serverless Functions.
-Your project will use Node.js 22 as the runtime instead.
-```
-
-**This is normal and expected!** Vercel automatically handles the version mismatch:
-- ✅ **Local development**: Node.js 24 (your machine)
-- ✅ **Production deployment**: Node.js 22 (Vercel's runtime)
-- ✅ **No action needed**: Vercel automatically uses the correct version
-
-**If you want to match versions locally:**
-```bash
-# Install Node.js 22 (optional)
-nvm install 22
-nvm use 22
+https://yourdomain.com/qr/boat-1    (Quest 1)
+https://yourdomain.com/qr/boat-2    (Quest 2)
+https://yourdomain.com/qr/boat-3    (Zest 1)
+https://yourdomain.com/qr/boat-4    (Zest 2)
+https://yourdomain.com/qr/boat-5    (Zest 3)
+https://yourdomain.com/qr/boat-6    (Zest 4)
+https://yourdomain.com/qr/boat-7    (Zest 5)
+https://yourdomain.com/qr/boat-8    (Zest 6)
+https://yourdomain.com/qr/boat-9    (Topaz 1)
+https://yourdomain.com/qr/boat-10   (Topaz 2)
+https://yourdomain.com/qr/boat-11   (Laser 1)
+https://yourdomain.com/qr/boat-12   (Laser 2)
+https://yourdomain.com/qr/boat-13   (Laser 3)
+https://yourdomain.com/qr/boat-14   (Laser 4)
+https://yourdomain.com/qr/kayak     (Kayak)
+https://yourdomain.com/qr/paddle-board (Paddle Board)
 ```
 
-### **If deployment fails with "Cannot find module '/var/task/dist/server/entry.mjs'"**
+## 🎉 Deployment Complete!
 
-**This was the main issue we fixed!** The problem was:
-- ❌ **Deprecated adapter**: `@astrojs/vercel/serverless` was causing build issues
-- ✅ **Solution**: Switched to `@astrojs/vercel` with proper configuration
+Your app will be available at: `https://yourdomain.com` (or your Netlify subdomain)
 
-**If you see this error again:**
-1. Check that `astro.config.mjs` uses `@astrojs/vercel` adapter
-2. Verify `dist/server/entry.mjs` exists after build
-3. Clean build cache: `rm -rf dist .vercel && npm run build`
+## ✅ What's Working
 
-### **Other Common Issues:**
+- ✅ **Live on Netlify** with serverless functions
+- ✅ **PostgreSQL database** connected and working
+- ✅ **Using local file storage** for QR codes
+- ✅ **PWA features** (installable, offline support)
+- ✅ **Push notifications** system
+- ✅ **Admin dashboard** with full functionality
 
-**If deployment fails:**
-1. Check environment variables are set correctly
-2. Verify database connection string
-3. Check Vercel deployment logs
+## 🔧 Technical Notes
 
-**If QR codes don't work:**
-1. Update QR code URLs with new domain
-2. Regenerate QR codes if needed
+### Node.js Version
+The local Node.js version (24) is not supported by Netlify Functions.
 
-**If database connection fails:**
-1. Verify DATABASE_URL is correct
-2. Check Neon database is active
-3. Test connection locally first
+**This is normal and expected!** Netlify automatically handles the version mismatch:
+- ✅ **Local development**: Node.js 24 (your system)
+- ✅ **Production deployment**: Node.js 18 (Netlify's runtime)
+- ✅ **No action needed**: Netlify automatically uses the correct version
 
-**If build fails locally:**
-1. Run `npm run build` to check for errors
-2. Verify all imports are correct
-3. Check for missing dependencies
+### Build Configuration
+- **Adapter**: `@astrojs/netlify` (configured in astro.config.mjs)
+- **Output**: Server-side rendering with Netlify Functions
+- **File Storage**: Local file system (public/qr-codes/)
 
-## 📱 PWA Features
+### Database
+- **Type**: PostgreSQL (Neon)
+- **Connection**: Environment variable `DATABASE_URL`
+- **SSL**: Required for production
 
-Your app includes:
-- **Offline support** with service worker
-- **Installable** on mobile devices
-- **Push notifications** (if configured)
-- **Responsive design** for all devices
+## 🚨 Important Notes
 
-## 🔐 Security
+### QR Code Storage
+- QR codes are now stored in `public/qr-codes/` directory
+- No external storage service needed
+- Files are served directly by Netlify
 
-- **Admin authentication** with PIN system
-- **Member authentication** with member numbers
-- **Secure database** with SSL connections
-- **Environment variables** for sensitive data
+### Environment Variables
+Make sure all required environment variables are set in Netlify:
+- `DATABASE_URL` - PostgreSQL connection string
+- `NODE_ENV` - Set to "production"
+- `ADMIN_PIN` - Admin access PIN
+- `APP_URL` - Your production domain
 
-## 🛠️ Technical Details
+## 🔄 Future Updates
 
-**Current Configuration:**
-- **Adapter**: `@astrojs/vercel` (modern configuration)
-- **Database**: Neon PostgreSQL
-- **File Storage**: Vercel Blob
-- **Build Output**: `dist/server/entry.mjs` ✅
-- **Node.js Runtime**: 22 (Vercel production) / 24 (local development)
+### Automatic Deployments
+- Netlify automatically deploys when you push to GitHub
+- No manual deployment needed
+- Environment variables persist across deployments
 
-**Key Files:**
-- `astro.config.mjs` - Astro configuration
-- `src/lib/database-postgres.js` - Database functions
-- `vercel.json` - Vercel configuration
-- `env.example` - Environment variables template
+### Manual Updates
+1. Make changes locally
+2. Test with `npm run dev`
+3. Commit and push to GitHub
+4. Netlify automatically rebuilds and deploys
 
----
+## 🆘 Troubleshooting
 
-**Need help?** Check the deployment logs in Vercel dashboard or refer to the original documentation files. 
+### Common Issues
+- **Build fails**: Check Node.js version and dependencies
+- **Database errors**: Verify DATABASE_URL is correct
+- **QR codes not working**: Update URLs in all files
+- **Functions not working**: Check Netlify function logs
+
+### Debug Steps
+1. Check Netlify function logs in dashboard
+2. Verify environment variables are set
+3. Test database connection
+4. Check browser console for errors
+
+## 📊 Monitoring
+
+### Netlify Dashboard
+- Monitor deployments
+- View function logs
+- Check site analytics
+- Manage environment variables
+
+### Function Logs
+- Go to Functions tab in Netlify dashboard
+- View real-time logs
+- Debug API issues
+- Monitor notification delivery
+
+## 🎯 Next Steps
+
+1. **Test all functionality** on the live site
+2. **Generate QR codes** for all boats
+3. **Test push notifications** with admin dashboard
+4. **Share with club members**
+5. **Monitor usage and performance**
+
+## 📞 Support
+
+If you encounter any issues:
+1. Check Netlify function logs
+2. Verify environment variables
+3. Test locally first
+4. Check browser console for errors
+
+**Need help?** Check the deployment logs in Netlify dashboard or refer to the original documentation files.
