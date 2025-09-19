@@ -18,11 +18,34 @@ export async function POST({ request }) {
     // Import database functions
     const { storePushSubscription } = await import('../../lib/database-postgres.js');
     
+    // Extract encryption keys from subscription
+    let p256dh = null;
+    let auth = null;
+    
+    if (subscription.getKey) {
+      try {
+        const p256dhKey = subscription.getKey('p256dh');
+        const authKey = subscription.getKey('auth');
+        
+        if (p256dhKey) {
+          // Convert ArrayBuffer to base64 string
+          p256dh = btoa(String.fromCharCode(...new Uint8Array(p256dhKey)));
+        }
+        
+        if (authKey) {
+          // Convert ArrayBuffer to base64 string
+          auth = btoa(String.fromCharCode(...new Uint8Array(authKey)));
+        }
+      } catch (error) {
+        console.error('Error extracting subscription keys:', error);
+      }
+    }
+    
     // Store subscription in database with member number
     const subscriptionData = {
       endpoint: subscription.endpoint,
-      p256dh: subscription.keys?.p256dh || null,
-      auth: subscription.keys?.auth || null,
+      p256dh: p256dh,
+      auth: auth,
       userAgent: userAgent || 'Unknown',
       memberNumber: memberNumber || null,
       timestamp: timestamp || new Date().toISOString()
@@ -35,10 +58,10 @@ export async function POST({ request }) {
       memberNumber: memberNumber || 'Anonymous',
       userAgent: userAgent,
       timestamp: timestamp,
-      keys: subscription.keys ? {
-        p256dh: subscription.keys.p256dh ? 'present' : 'missing',
-        auth: subscription.keys.auth ? 'present' : 'missing'
-      } : 'missing'
+      keys: {
+        p256dh: p256dh ? 'present' : 'missing',
+        auth: auth ? 'present' : 'missing'
+      }
     });
     
     return new Response(JSON.stringify({ 
@@ -78,11 +101,34 @@ export async function PUT({ request }) {
     // Import database functions
     const { updatePushSubscriptionMember } = await import('../../lib/database-postgres.js');
     
+    // Extract encryption keys from subscription
+    let p256dh = null;
+    let auth = null;
+    
+    if (subscription.getKey) {
+      try {
+        const p256dhKey = subscription.getKey('p256dh');
+        const authKey = subscription.getKey('auth');
+        
+        if (p256dhKey) {
+          // Convert ArrayBuffer to base64 string
+          p256dh = btoa(String.fromCharCode(...new Uint8Array(p256dhKey)));
+        }
+        
+        if (authKey) {
+          // Convert ArrayBuffer to base64 string
+          auth = btoa(String.fromCharCode(...new Uint8Array(authKey)));
+        }
+      } catch (error) {
+        console.error('Error extracting subscription keys:', error);
+      }
+    }
+    
     // Update existing subscription with member number
     const subscriptionData = {
       endpoint: subscription.endpoint,
-      p256dh: subscription.keys?.p256dh || null,
-      auth: subscription.keys?.auth || null,
+      p256dh: p256dh,
+      auth: auth,
       userAgent: userAgent || 'Unknown',
       memberNumber: memberNumber || null,
       timestamp: timestamp || new Date().toISOString()
@@ -94,7 +140,11 @@ export async function PUT({ request }) {
       endpoint: subscription.endpoint,
       memberNumber: memberNumber || 'Anonymous',
       userAgent: userAgent,
-      timestamp: timestamp
+      timestamp: timestamp,
+      keys: {
+        p256dh: p256dh ? 'present' : 'missing',
+        auth: auth ? 'present' : 'missing'
+      }
     });
     
     return new Response(JSON.stringify({ 
