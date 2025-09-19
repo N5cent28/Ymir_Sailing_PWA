@@ -127,9 +127,8 @@ export class PushNotificationManager {
   }
 
   getVapidPublicKey() {
-    // In production, this should come from environment variables
-    // For now, we'll use a placeholder - you'll need to generate real VAPID keys
-    return 'BEl62iUYgUivxIkv69yViEuiBIa40HI0F8HwQvfrHQ_4jf0QfTjX0Q5EaGJF_0v8eF0q8LQ1nQaL8oqMvq4BvQ';
+    // Use the same VAPID public key as the server
+    return 'BNr0dhFU7WG9GAdFO4vYzJBSYi3sPesGDeZVNayZ8KQMs2MjNMo5oNlM-KcxBiA1NrDPCktRmgfzKWdjBVw9MKY';
   }
 
   urlBase64ToUint8Array(base64String) {
