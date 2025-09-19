@@ -10,7 +10,12 @@ import Layout from '../layouts/Layout.astro';
       <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">🔧 Admin Notification Debugging</h1>
+            <div class="flex items-center mb-2">
+              <a href="/en/admin-dashboard" class="mr-4 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                ← Back to Admin Dashboard
+              </a>
+              <h1 class="text-3xl font-bold text-gray-900">🔧 Admin Notification Debugging</h1>
+            </div>
             <p class="text-gray-600">Comprehensive testing and debugging tools for push notifications</p>
           </div>
           <div class="text-right">
@@ -61,6 +66,9 @@ import Layout from '../layouts/Layout.astro';
             </button>
             <button onclick="testDirectNotification()" class="w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm">
               🔔 Test Direct Notification
+            </button>
+            <button onclick="verifyVapidKeys()" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm">
+              🔑 Verify VAPID Keys
             </button>
             </div>
           </div>
@@ -149,8 +157,24 @@ import Layout from '../layouts/Layout.astro';
         </div>
       </div>
 
+      <!-- Debug Log Section -->
+      <div class="mt-8 bg-white rounded-lg shadow-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-gray-900 flex items-center">
+            <span class="bg-blue-100 text-blue-800 rounded-full p-2 mr-3">📋</span>
+            Debug Log
+          </h2>
+          <button onclick="clearDebugLog()" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm">
+            Clear Log
+          </button>
+        </div>
+        <div id="debugLog" class="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto font-mono text-sm">
+          <div class="text-gray-500">Debug information will appear here...</div>
+        </div>
+      </div>
+
       <!-- Status Display -->
-      <div class="mt-8">
+      <div class="mt-4">
         <div id="status" class="hidden"></div>
       </div>
     </div>
@@ -198,10 +222,37 @@ import Layout from '../layouts/Layout.astro';
       statusDiv.textContent = message;
       statusDiv.classList.remove('hidden');
       
-      // Auto-hide after 5 seconds
+      // Auto-hide after 10 seconds (increased from 5)
       setTimeout(() => {
         statusDiv.classList.add('hidden');
-      }, 5000);
+      }, 10000);
+    }
+    
+    function addDebugLog(message, type = 'info') {
+      const debugLog = document.getElementById('debugLog');
+      const timestamp = new Date().toLocaleTimeString();
+      const logEntry = document.createElement('div');
+      logEntry.className = `mb-2 p-2 rounded ${
+        type === 'success' ? 'bg-green-100 text-green-800' :
+        type === 'error' ? 'bg-red-100 text-red-800' :
+        type === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+        'bg-blue-100 text-blue-800'
+      }`;
+      logEntry.innerHTML = `<span class="text-gray-500">[${timestamp}]</span> ${message}`;
+      
+      // Remove the placeholder if it exists
+      const placeholder = debugLog.querySelector('.text-gray-500');
+      if (placeholder && placeholder.textContent === 'Debug information will appear here...') {
+        placeholder.remove();
+      }
+      
+      debugLog.appendChild(logEntry);
+      debugLog.scrollTop = debugLog.scrollHeight;
+    }
+    
+    function clearDebugLog() {
+      const debugLog = document.getElementById('debugLog');
+      debugLog.innerHTML = '<div class="text-gray-500">Debug information will appear here...</div>';
     }
     
     // System Status Functions
@@ -332,6 +383,71 @@ import Layout from '../layouts/Layout.astro';
       }
     };
     
+    window.verifyVapidKeys = async function() {
+      addDebugLog(`🔑 Starting VAPID key verification...`, 'info');
+      
+      try {
+        // Get the VAPID public key from the client-side code
+        const clientVapidKey = 'BNr0dhFU7WG9GAdFO4vYzJBSYi3sPesGDeZVNayZ8KQMs2MjNMo5oNlM-KcxBiA1NrDPCktRmgfzKWdjBVw9MKY';
+        addDebugLog(`🔑 Client VAPID Public Key: ${clientVapidKey}`, 'info');
+        
+        // Check if we have a push subscription
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+          addDebugLog(`❌ Push notifications not supported in this browser`, 'error');
+          return;
+        }
+        
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        
+        if (!subscription) {
+          addDebugLog(`⚠️ No push subscription found. Please create one first.`, 'warning');
+          return;
+        }
+        
+        addDebugLog(`🔑 Push subscription found:`, 'success');
+        addDebugLog(`   Endpoint: ${subscription.endpoint}`, 'info');
+        addDebugLog(`   Keys present: ${subscription.getKey ? 'Yes' : 'No'}`, 'info');
+        
+        if (subscription.getKey) {
+          const p256dh = subscription.getKey('p256dh');
+          const auth = subscription.getKey('auth');
+          
+          if (p256dh) {
+            addDebugLog(`   P256dh key length: ${p256dh.byteLength} bytes`, 'success');
+          } else {
+            addDebugLog(`   P256dh key: Missing`, 'error');
+          }
+          
+          if (auth) {
+            addDebugLog(`   Auth key length: ${auth.byteLength} bytes`, 'success');
+          } else {
+            addDebugLog(`   Auth key: Missing`, 'error');
+          }
+        }
+        
+        // Test if we can create a new subscription with the correct VAPID key
+        try {
+          const newSubscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: clientVapidKey
+          });
+          addDebugLog(`✅ Successfully created new subscription with VAPID key`, 'success');
+          addDebugLog(`   New endpoint: ${newSubscription.endpoint}`, 'info');
+        } catch (error) {
+          addDebugLog(`❌ Failed to create subscription with VAPID key: ${error.message}`, 'error');
+        }
+        
+        showStatus(`✅ VAPID key verification completed - see debug log for details`, 'success');
+        
+      } catch (error) {
+        const message = `❌ VAPID key verification failed: ${error.message}`;
+        addDebugLog(message, 'error');
+        addDebugLog(`❌ Error details: ${error.stack}`, 'error');
+        showStatus(message, 'error');
+      }
+    };
+    
     // Notification Testing Functions
     window.testNotification = async function(type) {
       if (window.isTesting) return;
@@ -339,22 +455,36 @@ import Layout from '../layouts/Layout.astro';
       window.isTesting = true;
       const memberNumber = document.getElementById('memberNumber').value.trim();
       
+      addDebugLog(`🧪 Starting test notification: type=${type}, memberNumber=${memberNumber || 'all'}`, 'info');
       showStatus('Sending test notification...', 'info');
       
       try {
         const url = `/api/test-notification?type=${type}${memberNumber ? `&memberNumber=${memberNumber}` : ''}`;
+        addDebugLog(`📡 Making request to: ${url}`, 'info');
+        
         const response = await fetch(url);
+        addDebugLog(`📡 Response status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+        
         const data = await response.json();
+        addDebugLog(`📡 Response data: ${JSON.stringify(data, null, 2)}`, 'info');
         
         if (data.success) {
-          showStatus(`✅ Test notification sent successfully! Sent to ${data.sentTo} device(s)${data.failed > 0 ? `, ${data.failed} failed` : ''}`, 'success');
+          const message = `✅ Test notification sent successfully! Sent to ${data.sentTo} device(s)${data.failed > 0 ? `, ${data.failed} failed` : ''}`;
+          addDebugLog(message, 'success');
+          showStatus(message, 'success');
         } else {
-          showStatus(`❌ Failed to send notification: ${data.error}`, 'error');
+          const message = `❌ Failed to send notification: ${data.error}`;
+          addDebugLog(message, 'error');
+          showStatus(message, 'error');
         }
       } catch (error) {
-        showStatus(`❌ Error: ${error.message}`, 'error');
+        const message = `❌ Error: ${error.message}`;
+        addDebugLog(message, 'error');
+        addDebugLog(`❌ Error details: ${error.stack}`, 'error');
+        showStatus(message, 'error');
       } finally {
         window.isTesting = false;
+        addDebugLog(`🏁 Test notification completed`, 'info');
       }
     };
     
@@ -429,32 +559,50 @@ import Layout from '../layouts/Layout.astro';
     window.debugSubscriptions = async function() {
       const memberNumber = document.getElementById('memberNumber').value.trim();
       
+      addDebugLog(`🔍 Starting subscription debug: memberNumber=${memberNumber || 'all'}`, 'info');
       showStatus('Checking subscription database...', 'info');
       
       try {
         const url = `/api/test-notification?debug=true${memberNumber ? `&memberNumber=${memberNumber}` : ''}`;
+        addDebugLog(`📡 Making debug request to: ${url}`, 'info');
+        
         const response = await fetch(url);
+        addDebugLog(`📡 Debug response status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+        
         const data = await response.json();
+        addDebugLog(`📡 Debug response data: ${JSON.stringify(data, null, 2)}`, 'info');
         
         if (data.success) {
-          let message = `📊 Subscription Debug Info:\n`;
-          message += `Total subscriptions: ${data.totalSubscriptions}\n`;
-          message += `Your subscriptions: ${data.memberSubscriptions}\n`;
-          message += `Member number: ${data.memberNumber || 'Not specified'}\n\n`;
-          message += `All subscriptions:\n`;
+          addDebugLog(`📊 Subscription Debug Summary:`, 'info');
+          addDebugLog(`   Total subscriptions: ${data.totalSubscriptions}`, 'info');
+          addDebugLog(`   Your subscriptions: ${data.memberSubscriptions}`, 'info');
+          addDebugLog(`   Member number: ${data.memberNumber || 'Not specified'}`, 'info');
           
-          data.allSubscriptions.forEach((sub, index) => {
-            message += `${index + 1}. Member ${sub.member_number || 'null'} - ${sub.endpoint}\n`;
-            message += `   User Agent: ${sub.user_agent}\n`;
-            message += `   Created: ${new Date(sub.created_at).toLocaleString()}\n\n`;
-          });
+          if (data.allSubscriptions && data.allSubscriptions.length > 0) {
+            addDebugLog(`📋 All subscriptions in database:`, 'info');
+            data.allSubscriptions.forEach((sub, index) => {
+              addDebugLog(`   ${index + 1}. Member ${sub.member_number || 'null'}`, 'info');
+              addDebugLog(`      Endpoint: ${sub.endpoint}`, 'info');
+              addDebugLog(`      User Agent: ${sub.user_agent}`, 'info');
+              addDebugLog(`      Created: ${new Date(sub.created_at).toLocaleString()}`, 'info');
+              addDebugLog(`      P256dh: ${sub.p256dh ? 'Present' : 'Missing'}`, sub.p256dh ? 'success' : 'warning');
+              addDebugLog(`      Auth: ${sub.auth ? 'Present' : 'Missing'}`, sub.auth ? 'success' : 'warning');
+            });
+          } else {
+            addDebugLog(`⚠️ No subscriptions found in database`, 'warning');
+          }
           
-          showStatus(message, 'info');
+          showStatus(`✅ Debug completed - see debug log for details`, 'success');
         } else {
-          showStatus(`❌ Debug failed: ${data.error}`, 'error');
+          const message = `❌ Debug failed: ${data.error}`;
+          addDebugLog(message, 'error');
+          showStatus(message, 'error');
         }
       } catch (error) {
-        showStatus(`❌ Error: ${error.message}`, 'error');
+        const message = `❌ Error: ${error.message}`;
+        addDebugLog(message, 'error');
+        addDebugLog(`❌ Error details: ${error.stack}`, 'error');
+        showStatus(message, 'error');
       }
     };
     
