@@ -603,8 +603,7 @@ import Layout from '../layouts/Layout.astro';
         addDebugLog(`💾 Updating subscription in database...`, 'info');
         
         // Extract keys on the frontend before sending to API
-        const currentP256dhKey = currentSubscription.getKey('p256dh');
-        const currentAuthKey = currentSubscription.getKey('auth');
+        // (Keys already extracted above)
         
         let p256dh = null;
         let auth = null;
