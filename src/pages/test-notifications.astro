@@ -585,36 +585,36 @@ import Layout from '../layouts/Layout.astro';
         addDebugLog(`🔍 Current subscription found, extracting keys...`, 'info');
         
         // Extract encryption keys from current subscription
-        const p256dhKey = currentSubscription.getKey('p256dh');
-        const authKey = currentSubscription.getKey('auth');
+        const currentP256dhKey = currentSubscription.getKey('p256dh');
+        const currentAuthKey = currentSubscription.getKey('auth');
         
-        if (!p256dhKey || !authKey) {
+        if (!currentP256dhKey || !currentAuthKey) {
           addDebugLog(`❌ Current subscription missing encryption keys`, 'error');
-          addDebugLog(`   P256dh: ${p256dhKey ? 'Present' : 'Missing'}`, p256dhKey ? 'success' : 'error');
-          addDebugLog(`   Auth: ${authKey ? 'Present' : 'Missing'}`, authKey ? 'success' : 'error');
+          addDebugLog(`   P256dh: ${currentP256dhKey ? 'Present' : 'Missing'}`, currentP256dhKey ? 'success' : 'error');
+          addDebugLog(`   Auth: ${currentAuthKey ? 'Present' : 'Missing'}`, currentAuthKey ? 'success' : 'error');
           return;
         }
         
         addDebugLog(`✅ Current subscription has proper keys:`, 'success');
-        addDebugLog(`   P256dh: ${p256dhKey.byteLength} bytes`, 'success');
-        addDebugLog(`   Auth: ${authKey.byteLength} bytes`, 'success');
+        addDebugLog(`   P256dh: ${currentP256dhKey.byteLength} bytes`, 'success');
+        addDebugLog(`   Auth: ${currentAuthKey.byteLength} bytes`, 'success');
         
         // Update the subscription in the database
         addDebugLog(`💾 Updating subscription in database...`, 'info');
         
         // Extract keys on the frontend before sending to API
-        const p256dhKey = currentSubscription.getKey('p256dh');
-        const authKey = currentSubscription.getKey('auth');
+        const currentP256dhKey = currentSubscription.getKey('p256dh');
+        const currentAuthKey = currentSubscription.getKey('auth');
         
         let p256dh = null;
         let auth = null;
         
-        if (p256dhKey) {
-          p256dh = btoa(String.fromCharCode(...new Uint8Array(p256dhKey)));
+        if (currentP256dhKey) {
+          p256dh = btoa(String.fromCharCode(...new Uint8Array(currentP256dhKey)));
         }
         
-        if (authKey) {
-          auth = btoa(String.fromCharCode(...new Uint8Array(authKey)));
+        if (currentAuthKey) {
+          auth = btoa(String.fromCharCode(...new Uint8Array(currentAuthKey)));
         }
         
         addDebugLog(`🔑 Extracted keys: P256dh=${p256dh ? 'present' : 'missing'}, Auth=${auth ? 'present' : 'missing'}`, 'info');
