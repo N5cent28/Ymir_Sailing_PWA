@@ -27,7 +27,9 @@ export async function GET({ request }) {
           member_number: sub.member_number,
           endpoint: sub.endpoint.substring(0, 50) + '...',
           user_agent: sub.user_agent,
-          created_at: sub.created_at
+          created_at: sub.created_at,
+          p256dh: sub.p256dh,
+          auth: sub.auth
         }))
       }), {
         status: 200,
