@@ -8,6 +8,7 @@ import {
   sendOverdueAlert, 
   sendAdminOverdueAlert 
 } from './notifications.js';
+import { timezoneManager } from './timezone.js';
 
 // Track which notifications have been sent to avoid duplicates
 const sentNotifications = new Set();
@@ -21,6 +22,11 @@ export async function checkAndSendNotifications() {
     
     const activeCheckIns = await getAllActiveCheckIns();
     const now = new Date();
+    
+    // Log timezone information for debugging
+    console.log('🕐 Current server time:', now.toISOString());
+    console.log('🕐 Club timezone:', timezoneManager.getConfig().timezone);
+    console.log('🕐 Current club time:', timezoneManager.getCurrentClubTime());
     
     for (const checkIn of activeCheckIns) {
       await processCheckInNotifications(checkIn, now);
@@ -38,8 +44,15 @@ export async function checkAndSendNotifications() {
  */
 async function processCheckInNotifications(checkIn, now) {
   const expectedReturn = new Date(checkIn.expected_return);
-  const timeDiff = expectedReturn - now;
-  const minutesDiff = Math.floor(timeDiff / (1000 * 60));
+  
+  // Use timezone-aware comparison
+  const timeUntilReturn = timezoneManager.getTimeUntilReturn(expectedReturn, now);
+  const minutesDiff = timeUntilReturn.overdue ? 
+    -timezoneManager.getOverdueHours(expectedReturn, now) * 60 : 
+    timeUntilReturn.hours * 60 + timeUntilReturn.minutes;
+  
+  // Log timing information for debugging
+  console.log(`⏰ Check-in ${checkIn.id}: Expected return: ${expectedReturn.toISOString()}, Minutes diff: ${minutesDiff}`);
   
   // Create unique notification keys to prevent duplicates
   const checkInKey = `${checkIn.id}_${checkIn.member_number}`;
@@ -56,6 +69,7 @@ async function processCheckInNotifications(checkIn, now) {
     }
     
     if (warningKey && !sentNotifications.has(warningKey)) {
+      console.log(`📢 Sending pre-return warning for check-in ${checkIn.id}: ${minutesDiff} minutes until return`);
       await sendPreCheckInWarning(checkIn, minutesDiff);
       sentNotifications.add(warningKey);
     }
@@ -67,6 +81,7 @@ async function processCheckInNotifications(checkIn, now) {
     const overdueKey = `${checkInKey}_overdue_${Math.floor(overdueMinutes / 30) * 30}`;
     
     if (!sentNotifications.has(overdueKey)) {
+      console.log(`🚨 Sending overdue notification for check-in ${checkIn.id}: ${overdueMinutes} minutes overdue`);
       await sendOverdueNotifications(checkIn, overdueMinutes);
       sentNotifications.add(overdueKey);
     }

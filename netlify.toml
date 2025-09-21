@@ -1,0 +1,18 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Cron job for notifications - runs every 5 minutes
+[[plugins]]
+  package = "@netlify/plugin-cron"
+
+[[plugins.cron]]
+  schedule = "*/5 * * * *"
+  command = "curl -X GET https://siglingafelagidymir.com/api/cron-notifications"
+
+# Alternative: Use Netlify's built-in cron (if available)
+# [build.environment]
+#   CRON_SECRET = "your-secret-key-here"
