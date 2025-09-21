@@ -224,20 +224,28 @@ export async function POST({ request }) {
           const anonymousSubscriptions = allSubscriptions.filter(sub => !sub.member_number);
           
           if (anonymousSubscriptions.length > 0) {
-            // Link the most recent anonymous subscription to this member
-            const latestAnonymous = anonymousSubscriptions[0];
-            console.log('🔗 Linking anonymous subscription to member:', memberNumber);
+            // Find the most recent anonymous subscription with proper keys
+            const validAnonymousSubs = anonymousSubscriptions.filter(sub => sub.p256dh && sub.auth);
             
-            await updatePushSubscriptionMember({
-              endpoint: latestAnonymous.endpoint,
-              p256dh: latestAnonymous.p256dh,
-              auth: latestAnonymous.auth,
-              userAgent: latestAnonymous.user_agent,
-              memberNumber: memberNumber,
-              timestamp: new Date().toISOString()
-            });
-            
-            console.log('✅ Anonymous subscription linked to member:', memberNumber);
+            if (validAnonymousSubs.length > 0) {
+              // Link the most recent valid anonymous subscription to this member
+              const latestValidAnonymous = validAnonymousSubs[0];
+              console.log('🔗 Linking valid anonymous subscription to member:', memberNumber);
+              
+              await updatePushSubscriptionMember({
+                endpoint: latestValidAnonymous.endpoint,
+                p256dh: latestValidAnonymous.p256dh,
+                auth: latestValidAnonymous.auth,
+                userAgent: latestValidAnonymous.user_agent,
+                memberNumber: memberNumber,
+                timestamp: new Date().toISOString()
+              });
+              
+              console.log('✅ Valid anonymous subscription linked to member:', memberNumber);
+            } else {
+              console.log('⚠️ No valid anonymous subscriptions found - notifications will not be sent');
+              console.log('💡 User should grant notification permission to receive alerts');
+            }
           } else {
             console.log('⚠️ No push subscription found for member - notifications will not be sent');
             console.log('💡 User should grant notification permission to receive alerts');

@@ -116,7 +116,11 @@ import Layout from '../layouts/Layout.astro';
       
             <button onclick="testWebhook()" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm">
               🔗 Test Webhook
-      </button>
+            </button>
+            
+            <button onclick="cleanupInvalidSubscriptions()" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm">
+              🧹 Clean Invalid Subscriptions
+            </button>
           </div>
         </div>
 
@@ -894,6 +898,45 @@ import Layout from '../layouts/Layout.astro';
         }
       } catch (error) {
         const message = `❌ Error testing webhook: ${error.message}`;
+        addDebugLog(message, 'error');
+        addDebugLog(`❌ Error details: ${error.stack}`, 'error');
+        showStatus(message, 'error');
+      }
+    };
+    
+    // Cleanup Invalid Subscriptions
+    window.cleanupInvalidSubscriptions = async function() {
+      if (!confirm('⚠️ WARNING: This will delete all push subscriptions that are missing encryption keys (p256dh or auth). This action cannot be undone. Are you sure you want to continue?')) {
+        return;
+      }
+      
+      addDebugLog(`🧹 Starting cleanup of invalid push subscriptions...`, 'info');
+      showStatus('Cleaning up invalid subscriptions...', 'info');
+      
+      try {
+        const response = await fetch('/api/cleanup-invalid-subscriptions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        addDebugLog(`📡 Cleanup response status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+        
+        const data = await response.json();
+        addDebugLog(`📡 Cleanup response data: ${JSON.stringify(data, null, 2)}`, 'info');
+        
+        if (data.success) {
+          addDebugLog(`✅ Cleanup completed successfully!`, 'success');
+          addDebugLog(`   Removed ${data.deletedCount} invalid subscriptions`, 'info');
+          showStatus(`✅ Cleanup completed! Removed ${data.deletedCount} invalid subscriptions`, 'success');
+        } else {
+          const message = `❌ Cleanup failed: ${data.error}`;
+          addDebugLog(message, 'error');
+          showStatus(message, 'error');
+        }
+      } catch (error) {
+        const message = `❌ Error during cleanup: ${error.message}`;
         addDebugLog(message, 'error');
         addDebugLog(`❌ Error details: ${error.stack}`, 'error');
         showStatus(message, 'error');

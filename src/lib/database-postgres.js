@@ -1448,6 +1448,20 @@ export async function deleteAllPushSubscriptions() {
   }
 }
 
+export async function deleteInvalidPushSubscriptions() {
+  const client = await getClient();
+  try {
+    // Delete subscriptions that are missing required encryption keys
+    const result = await client.query(
+      'DELETE FROM push_subscriptions WHERE p256dh IS NULL OR auth IS NULL OR p256dh = \'\' OR auth = \'\''
+    );
+    console.log(`🧹 Cleaned up invalid push subscriptions: ${result.rowCount} subscriptions removed`);
+    return result.rowCount;
+  } finally {
+    client.release();
+  }
+}
+
 export async function getAdmins() {
   const client = await getClient();
   try {
