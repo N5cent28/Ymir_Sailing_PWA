@@ -5,14 +5,6 @@
 [functions]
   node_bundler = "esbuild"
 
-# Cron job for notifications - runs every 5 minutes
-[[plugins]]
-  package = "@netlify/plugin-cron"
-
-[[plugins.cron]]
-  schedule = "*/5 * * * *"
-  command = "curl -X GET https://siglingafelagidymir.com/api/cron-notifications"
-
-# Alternative: Use Netlify's built-in cron (if available)
-# [build.environment]
-#   CRON_SECRET = "your-secret-key-here"
+# Note: For scheduled notifications, we'll use external cron services
+# or manual triggering through the admin interface
+# Netlify doesn't support built-in cron jobs for free plans
