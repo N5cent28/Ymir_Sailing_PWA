@@ -509,6 +509,23 @@ import Layout from '../layouts/Layout.astro';
           // Update the subscription in the database
           addDebugLog(`💾 Updating subscription in database...`, 'info');
           
+          // Extract keys on the frontend before sending to API
+          const newP256dhKey = newSubscription.getKey('p256dh');
+          const newAuthKey = newSubscription.getKey('auth');
+          
+          let p256dh = null;
+          let auth = null;
+          
+          if (newP256dhKey) {
+            p256dh = btoa(String.fromCharCode(...new Uint8Array(newP256dhKey)));
+          }
+          
+          if (newAuthKey) {
+            auth = btoa(String.fromCharCode(...new Uint8Array(newAuthKey)));
+          }
+          
+          addDebugLog(`🔑 Extracted keys: P256dh=${p256dh ? 'present' : 'missing'}, Auth=${auth ? 'present' : 'missing'}`, 'info');
+          
           const response = await fetch('/api/update-push-subscription', {
             method: 'POST',
             headers: {
@@ -516,7 +533,9 @@ import Layout from '../layouts/Layout.astro';
             },
             body: JSON.stringify({
               subscription: {
-                ...newSubscription,
+                endpoint: newSubscription.endpoint,
+                p256dh: p256dh,
+                auth: auth,
                 userAgent: navigator.userAgent
               },
               memberNumber: '1234' // You might want to get this from the form
@@ -583,6 +602,23 @@ import Layout from '../layouts/Layout.astro';
         // Update the subscription in the database
         addDebugLog(`💾 Updating subscription in database...`, 'info');
         
+        // Extract keys on the frontend before sending to API
+        const p256dhKey = currentSubscription.getKey('p256dh');
+        const authKey = currentSubscription.getKey('auth');
+        
+        let p256dh = null;
+        let auth = null;
+        
+        if (p256dhKey) {
+          p256dh = btoa(String.fromCharCode(...new Uint8Array(p256dhKey)));
+        }
+        
+        if (authKey) {
+          auth = btoa(String.fromCharCode(...new Uint8Array(authKey)));
+        }
+        
+        addDebugLog(`🔑 Extracted keys: P256dh=${p256dh ? 'present' : 'missing'}, Auth=${auth ? 'present' : 'missing'}`, 'info');
+        
         const response = await fetch('/api/update-push-subscription', {
           method: 'POST',
           headers: {
@@ -590,7 +626,9 @@ import Layout from '../layouts/Layout.astro';
           },
           body: JSON.stringify({
             subscription: {
-              ...currentSubscription,
+              endpoint: currentSubscription.endpoint,
+              p256dh: p256dh,
+              auth: auth,
               userAgent: navigator.userAgent
             },
             memberNumber: '1234'
