@@ -201,6 +201,39 @@ export async function POST({ request }) {
       }
     }
     
+    // Update push subscription with member number if available
+    if (memberNumber) {
+      try {
+        console.log('🔗 Updating push subscription with member number:', memberNumber);
+        const { updatePushSubscriptionMember } = await import('../../lib/database-postgres.js');
+        
+        // Get the current push subscription from the database (most recent one)
+        const { getPushSubscriptions } = await import('../../lib/database-postgres.js');
+        const subscriptions = await getPushSubscriptions();
+        
+        if (subscriptions.length > 0) {
+          // Find the most recent subscription (likely the current user's)
+          const latestSubscription = subscriptions[0];
+          
+          // Update it with the member number
+          await updatePushSubscriptionMember({
+            endpoint: latestSubscription.endpoint,
+            p256dh: latestSubscription.p256dh,
+            auth: latestSubscription.auth,
+            userAgent: latestSubscription.user_agent,
+            memberNumber: memberNumber,
+            timestamp: new Date().toISOString()
+          });
+          
+          console.log('✅ Push subscription updated with member number:', memberNumber);
+        } else {
+          console.log('⚠️ No push subscriptions found to update');
+        }
+      } catch (error) {
+        console.error('❌ Error updating push subscription:', error);
+      }
+    }
+    
     // Send push notification
     if (takeOver) {
       await sendCheckOutConfirmation(sailorName, boat.name, expectedReturnUTCString, 'take_over');

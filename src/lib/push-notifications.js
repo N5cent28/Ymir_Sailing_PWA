@@ -103,13 +103,41 @@ export class PushNotificationManager {
         console.log('Could not get current user for push subscription:', error);
       }
 
+      // Extract encryption keys on the frontend before sending
+      let p256dh = null;
+      let auth = null;
+      
+      if (subscription.getKey) {
+        try {
+          const p256dhKey = subscription.getKey('p256dh');
+          const authKey = subscription.getKey('auth');
+          
+          if (p256dhKey) {
+            // Convert ArrayBuffer to base64 string
+            p256dh = btoa(String.fromCharCode(...new Uint8Array(p256dhKey)));
+          }
+          
+          if (authKey) {
+            // Convert ArrayBuffer to base64 string
+            auth = btoa(String.fromCharCode(...new Uint8Array(authKey)));
+          }
+        } catch (error) {
+          console.error('Error extracting subscription keys:', error);
+        }
+      }
+
       const response = await fetch('/api/push-subscription', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          subscription: subscription,
+          subscription: {
+            endpoint: subscription.endpoint,
+            p256dh: p256dh,
+            auth: auth,
+            userAgent: navigator.userAgent
+          },
           userAgent: navigator.userAgent,
           timestamp: new Date().toISOString(),
           memberNumber: memberNumber

@@ -18,28 +18,9 @@ export async function POST({ request }) {
     // Import database functions
     const { storePushSubscription } = await import('../../lib/database-postgres.js');
     
-    // Extract encryption keys from subscription
-    let p256dh = null;
-    let auth = null;
-    
-    if (subscription.getKey) {
-      try {
-        const p256dhKey = subscription.getKey('p256dh');
-        const authKey = subscription.getKey('auth');
-        
-        if (p256dhKey) {
-          // Convert ArrayBuffer to base64 string
-          p256dh = btoa(String.fromCharCode(...new Uint8Array(p256dhKey)));
-        }
-        
-        if (authKey) {
-          // Convert ArrayBuffer to base64 string
-          auth = btoa(String.fromCharCode(...new Uint8Array(authKey)));
-        }
-      } catch (error) {
-        console.error('Error extracting subscription keys:', error);
-      }
-    }
+    // Keys are now pre-extracted on the frontend
+    const p256dh = subscription.p256dh || null;
+    const auth = subscription.auth || null;
     
     // Store subscription in database with member number
     const subscriptionData = {
@@ -101,28 +82,9 @@ export async function PUT({ request }) {
     // Import database functions
     const { updatePushSubscriptionMember } = await import('../../lib/database-postgres.js');
     
-    // Extract encryption keys from subscription
-    let p256dh = null;
-    let auth = null;
-    
-    if (subscription.getKey) {
-      try {
-        const p256dhKey = subscription.getKey('p256dh');
-        const authKey = subscription.getKey('auth');
-        
-        if (p256dhKey) {
-          // Convert ArrayBuffer to base64 string
-          p256dh = btoa(String.fromCharCode(...new Uint8Array(p256dhKey)));
-        }
-        
-        if (authKey) {
-          // Convert ArrayBuffer to base64 string
-          auth = btoa(String.fromCharCode(...new Uint8Array(authKey)));
-        }
-      } catch (error) {
-        console.error('Error extracting subscription keys:', error);
-      }
-    }
+    // Keys are now pre-extracted on the frontend
+    const p256dh = subscription.p256dh || null;
+    const auth = subscription.auth || null;
     
     // Update existing subscription with member number
     const subscriptionData = {
