@@ -201,36 +201,50 @@ export async function POST({ request }) {
       }
     }
     
-    // Update push subscription with member number if available
+    // Handle push subscription for notifications
     if (memberNumber) {
       try {
-        console.log('🔗 Updating push subscription with member number:', memberNumber);
-        const { updatePushSubscriptionMember } = await import('../../lib/database-postgres.js');
+        console.log('🔗 Checking push subscription for member:', memberNumber);
+        const { getPushSubscriptions, updatePushSubscriptionMember, storePushSubscription } = await import('../../lib/database-postgres.js');
         
-        // Get the current push subscription from the database (most recent one)
-        const { getPushSubscriptions } = await import('../../lib/database-postgres.js');
-        const subscriptions = await getPushSubscriptions();
+        // Check if there's already a subscription for this member
+        const memberSubscriptions = await getPushSubscriptions(memberNumber);
         
-        if (subscriptions.length > 0) {
-          // Find the most recent subscription (likely the current user's)
-          const latestSubscription = subscriptions[0];
-          
-          // Update it with the member number
-          await updatePushSubscriptionMember({
-            endpoint: latestSubscription.endpoint,
-            p256dh: latestSubscription.p256dh,
-            auth: latestSubscription.auth,
-            userAgent: latestSubscription.user_agent,
-            memberNumber: memberNumber,
-            timestamp: new Date().toISOString()
-          });
-          
-          console.log('✅ Push subscription updated with member number:', memberNumber);
+        if (memberSubscriptions.length > 0) {
+          // Member already has a subscription - check if it has proper keys
+          const existingSub = memberSubscriptions[0];
+          if (existingSub.p256dh && existingSub.auth) {
+            console.log('✅ Member already has valid push subscription with keys');
+          } else {
+            console.log('⚠️ Member subscription exists but missing keys - will need to be updated');
+          }
         } else {
-          console.log('⚠️ No push subscriptions found to update');
+          // No subscription for this member - check if there's an anonymous one we can link
+          const allSubscriptions = await getPushSubscriptions();
+          const anonymousSubscriptions = allSubscriptions.filter(sub => !sub.member_number);
+          
+          if (anonymousSubscriptions.length > 0) {
+            // Link the most recent anonymous subscription to this member
+            const latestAnonymous = anonymousSubscriptions[0];
+            console.log('🔗 Linking anonymous subscription to member:', memberNumber);
+            
+            await updatePushSubscriptionMember({
+              endpoint: latestAnonymous.endpoint,
+              p256dh: latestAnonymous.p256dh,
+              auth: latestAnonymous.auth,
+              userAgent: latestAnonymous.user_agent,
+              memberNumber: memberNumber,
+              timestamp: new Date().toISOString()
+            });
+            
+            console.log('✅ Anonymous subscription linked to member:', memberNumber);
+          } else {
+            console.log('⚠️ No push subscription found for member - notifications will not be sent');
+            console.log('💡 User should grant notification permission to receive alerts');
+          }
         }
       } catch (error) {
-        console.error('❌ Error updating push subscription:', error);
+        console.error('❌ Error handling push subscription:', error);
       }
     }
     

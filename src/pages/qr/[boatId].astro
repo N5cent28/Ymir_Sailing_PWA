@@ -1147,6 +1147,36 @@ console.log('- activeCheckIns:', activeCheckIns);
             safetyChecklist: true
           };
           
+          // Check and request notification permission before checkout
+          if (memberNumber) {
+            try {
+              const { pushNotificationManager } = await import('../../lib/push-notifications.js');
+              
+              // Check if user has notification permission
+              const permission = await pushNotificationManager.getPermissionStatus();
+              
+              if (permission === 'denied') {
+                showMessage('Notifications are disabled. You can enable them in your browser settings to receive return reminders.', 'error');
+                return;
+              } else if (permission === 'default') {
+                // Request permission
+                const granted = await pushNotificationManager.requestPermission();
+                if (!granted) {
+                  showMessage('Notification permission denied. You can still check out the boat, but you won\'t receive return reminders.', 'error');
+                  return;
+                }
+              }
+              
+              // Ensure subscription is created and linked to member number
+              if (permission === 'granted' || pushNotificationManager.isSubscribed()) {
+                console.log('✅ Push notifications enabled for member:', memberNumber);
+              }
+            } catch (error) {
+              console.error('Error setting up notifications:', error);
+              showMessage('Warning: Could not set up notifications. You can still check out the boat.', 'error');
+            }
+          }
+          
           try {
             const response = await fetch('/api/check-in', {
               method: 'POST',
@@ -1227,10 +1257,42 @@ console.log('- activeCheckIns:', activeCheckIns);
           const data = {
             boatId: boatId,
             sailorName: formData.get('name'),
+            memberNumber: formData.get('memberNumber'),
             expectedReturn: formData.get('return'),
             takeOver: true,
             previousCheckInId: activeCheckInInfo.dataset.checkInId
           };
+          
+          // Check and request notification permission before take-over
+          const memberNumber = formData.get('memberNumber');
+          if (memberNumber) {
+            try {
+              const { pushNotificationManager } = await import('../../lib/push-notifications.js');
+              
+              // Check if user has notification permission
+              const permission = await pushNotificationManager.getPermissionStatus();
+              
+              if (permission === 'denied') {
+                showMessage('Notifications are disabled. You can enable them in your browser settings to receive return reminders.', 'error');
+                return;
+              } else if (permission === 'default') {
+                // Request permission
+                const granted = await pushNotificationManager.requestPermission();
+                if (!granted) {
+                  showMessage('Notification permission denied. You can still take over the boat, but you won\'t receive return reminders.', 'error');
+                  return;
+                }
+              }
+              
+              // Ensure subscription is created and linked to member number
+              if (permission === 'granted' || pushNotificationManager.isSubscribed()) {
+                console.log('✅ Push notifications enabled for member:', memberNumber);
+              }
+            } catch (error) {
+              console.error('Error setting up notifications:', error);
+              showMessage('Warning: Could not set up notifications. You can still take over the boat.', 'error');
+            }
+          }
           
           console.log('🔍 TAKEOVER: Form data being sent:', data);
           console.log('- previousCheckInId from dataset:', activeCheckInInfo.dataset.checkInId);

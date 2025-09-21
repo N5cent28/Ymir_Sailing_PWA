@@ -78,8 +78,8 @@ import Layout from '../layouts/Layout.astro';
             </button>
             </div>
           </div>
-        </div>
-
+    </div>
+    
         <!-- Notification Testing -->
         <div class="bg-white rounded-lg shadow-lg p-6">
           <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
@@ -95,28 +95,28 @@ import Layout from '../layouts/Layout.astro';
           
           <div class="space-y-3">
             <button onclick="testNotification('test')" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
-              📢 Basic Test Notification
-            </button>
-            
+        📢 Basic Test Notification
+      </button>
+      
             <button onclick="testNotification('checkout')" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
-              ⛵ Boat Checkout Confirmation
-            </button>
-            
+        ⛵ Boat Checkout Confirmation
+      </button>
+      
             <button onclick="testNotification('reminder')" class="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm">
-              ⏰ Time Extension Reminder
-            </button>
-            
+        ⏰ Time Extension Reminder
+      </button>
+      
             <button onclick="testNotification('overdue')" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm">
-              🚨 Overdue Boat Alert
-            </button>
+        🚨 Overdue Boat Alert
+      </button>
             
             <button onclick="testCronJob()" class="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm">
               🕐 Test Cron Job
-            </button>
-            
+      </button>
+      
             <button onclick="testWebhook()" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm">
               🔗 Test Webhook
-            </button>
+      </button>
           </div>
         </div>
 
@@ -129,9 +129,9 @@ import Layout from '../layouts/Layout.astro';
           
           <div class="space-y-3">
             <button onclick="fixSubscriptionLink()" class="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm">
-              🔗 Fix Subscription Link
-            </button>
-            
+        🔗 Fix Subscription Link
+      </button>
+      
             <button onclick="testNotificationSystem()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
               🔍 Test Notification System
             </button>
@@ -180,7 +180,7 @@ import Layout from '../layouts/Layout.astro';
           </h2>
           <button onclick="clearDebugLog()" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm">
             Clear Log
-          </button>
+      </button>
         </div>
         <div id="debugLog" class="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto font-mono text-sm">
           <div class="text-gray-500">Debug information will appear here...</div>
@@ -798,7 +798,7 @@ import Layout from '../layouts/Layout.astro';
           
           if (data.allSubscriptions && data.allSubscriptions.length > 0) {
             addDebugLog(`📋 All subscriptions in database:`, 'info');
-            data.allSubscriptions.forEach((sub, index) => {
+          data.allSubscriptions.forEach((sub, index) => {
               addDebugLog(`   ${index + 1}. Member ${sub.member_number || 'null'}`, 'info');
               addDebugLog(`      Endpoint: ${sub.endpoint}`, 'info');
               addDebugLog(`      User Agent: ${sub.user_agent}`, 'info');
