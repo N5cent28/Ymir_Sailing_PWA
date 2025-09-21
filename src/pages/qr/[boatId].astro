@@ -305,6 +305,10 @@ console.log('- activeCheckIns:', activeCheckIns);
               >
                 Look up member info
               </button>
+              <div id="memberVerificationStatus" class="mt-2 text-sm hidden">
+                <span class="verification-icon">🔒</span>
+                <span class="verification-text"></span>
+              </div>
             </div>
             
             <div>
@@ -503,9 +507,10 @@ console.log('- activeCheckIns:', activeCheckIns);
       const takeOverPhoneInput = document.getElementById('takeOverPhone');
       const takeOverLookupMemberBtn = document.getElementById('takeOverLookupMember');
       const boatSelectionDropdown = document.getElementById('boatSelection');
+      const memberVerificationStatus = document.getElementById('memberVerificationStatus');
       
       // Function to show error message
-      function showMessage(text, type) {
+      function showMessage(text: string, type: string) {
         if (messageDiv) {
           messageDiv.className = 'mt-4 p-3 rounded-lg';
           messageDiv.className += type === 'success' ? ' bg-green-100 text-green-800' : ' bg-red-100 text-red-800';
@@ -516,6 +521,147 @@ console.log('- activeCheckIns:', activeCheckIns);
             messageDiv.classList.add('hidden');
           }, 5000);
         }
+      }
+
+      // Function to calculate Levenshtein distance between two strings
+      function levenshteinDistance(str1: string, str2: string) {
+        const matrix = [];
+        
+        for (let i = 0; i <= str2.length; i++) {
+          matrix[i] = [i];
+        }
+        
+        for (let j = 0; j <= str1.length; j++) {
+          matrix[0][j] = j;
+        }
+        
+        for (let i = 1; i <= str2.length; i++) {
+          for (let j = 1; j <= str1.length; j++) {
+            if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+              matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+              matrix[i][j] = Math.min(
+                matrix[i - 1][j - 1] + 1,
+                matrix[i][j - 1] + 1,
+                matrix[i - 1][j] + 1
+              );
+            }
+          }
+        }
+        
+        return matrix[str2.length][str1.length];
+      }
+
+      // Function to verify member credentials
+      async function verifyMemberCredentials(memberNumber: string, enteredName: string) {
+        try {
+          const response = await fetch(`/api/check-in?memberNumber=${memberNumber}`);
+          const data = await response.json();
+          
+          if (!data.found) {
+            return {
+              valid: false,
+              error: 'Member number not found in database'
+            };
+          }
+          
+          const dbName = data.member.name.toLowerCase().trim();
+          const enteredNameLower = enteredName.toLowerCase().trim();
+          
+          // Calculate the edit distance between the names
+          const distance = levenshteinDistance(enteredNameLower, dbName);
+          
+          // Allow up to 3 character differences
+          if (distance <= 3) {
+            return {
+              valid: true,
+              member: data.member,
+              nameMatch: true
+            };
+          } else {
+            return {
+              valid: false,
+              error: `Name does not match. Expected: ${data.member.name}, Entered: ${enteredName}`
+            };
+          }
+        } catch (error) {
+          console.error('Error verifying member credentials:', error);
+          return {
+            valid: false,
+            error: 'Error verifying member credentials'
+          };
+        }
+      }
+
+      // Function to update verification status display
+      function updateVerificationStatus(status: string, message = '') {
+        if (!memberVerificationStatus) return;
+        
+        const icon = memberVerificationStatus?.querySelector('.verification-icon');
+        const text = memberVerificationStatus?.querySelector('.verification-text');
+        
+        if (status === 'verifying') {
+          memberVerificationStatus.className = 'mt-2 text-sm text-blue-600';
+          icon && (icon.textContent = '⏳');
+          text && (text.textContent = 'Verifying member credentials...');
+          memberVerificationStatus.classList.remove('hidden');
+        } else if (status === 'verified') {
+          memberVerificationStatus.className = 'mt-2 text-sm text-green-600';
+          icon && (icon.textContent = '✅');
+          text && (text.textContent = 'Member verified successfully');
+          memberVerificationStatus.classList.remove('hidden');
+        } else if (status === 'error') {
+          memberVerificationStatus.className = 'mt-2 text-sm text-red-600';
+          icon && (icon.textContent = '❌');
+          text && (text.textContent = message || 'Verification failed');
+          memberVerificationStatus.classList.remove('hidden');
+        } else if (status === 'required') {
+          memberVerificationStatus.className = 'mt-2 text-sm text-orange-600';
+          icon && (icon.textContent = '🔒');
+          text && (text.textContent = 'Member verification required for checkout');
+          memberVerificationStatus.classList.remove('hidden');
+        } else {
+          memberVerificationStatus.classList.add('hidden');
+        }
+      }
+
+      // Function to perform real-time verification
+      let verificationTimeout: ReturnType<typeof setTimeout> | undefined;
+      async function performRealTimeVerification() {
+        const memberNumber = memberNumberInput?.value?.trim() || '';
+        const sailorName = nameInput?.value?.trim() || '';
+        
+        // Clear previous timeout
+        if (verificationTimeout) {
+          clearTimeout(verificationTimeout);
+        }
+        
+        // Hide status if no member number
+        if (!memberNumber) {
+          updateVerificationStatus('hidden');
+          return;
+        }
+        
+        // Show required status if member number but no name
+        if (memberNumber && !sailorName) {
+          updateVerificationStatus('required');
+          return;
+        }
+        
+        // Debounce verification to avoid too many API calls
+        verificationTimeout = setTimeout(async () => {
+          if (memberNumber && sailorName) {
+            updateVerificationStatus('verifying');
+            
+            const verification = await verifyMemberCredentials(memberNumber, sailorName);
+            
+            if (verification.valid) {
+              updateVerificationStatus('verified');
+            } else {
+              updateVerificationStatus('error', verification.error);
+            }
+          }
+        }, 500);
       }
 
       // Function to show check-in success with enhanced UI
@@ -813,8 +959,8 @@ console.log('- activeCheckIns:', activeCheckIns);
       });
       
       // Member lookup functionality
-      lookupMemberBtn.addEventListener('click', async () => {
-        const memberNumber = memberNumberInput.value.trim();
+      lookupMemberBtn?.addEventListener('click', async () => {
+        const memberNumber = memberNumberInput?.value?.trim();
         if (!memberNumber) {
           showMessage('Please enter a member number', 'error');
           return;
@@ -825,19 +971,32 @@ console.log('- activeCheckIns:', activeCheckIns);
           const data = await response.json();
           
           if (data.found) {
-            nameInput.value = data.member.name;
-            if (data.member.phone) {
+            if (nameInput) nameInput.value = data.member.name;
+            if (data.member.phone && phoneInput) {
               phoneInput.value = data.member.phone;
             }
             showMessage('Member information loaded!', 'success');
+            // Trigger verification after loading member info
+            performRealTimeVerification();
           } else {
             showMessage('Member number not found', 'error');
+            updateVerificationStatus('error', 'Member number not found');
           }
         } catch (error) {
           console.error('Error looking up member:', error);
           showMessage('Error looking up member', 'error');
+          updateVerificationStatus('error', 'Error looking up member');
         }
       });
+
+      // Add real-time verification listeners
+      if (memberNumberInput) {
+        memberNumberInput.addEventListener('input', performRealTimeVerification);
+      }
+      
+      if (nameInput) {
+        nameInput.addEventListener('input', performRealTimeVerification);
+      }
       
       // Check for extension options when page loads
       async function checkExtensionOptions() {
@@ -954,16 +1113,35 @@ console.log('- activeCheckIns:', activeCheckIns);
           
           const formData = new FormData(form);
           const selectedBoatId = boatSelectionDropdown ? boatSelectionDropdown.value : boatId;
+          const memberNumber = formData.get('memberNumber');
+          const sailorName = formData.get('name');
           
           if (!selectedBoatId) {
             showMessage('Please select a boat to check out.', 'error');
             return;
           }
           
+          // Verify member credentials if member number is provided
+          if (memberNumber && sailorName) {
+            showMessage('Verifying member credentials...', 'success');
+            
+            const verification = await verifyMemberCredentials(memberNumber, sailorName);
+            
+            if (!verification.valid) {
+              showMessage(`Verification failed: ${verification.error}`, 'error');
+              return;
+            }
+            
+            showMessage('Member verification successful!', 'success');
+          } else if (memberNumber && !sailorName) {
+            showMessage('Please enter your name for member verification.', 'error');
+            return;
+          }
+          
           const data = {
             boatId: selectedBoatId,
-            sailorName: formData.get('name'),
-            memberNumber: formData.get('memberNumber') || null,
+            sailorName: sailorName,
+            memberNumber: memberNumber || null,
             phone: formData.get('phone') || null,
             expectedReturn: formData.get('return'),
             safetyChecklist: true
