@@ -46,7 +46,7 @@ export async function POST({ request }) {
       endpoint: subscription.endpoint,
       p256dh: p256dh,
       auth: auth,
-      userAgent: navigator.userAgent,
+      userAgent: subscription.userAgent || 'Unknown',
       memberNumber: memberNumber || null,
       timestamp: new Date().toISOString()
     };

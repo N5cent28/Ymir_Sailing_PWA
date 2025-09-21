@@ -515,7 +515,10 @@ import Layout from '../layouts/Layout.astro';
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              subscription: newSubscription,
+              subscription: {
+                ...newSubscription,
+                userAgent: navigator.userAgent
+              },
               memberNumber: '1234' // You might want to get this from the form
             })
           });
@@ -586,7 +589,10 @@ import Layout from '../layouts/Layout.astro';
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            subscription: currentSubscription,
+            subscription: {
+              ...currentSubscription,
+              userAgent: navigator.userAgent
+            },
             memberNumber: '1234'
           })
         });
