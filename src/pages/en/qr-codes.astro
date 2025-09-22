@@ -30,7 +30,7 @@ const qrCodes = (await getQRCodes()) as unknown as QRCodeRow[];
 const qrCodeMap = new Map<string, QRCodeRow>(qrCodes.map((qr: QRCodeRow) => [qr.boat_id, qr]));
 ---
 
-<Layout title="QR Code Management - Siglingafélagið Ýmir" lang="en">
+<Layout title="Complete Fleet Checkout - Siglingafélagið Ýmir" lang="en">
   <Navigation />
   
   <main>
@@ -38,10 +38,10 @@ const qrCodeMap = new Map<string, QRCodeRow>(qrCodes.map((qr: QRCodeRow) => [qr.
     <section class="bg-gradient-to-br from-ocean-green to-green-600 text-white py-20">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h1 class="text-5xl font-bold mb-6">
-          QR Code Management
+          Complete Fleet Checkout
         </h1>
         <p class="text-xl mb-8 max-w-3xl mx-auto">
-          Generate and manage QR codes for boat check-ins. Print these codes and attach them to your boats.
+          Boat QR codes and checkout form links. Make sure you're selecting the correct vessel!
         </p>
       </div>
     </section>
@@ -93,15 +93,9 @@ const qrCodeMap = new Map<string, QRCodeRow>(qrCodes.map((qr: QRCodeRow) => [qr.
                   <div class="flex space-x-2">
                     <button
                       onclick={`window.open('${Astro.url.origin}${boat.url}', '_blank')`}
-                      class="flex-1 bg-ocean-green text-white px-3 py-2 rounded text-sm hover:bg-green-700 transition-colors"
+                      class="w-full bg-ocean-green text-white px-3 py-2 rounded text-sm hover:bg-green-700 transition-colors"
                     >
-                      Test
-                    </button>
-                    <button
-                      onclick={`navigator.clipboard.writeText('${Astro.url.origin}${boat.url}')`}
-                      class="flex-1 bg-gray-500 text-white px-3 py-2 rounded text-sm hover:bg-gray-600 transition-colors"
-                    >
-                      Copy URL
+                      Check-out Form
                     </button>
                   </div>
                 </div>
@@ -153,15 +147,9 @@ const qrCodeMap = new Map<string, QRCodeRow>(qrCodes.map((qr: QRCodeRow) => [qr.
                   <div class="flex space-x-2">
                     <button
                       onclick={`window.open('${Astro.url.origin}${boat.url}', '_blank')`}
-                      class="flex-1 bg-ocean-green text-white px-3 py-2 rounded text-sm hover:bg-green-700 transition-colors"
+                      class="w-full bg-ocean-green text-white px-3 py-2 rounded text-sm hover:bg-green-700 transition-colors"
                     >
-                      Test
-                    </button>
-                    <button
-                      onclick={`navigator.clipboard.writeText('${Astro.url.origin}${boat.url}')`}
-                      class="flex-1 bg-gray-500 text-white px-3 py-2 rounded text-sm hover:bg-gray-600 transition-colors"
-                    >
-                      Copy URL
+                      Check-out Form
                     </button>
                   </div>
                 </div>
@@ -172,24 +160,24 @@ const qrCodeMap = new Map<string, QRCodeRow>(qrCodes.map((qr: QRCodeRow) => [qr.
         
         <!-- Instructions -->
         <div class="mt-12 bg-blue-50 rounded-lg p-6">
-          <h3 class="text-lg font-semibold text-blue-900 mb-4">QR Code Management:</h3>
+          <h3 class="text-lg font-semibold text-blue-900 mb-4">How to Check Out a Boat:</h3>
           <div class="grid md:grid-cols-2 gap-6">
             <div>
-              <h4 class="font-semibold text-blue-800 mb-2">For Admins:</h4>
+              <h4 class="font-semibold text-blue-800 mb-2">Using QR Codes:</h4>
               <ol class="list-decimal list-inside space-y-2 text-blue-800">
-                <li>Go to <a href="/en/admin-qr-codes" class="underline font-semibold">Admin QR Code Management</a></li>
-                <li>Upload QR code images for each boat</li>
-                <li>QR codes will automatically appear on this page</li>
-                <li>Test each QR code to ensure it works correctly</li>
+                <li>Scan the QR code on the boat you want to use</li>
+                <li>Or click "Check-out Form" above for the boat you want</li>
+                <li>Fill out the checkout form with your details</li>
+                <li>Follow the safety checklist before departure</li>
               </ol>
             </div>
             <div>
-              <h4 class="font-semibold text-blue-800 mb-2">For Members:</h4>
+              <h4 class="font-semibold text-blue-800 mb-2">Alternative Methods:</h4>
               <ol class="list-decimal list-inside space-y-2 text-blue-800">
-                <li>Scan the QR code on any boat</li>
-                <li>Or use the "Find My Boat" feature with your member number</li>
-                <li>Follow the check-out process</li>
-                <li>Return the boat using the same QR code or member number</li>
+                <li>Use the "Find My Boat" feature with your member number</li>
+                <li>Go to "My Boat" in the navigation menu</li>
+                <li>Select the boat you want to check out</li>
+                <li>Return the boat using the same method when done</li>
               </ol>
             </div>
           </div>
