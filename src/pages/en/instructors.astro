@@ -1,37 +1,57 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import Navigation from '../../components/Navigation.astro';
+import BackButton from '../../components/BackButton.astro';
+import { getAdminMembers } from '../../lib/database-postgres.js';
+const admins = await getAdminMembers();
 ---
 
-<Layout title="Expert Guidance - Siglingafélagið Ýmir" lang="en">
+<Layout title="Meet Our Leadership - Siglingafélagið Ýmir" lang="en">
   <Navigation />
   
   <main>
     <!-- Hero Section -->
     <section class="bg-gradient-to-br from-ocean-green to-green-600 text-white py-20">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h1 class="text-5xl font-bold mb-6">
-          Expert Guidance
-        </h1>
+        <div class="mb-6 flex justify-start">
+          <BackButton label="Back" variant="general" />
+        </div>
+        <h1 class="text-5xl font-bold mb-6">Meet Our Leadership</h1>
         <p class="text-xl mb-8 max-w-3xl mx-auto">
-          Learn from our experienced instructors and sailing experts. Our team brings decades of 
-          combined experience to help you master the art of sailing.
+          Learn about the leaders and instructors who make Ýmir run smoothly and safely. This list is populated from our admin database.
         </p>
       </div>
     </section>
 
-    <!-- Instructors Section -->
+    <!-- Leadership Section -->
     <section class="py-16 bg-white">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
-          <h2 class="text-3xl font-bold text-ocean-green mb-4">Meet Our Instructors</h2>
-          <p class="text-xl text-anchor-gray">
-            Our certified instructors are passionate about sailing and dedicated to your success.
-          </p>
+          <h2 class="text-3xl font-bold text-ocean-green mb-4">Our Leadership Team</h2>
+          <p class="text-xl text-anchor-gray">Club administrators and instructors.</p>
         </div>
 
-        <!-- Instructors Grid -->
+        <!-- Dynamic Admin Profiles -->
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+          {admins && admins.length > 0 ? admins.map((admin: any) => (
+            <div class="bg-sail-white rounded-lg p-8 shadow-lg text-center">
+              <div class="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden bg-gray-200">
+                <img 
+                  src={admin.profile_picture || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face'} 
+                  alt={admin.name}
+                  class="w-full h-full object-cover"
+                />
+              </div>
+              <h3 class="text-2xl font-bold text-ocean-green mb-2">{admin.name}</h3>
+              <p class="text-lg text-anchor-gray mb-4">{admin.email || admin.member_number || 'Administrator'}</p>
+              {admin.bio && (<p class="text-anchor-gray mb-4">{admin.bio}</p>)}
+            </div>
+          )) : (
+            <div class="col-span-full text-center text-anchor-gray">No administrators found.</div>
+          )}
+        </div>
+
+        <!-- Static showcase (optional) removed for dynamic list -->
           <!-- Instructor 1 -->
           <div class="bg-sail-white rounded-lg p-8 shadow-lg text-center">
             <div class="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden bg-gray-200">
