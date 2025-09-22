@@ -55,29 +55,7 @@ import Layout from '../layouts/Layout.astro';
             </div>
           </div>
           
-          <div class="mt-6 pt-6 border-t border-gray-200">
-            <h3 class="font-semibold text-gray-900 mb-3">Quick Actions</h3>
-            <div class="space-y-2">
-              <button onclick="requestNotificationPermission()" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
-                🔔 Request Notification Permission
-              </button>
-            <button onclick="debugSubscriptions()" class="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm">
-              📊 Debug Subscriptions
-            </button>
-            <button onclick="testDirectNotification()" class="w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm">
-              🔔 Test Direct Notification
-            </button>
-            <button onclick="verifyVapidKeys()" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm">
-              🔑 Verify VAPID Keys
-            </button>
-            <button onclick="fixEncryptionKeys()" class="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm">
-              🔧 Fix Encryption Keys
-            </button>
-            <button onclick="updateDatabaseSubscriptions()" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm">
-              🔄 Update Database Subscriptions
-            </button>
-            </div>
-          </div>
+          
     </div>
     
         <!-- Notification Testing -->
@@ -94,32 +72,32 @@ import Layout from '../layouts/Layout.astro';
           </div>
           
           <div class="space-y-3">
-            <button onclick="testNotification('test')" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
-        📢 Basic Test Notification
-      </button>
-      
-            <button onclick="testNotification('checkout')" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
-        ⛵ Boat Checkout Confirmation
-      </button>
-      
-            <button onclick="testNotification('reminder')" class="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm">
-        ⏰ Time Extension Reminder
-      </button>
-      
-            <button onclick="testNotification('overdue')" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm">
-        🚨 Overdue Boat Alert
-      </button>
-            
-            <button onclick="testCronJob()" class="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm">
-              🕐 Test Cron Job
-      </button>
-      
-            <button onclick="testWebhook()" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm">
-              🔗 Test Webhook
+            <button title="Request browser notification permission and register service worker if needed" onclick="requestNotificationPermission()" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
+              🔔 Request Notification Permission
             </button>
-            
-            <button onclick="cleanupInvalidSubscriptions()" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm">
-              🧹 Clean Invalid Subscriptions
+
+            <button title="Send a simple push payload to your current subscription (server push)" onclick="testNotification('test')" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+              📢 Basic Test Notification
+            </button>
+
+            <button title="Run an end-to-end system test that exercises server logic and delivery" onclick="testNotificationSystem()" class="w-full px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm">
+              🔍 Test Notification System
+            </button>
+
+            <button title="Use the browser's Notification API directly (no push, requires app open)" onclick="testDirectNotification()" class="w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm">
+              🔔 Test Direct Notification
+            </button>
+
+            <button title="Simulate checkout event push template" onclick="testNotification('checkout')" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
+              ⛵ Boat Checkout Confirmation
+            </button>
+
+            <button title="Simulate time extension reminder push template" onclick="testNotification('reminder')" class="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm">
+              ⏰ Time Extension Reminder
+            </button>
+
+            <button title="Simulate overdue alert push template" onclick="testNotification('overdue')" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm">
+              🚨 Overdue Boat Alert
             </button>
           </div>
         </div>
@@ -132,46 +110,42 @@ import Layout from '../layouts/Layout.astro';
           </h2>
           
           <div class="space-y-3">
-            <button onclick="fixSubscriptionLink()" class="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm">
-        🔗 Fix Subscription Link
-      </button>
-      
-            <button onclick="testNotificationSystem()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
-              🔍 Test Notification System
+            <button title="Fetch and print all push subscriptions from database with key presence" onclick="debugSubscriptions()" class="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm">
+              📊 Debug Subscriptions
+            </button>
+
+            <button title="Remove DB rows with missing p256dh/auth to avoid using broken subscriptions" onclick="cleanupInvalidSubscriptions()" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm">
+              🧹 Clean Invalid Subscriptions
+            </button>
+
+            <button title="Delete ALL push subscriptions (simulates everyone logged out)" onclick="deleteAllSubscriptions()" class="w-full px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors text-sm">
+              🗑️ Delete All Subscriptions
+            </button>
+
+            <button title="Call external webhook endpoint to run scheduler (for external cron)" onclick="testWebhook()" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm">
+              🔗 Test Webhook
+            </button>
+
+            <button title="Call internal cron endpoint to run scheduler now" onclick="testCronJob()" class="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm">
+              🕐 Test Cron Job
+            </button>
+
+            <button title="Check client/server VAPID configuration and attempt a fresh subscription" onclick="verifyVapidKeys()" class="w-full px-4 py-2 bg-indigo-700 text-white rounded-lg hover:bg-indigo-800 transition-colors text-sm">
+              🔑 Verify VAPID Keys
+            </button>
+
+            <button title="Recreate push subscription to ensure p256dh/auth keys are present" onclick="fixEncryptionKeys()" class="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm">
+              🔧 Fix Encryption Keys
+            </button>
+
+            <button title="Associate an existing anonymous subscription with the entered member number" onclick="fixSubscriptionLink()" class="w-full px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm">
+              🔗 Fix Subscription Link
+            </button>
+
+            <button title="Extract keys from current browser subscription and update DB row" onclick="updateDatabaseSubscriptions()" class="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm">
+              🔄 Update Database Subscriptions
             </button>
           </div>
-        </div>
-
-        <!-- Advanced Admin Tools -->
-        <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-red-500">
-          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
-            <span class="bg-red-100 text-red-800 rounded-full p-2 mr-3">⚠️</span>
-            Advanced Admin Tools
-          </h2>
-          
-          <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-            <div class="flex items-start">
-              <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <div class="ml-3">
-                <h3 class="text-sm font-medium text-red-800">Warning</h3>
-                <div class="mt-2 text-sm text-red-700">
-                  <p>These actions affect all users and should only be used for testing purposes.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <button onclick="deleteAllSubscriptions()" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium">
-            🗑️ Delete All Subscriptions
-          </button>
-          
-          <p class="text-xs text-gray-500 mt-2">
-            This simulates all users logging out by removing all push notification subscriptions from the database.
-          </p>
         </div>
       </div>
 
@@ -199,6 +173,7 @@ import Layout from '../layouts/Layout.astro';
   </div>
 
   <script>
+    // @ts-nocheck
     // Global variables
     window.isTesting = false;
     
