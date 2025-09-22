@@ -1,6 +1,4 @@
 import { getQRCodes, getQRCodeByBoatId, createQRCode, updateQRCode } from '../../lib/database-postgres.js';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
 
 export async function POST({ request }) {
   try {
@@ -48,55 +46,21 @@ export async function POST({ request }) {
       });
     }
 
-    // Generate unique filename
+    // Generate filename for reference
     const fileExtension = (qrCodeFile.name && qrCodeFile.name.includes('.')) ? qrCodeFile.name.split('.').pop() : 'png';
     const filename = `${boatId}-${Date.now()}.${fileExtension}`;
-    const qrCodesDir = join(process.cwd(), 'public', 'qr-codes');
-    const filePath = join(qrCodesDir, filename);
-
-    console.log('📤 File paths:', {
-      filename,
-      qrCodesDir,
-      filePath,
-      cwd: process.cwd()
-    });
-
-    // Ensure qr-codes directory exists
-    console.log('📤 Creating qr-codes directory if it doesn\'t exist...');
-    try {
-      await mkdir(qrCodesDir, { recursive: true });
-      console.log('📤 Directory created/verified successfully');
-    } catch (mkdirError) {
-      console.error('❌ Directory creation error:', mkdirError);
-      throw new Error(`Directory creation failed: ${mkdirError.message}`);
-    }
-
-    // Convert file to ArrayBuffer
-    console.log('📤 Converting file to ArrayBuffer...');
+    
+    // Convert file to base64 for storage in database
+    console.log('📤 Converting file to base64...');
     const arrayBuffer = await qrCodeFile.arrayBuffer();
-    console.log('📤 ArrayBuffer size:', arrayBuffer.byteLength);
-
-    // Write file to local storage
-    console.log('📤 Writing file to local storage...');
-    let qrCodeUrl;
-    try {
-      await writeFile(filePath, Buffer.from(arrayBuffer));
-      console.log('📤 File written successfully to:', filePath);
-      
-      // Generate public URL for the file
-      const baseUrl = process.env.APP_URL || 'https://siglingafelagidymir.com';
-      qrCodeUrl = `${baseUrl}/qr-codes/${filename}`;
-      console.log('📤 Generated URL:', qrCodeUrl);
-    } catch (fileError) {
-      console.error('❌ File write error:', fileError);
-      console.error('❌ File write error details:', {
-        code: fileError.code,
-        errno: fileError.errno,
-        syscall: fileError.syscall,
-        path: fileError.path
-      });
-      throw new Error(`File upload failed: ${fileError.message}`);
-    }
+    const base64 = Buffer.from(arrayBuffer).toString('base64');
+    const dataUrl = `data:${qrCodeFile.type};base64,${base64}`;
+    
+    console.log('📤 File converted to base64, size:', base64.length);
+    
+    // Store the base64 data URL directly in the database
+    const qrCodeUrl = dataUrl;
+    console.log('📤 Using data URL for storage:', qrCodeUrl.substring(0, 100) + '...');
     
     // Check if QR code already exists for this boat
     console.log('📤 Checking for existing QR code for boat:', boatId);
@@ -133,7 +97,7 @@ export async function POST({ request }) {
 
     return new Response(JSON.stringify({
       success: true,
-      filename: `qr-codes/${filename}`,
+      filename: filename,
       url: qrCodeUrl,
       message: `QR code uploaded successfully for ${boatName}`
     }), {
