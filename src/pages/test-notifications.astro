@@ -25,38 +25,7 @@ import Layout from '../layouts/Layout.astro';
         </div>
       </div>
 
-      <div class="grid lg:grid-cols-2 gap-8">
-        <!-- System Status -->
-        <div class="bg-white rounded-lg shadow-lg p-6">
-          <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
-            <span class="bg-green-100 text-green-800 rounded-full p-2 mr-3">📊</span>
-            System Status
-          </h2>
-          
-          <div class="space-y-4">
-            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-              <span class="font-medium">Notification Support</span>
-              <span id="notificationSupport" class="px-3 py-1 rounded-full text-sm font-medium">Checking...</span>
-            </div>
-            
-            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-              <span class="font-medium">Service Worker</span>
-              <span id="serviceWorkerStatus" class="px-3 py-1 rounded-full text-sm font-medium">Checking...</span>
-            </div>
-            
-            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-              <span class="font-medium">Push Subscription</span>
-              <span id="pushSubscriptionStatus" class="px-3 py-1 rounded-full text-sm font-medium">Checking...</span>
-            </div>
-            
-            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-              <span class="font-medium">User Agent</span>
-              <span id="userAgent" class="text-xs text-gray-600 font-mono">Loading...</span>
-            </div>
-          </div>
-          
-          
-    </div>
+      <div class="grid lg:grid-cols-2 gap-6">
     
         <!-- Notification Testing -->
         <div class="bg-white rounded-lg shadow-lg p-6">
@@ -72,31 +41,31 @@ import Layout from '../layouts/Layout.astro';
           </div>
           
           <div class="space-y-3">
-            <button title="Request browser notification permission and register service worker if needed" onclick="requestNotificationPermission()" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
+            <button title="Client-only. Calls Notification.requestPermission(); if granted, prepares SW/Push setup. No server call." onclick="requestNotificationPermission()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
               🔔 Request Notification Permission
             </button>
 
-            <button title="Send a simple push payload to your current subscription (server push)" onclick="testNotification('test')" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+            <button title="Server push via /api/test-notification?type=test. Targets memberNumber if provided; else all. Uses VAPID + Web Push payload." onclick="testNotification('test')" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm">
               📢 Basic Test Notification
             </button>
 
-            <button title="Run an end-to-end system test that exercises server logic and delivery" onclick="testNotificationSystem()" class="w-full px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm">
+            <button title="End-to-end test path. Invokes scheduler/handlers to emulate real flows, aggregates results, logs success/fail counts." onclick="testNotificationSystem()" class="w-full px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm">
               🔍 Test Notification System
             </button>
 
-            <button title="Use the browser's Notification API directly (no push, requires app open)" onclick="testDirectNotification()" class="w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm">
+            <button title="Client-only. Uses browser Notification API (no service worker). Only visible if page is active." onclick="testDirectNotification()" class="w-full px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors text-sm">
               🔔 Test Direct Notification
             </button>
 
-            <button title="Simulate checkout event push template" onclick="testNotification('checkout')" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
+            <button title="Server push via /api/test-notification?type=checkout. Sends templated 'Boat Check-Out Confirmed' payload." onclick="testNotification('checkout')" class="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm">
               ⛵ Boat Checkout Confirmation
             </button>
 
-            <button title="Simulate time extension reminder push template" onclick="testNotification('reminder')" class="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm">
+            <button title="Server push via /api/test-notification?type=reminder. Uses extension reminder template and options." onclick="testNotification('reminder')" class="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm">
               ⏰ Time Extension Reminder
             </button>
 
-            <button title="Simulate overdue alert push template" onclick="testNotification('overdue')" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm">
+            <button title="Server push via /api/test-notification?type=overdue. Sends escalating overdue alert payload." onclick="testNotification('overdue')" class="w-full px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors text-sm">
               🚨 Overdue Boat Alert
             </button>
           </div>
@@ -145,6 +114,25 @@ import Layout from '../layouts/Layout.astro';
             <button title="Extract keys from current browser subscription and update DB row" onclick="updateDatabaseSubscriptions()" class="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm">
               🔄 Update Database Subscriptions
             </button>
+          </div>
+        </div>
+
+        <!-- Compact System Status -->
+        <div class="lg:col-span-2 bg-white rounded-lg shadow-lg p-4 mt-6">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="text-sm font-semibold text-gray-700">System Status:</div>
+            <div class="px-3 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-800" title="Current browser Notification permission state">
+              🔔 Notifications: <span id="notificationSupport">Checking...</span>
+            </div>
+            <div class="px-3 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-800" title="Service worker registration state for this origin">
+              🧩 Service Worker: <span id="serviceWorkerStatus">Checking...</span>
+            </div>
+            <div class="px-3 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-800" title="Whether a PushManager subscription currently exists in this browser">
+              📬 Push Subscription: <span id="pushSubscriptionStatus">Checking...</span>
+            </div>
+            <div class="px-3 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-800 overflow-hidden text-ellipsis" style="max-width: 40ch" title="Client user agent string">
+              🖥️ UA: <span id="userAgent">Loading...</span>
+            </div>
           </div>
         </div>
       </div>
