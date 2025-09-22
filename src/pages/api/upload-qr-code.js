@@ -1,6 +1,5 @@
 import { getQRCodes, getQRCodeByBoatId, createQRCode, updateQRCode } from '../../lib/database-postgres.js';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
+import { put } from '@netlify/blobs';
 
 export async function POST({ request }) {
   try {
@@ -31,20 +30,19 @@ export async function POST({ request }) {
     }
 
     // Generate unique filename
-    const fileExtension = qrCodeFile.name.split('.').pop();
+    const fileExtension = (qrCodeFile.name && qrCodeFile.name.includes('.')) ? qrCodeFile.name.split('.').pop() : 'png';
     const filename = `qr-codes/${boatId}-${Date.now()}.${fileExtension}`;
-    const filePath = join(process.cwd(), 'public', filename);
 
-    // Ensure directory exists
-    await mkdir(join(process.cwd(), 'public', 'qr-codes'), { recursive: true });
-
-    // Convert file to buffer and save
+    // Convert file to ArrayBuffer
     const arrayBuffer = await qrCodeFile.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    await writeFile(filePath, buffer);
 
-    // Save to database with public URL
-    const qrCodeUrl = `/${filename}`;
+    // Upload to Netlify Blobs (public bucket)
+    const blob = await put(filename, arrayBuffer, {
+      contentType: qrCodeFile.type || 'image/png',
+      access: 'public'
+    });
+
+    const qrCodeUrl = blob.url; // Public URL
     
     // Check if QR code already exists for this boat
     const existingQR = await getQRCodeByBoatId(boatId);
