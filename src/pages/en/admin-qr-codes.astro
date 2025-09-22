@@ -283,7 +283,10 @@ const boats = await getAllBoats();
           result.qrCodes.forEach(qrCode => {
             const preview = document.getElementById(`qr-preview-${qrCode.boat_id}`);
             if (preview) {
-              preview.innerHTML = `<img src="/uploads/qr-codes/${qrCode.filename}" alt="QR Code for ${qrCode.boat_name}" class="w-full h-full object-contain rounded">`;
+              const src = qrCode.qr_code_url || '';
+              if (src.startsWith('data:') || src.startsWith('http')) {
+                preview.innerHTML = `<img src="${src}" alt="QR Code for ${qrCode.boat_name || ''}" class="w-full h-full object-contain rounded">`;
+              }
             }
           });
         }
