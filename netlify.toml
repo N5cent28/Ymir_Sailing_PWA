@@ -5,9 +5,6 @@
 [functions]
   node_bundler = "esbuild"
 
-[[plugins]]
-  package = "@netlify/plugin-blobs"
-
 # Note: For scheduled notifications, we'll use external cron services
 # or manual triggering through the admin interface
 # Netlify doesn't support built-in cron jobs for free plans

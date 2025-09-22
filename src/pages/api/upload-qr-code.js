@@ -51,13 +51,18 @@ export async function POST({ request }) {
 
     // Upload to Netlify Blobs (public bucket)
     console.log('📤 Uploading to Netlify Blobs...');
-    const blob = await put(filename, arrayBuffer, {
-      contentType: qrCodeFile.type || 'image/png',
-      access: 'public'
-    });
-    console.log('📤 Blob uploaded:', blob.url);
-
-    const qrCodeUrl = blob.url; // Public URL
+    let qrCodeUrl;
+    try {
+      const blob = await put(filename, arrayBuffer, {
+        contentType: qrCodeFile.type || 'image/png',
+        access: 'public'
+      });
+      console.log('📤 Blob uploaded:', blob.url);
+      qrCodeUrl = blob.url; // Public URL
+    } catch (blobError) {
+      console.error('❌ Netlify Blobs error:', blobError);
+      throw new Error(`Netlify Blobs upload failed: ${blobError.message}`);
+    }
     
     // Check if QR code already exists for this boat
     const existingQR = await getQRCodeByBoatId(boatId);
