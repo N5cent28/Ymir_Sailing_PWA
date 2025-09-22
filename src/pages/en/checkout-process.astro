@@ -1,0 +1,221 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Navigation from '../../components/Navigation.astro';
+---
+
+<Layout title="Checkout Process - Siglingafélagið Ýmir" lang="en">
+  <Navigation />
+  
+  <main>
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-br from-ocean-green to-green-600 text-white py-20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-5xl font-bold mb-6">
+          Safe & Secure Checkout Process
+        </h1>
+        <p class="text-xl mb-8 max-w-3xl mx-auto">
+          Our comprehensive system ensures safe boat check-ins, tracking, and maintenance for all members.
+        </p>
+      </div>
+    </section>
+
+    <!-- Process Overview -->
+    <section class="py-16 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-bold text-ocean-green mb-4">How Our System Works</h2>
+          <p class="text-xl text-anchor-gray">
+            From QR code scanning to safety alerts, here's how we keep our fleet safe and accessible.
+          </p>
+        </div>
+
+        <!-- Process Steps -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+          <!-- QR Code Scanning -->
+          <div class="bg-sail-white rounded-lg p-6 shadow-lg">
+            <div class="bg-ocean-green w-16 h-16 rounded-full flex items-center justify-center mb-4">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold mb-3 text-ocean-green">QR Code Scanning</h3>
+            <p class="text-anchor-gray mb-4">
+              Each boat has a unique QR code. Simply scan with your phone to instantly access the checkout form.
+            </p>
+            <ul class="text-sm text-anchor-gray space-y-1">
+              <li>• Instant boat identification</li>
+              <li>• Mobile-friendly interface</li>
+              <li>• Works in all weather conditions</li>
+            </ul>
+          </div>
+
+          <!-- Member Verification -->
+          <div class="bg-sail-white rounded-lg p-6 shadow-lg">
+            <div class="bg-ocean-green w-16 h-16 rounded-full flex items-center justify-center mb-4">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold mb-3 text-ocean-green">Member Verification</h3>
+            <p class="text-anchor-gray mb-4">
+              Your member number and PIN ensure only authorized members can access our boats.
+            </p>
+            <ul class="text-sm text-anchor-gray space-y-1">
+              <li>• Secure member authentication</li>
+              <li>• PIN-based verification</li>
+              <li>• Admin oversight capabilities</li>
+            </ul>
+          </div>
+
+          <!-- Checkout Extensions -->
+          <div class="bg-sail-white rounded-lg p-6 shadow-lg">
+            <div class="bg-ocean-green w-16 h-16 rounded-full flex items-center justify-center mb-4">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold mb-3 text-ocean-green">Time Extensions</h3>
+            <p class="text-anchor-gray mb-4">
+              Need more time? Request extensions directly through the app with automatic notifications.
+            </p>
+            <ul class="text-sm text-anchor-gray space-y-1">
+              <li>• Easy extension requests</li>
+              <li>• Automatic admin notifications</li>
+              <li>• Real-time tracking updates</li>
+            </ul>
+          </div>
+
+          <!-- Maintenance Reporting -->
+          <div class="bg-sail-white rounded-lg p-6 shadow-lg">
+            <div class="bg-ocean-green w-16 h-16 rounded-full flex items-center justify-center mb-4">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold mb-3 text-ocean-green">Maintenance Reporting</h3>
+            <p class="text-anchor-gray mb-4">
+              Report issues instantly through the app. Our maintenance team gets notified immediately.
+            </p>
+            <ul class="text-sm text-anchor-gray space-y-1">
+              <li>• Instant issue reporting</li>
+              <li>• Photo documentation support</li>
+              <li>• Priority-based notifications</li>
+            </ul>
+          </div>
+
+          <!-- Safety Messaging -->
+          <div class="bg-sail-white rounded-lg p-6 shadow-lg">
+            <div class="bg-ocean-green w-16 h-16 rounded-full flex items-center justify-center mb-4">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold mb-3 text-ocean-green">Safety Messaging</h3>
+            <p class="text-anchor-gray mb-4">
+              Get real-time safety updates, weather alerts, and emergency notifications.
+            </p>
+            <ul class="text-sm text-anchor-gray space-y-1">
+              <li>• Weather condition alerts</li>
+              <li>• Emergency notifications</li>
+              <li>• Safety checklist reminders</li>
+            </ul>
+          </div>
+
+          <!-- Administrator Alerts -->
+          <div class="bg-sail-white rounded-lg p-6 shadow-lg">
+            <div class="bg-ocean-green w-16 h-16 rounded-full flex items-center justify-center mb-4">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4.828 7l2.586 2.586a2 2 0 002.828 0L12.828 7H4.828zM4 5h16a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V7a2 2 0 012-2z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold mb-3 text-ocean-green">Admin Alerts</h3>
+            <p class="text-anchor-gray mb-4">
+              Administrators receive instant notifications for all activities and can monitor the fleet in real-time.
+            </p>
+            <ul class="text-sm text-anchor-gray space-y-1">
+              <li>• Real-time fleet monitoring</li>
+              <li>• Instant activity notifications</li>
+              <li>• Emergency response capabilities</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Safety Features -->
+        <div class="bg-blue-50 rounded-lg p-8 mb-16">
+          <h3 class="text-2xl font-bold text-blue-900 mb-6 text-center">Safety Features</h3>
+          <div class="grid md:grid-cols-2 gap-8">
+            <div>
+              <h4 class="text-lg font-semibold text-blue-800 mb-4">For Members</h4>
+              <ul class="space-y-2 text-blue-800">
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                  </svg>
+                  Easy boat checkout with QR codes
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                  </svg>
+                  Request time extensions when needed
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                  </svg>
+                  Report maintenance issues instantly
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                  </svg>
+                  Receive safety and weather alerts
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 class="text-lg font-semibold text-blue-800 mb-4">For Administrators</h4>
+              <ul class="space-y-2 text-blue-800">
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                  </svg>
+                  Real-time fleet monitoring
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                  </svg>
+                  Instant notifications for all activities
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                  </svg>
+                  Emergency response capabilities
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                  </svg>
+                  Comprehensive activity tracking
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Call to Action -->
+        <div class="text-center">
+          <a href="/en/qr-codes" class="btn-primary text-lg px-8 py-3 mr-4">
+            Try the System
+          </a>
+          <a href="/en/contact" class="btn-secondary text-lg px-8 py-3">
+            Learn More
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+</Layout>
