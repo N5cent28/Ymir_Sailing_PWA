@@ -5,6 +5,12 @@ import { join } from 'path';
 export async function POST({ request }) {
   try {
     console.log('📤 QR upload request received');
+    console.log('📤 Environment check:', {
+      NODE_ENV: process.env.NODE_ENV,
+      APP_URL: process.env.APP_URL,
+      DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'NOT SET',
+      cwd: process.cwd()
+    });
     
     const formData = await request.formData();
     const qrCodeFile = formData.get('qrCode');
@@ -16,7 +22,8 @@ export async function POST({ request }) {
       boatId, 
       boatName,
       fileType: qrCodeFile?.type,
-      fileName: qrCodeFile?.name
+      fileName: qrCodeFile?.name,
+      fileSize: qrCodeFile?.size
     });
 
     if (!qrCodeFile || !boatId || !boatName) {
@@ -47,9 +54,22 @@ export async function POST({ request }) {
     const qrCodesDir = join(process.cwd(), 'public', 'qr-codes');
     const filePath = join(qrCodesDir, filename);
 
+    console.log('📤 File paths:', {
+      filename,
+      qrCodesDir,
+      filePath,
+      cwd: process.cwd()
+    });
+
     // Ensure qr-codes directory exists
     console.log('📤 Creating qr-codes directory if it doesn\'t exist...');
-    await mkdir(qrCodesDir, { recursive: true });
+    try {
+      await mkdir(qrCodesDir, { recursive: true });
+      console.log('📤 Directory created/verified successfully');
+    } catch (mkdirError) {
+      console.error('❌ Directory creation error:', mkdirError);
+      throw new Error(`Directory creation failed: ${mkdirError.message}`);
+    }
 
     // Convert file to ArrayBuffer
     console.log('📤 Converting file to ArrayBuffer...');
@@ -58,27 +78,57 @@ export async function POST({ request }) {
 
     // Write file to local storage
     console.log('📤 Writing file to local storage...');
+    let qrCodeUrl;
     try {
       await writeFile(filePath, Buffer.from(arrayBuffer));
+      console.log('📤 File written successfully to:', filePath);
       
       // Generate public URL for the file
       const baseUrl = process.env.APP_URL || 'https://siglingafelagidymir.com';
-      const qrCodeUrl = `${baseUrl}/qr-codes/${filename}`;
-      console.log('📤 File saved locally:', qrCodeUrl);
+      qrCodeUrl = `${baseUrl}/qr-codes/${filename}`;
+      console.log('📤 Generated URL:', qrCodeUrl);
     } catch (fileError) {
       console.error('❌ File write error:', fileError);
+      console.error('❌ File write error details:', {
+        code: fileError.code,
+        errno: fileError.errno,
+        syscall: fileError.syscall,
+        path: fileError.path
+      });
       throw new Error(`File upload failed: ${fileError.message}`);
     }
     
     // Check if QR code already exists for this boat
-    const existingQR = await getQRCodeByBoatId(boatId);
+    console.log('📤 Checking for existing QR code for boat:', boatId);
+    let existingQR;
+    try {
+      existingQR = await getQRCodeByBoatId(boatId);
+      console.log('📤 Existing QR check result:', existingQR ? 'Found' : 'Not found');
+    } catch (dbError) {
+      console.error('❌ Database error checking existing QR:', dbError);
+      throw new Error(`Database check failed: ${dbError.message}`);
+    }
     
     if (existingQR) {
       // Update existing record
-      await updateQRCode(boatId, qrCodeUrl);
+      console.log('📤 Updating existing QR code record');
+      try {
+        await updateQRCode(boatId, qrCodeUrl);
+        console.log('📤 QR code record updated successfully');
+      } catch (updateError) {
+        console.error('❌ Database update error:', updateError);
+        throw new Error(`Database update failed: ${updateError.message}`);
+      }
     } else {
       // Create new record
-      await createQRCode(boatId, qrCodeUrl);
+      console.log('📤 Creating new QR code record');
+      try {
+        await createQRCode(boatId, qrCodeUrl);
+        console.log('📤 QR code record created successfully');
+      } catch (createError) {
+        console.error('❌ Database create error:', createError);
+        throw new Error(`Database create failed: ${createError.message}`);
+      }
     }
 
     return new Response(JSON.stringify({
@@ -92,15 +142,20 @@ export async function POST({ request }) {
     });
 
   } catch (error) {
-    console.error('Error uploading QR code:', error);
-    console.error('Error stack:', error.stack);
-    console.error('Error message:', error.message);
+    console.error('❌ CRITICAL ERROR in QR upload:', error);
+    console.error('❌ Error name:', error.name);
+    console.error('❌ Error message:', error.message);
+    console.error('❌ Error stack:', error.stack);
+    console.error('❌ Error code:', error.code);
+    console.error('❌ Error cause:', error.cause);
     
     return new Response(JSON.stringify({
       success: false,
       error: 'Internal server error',
       details: error.message,
-      stack: error.stack
+      name: error.name,
+      code: error.code,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
