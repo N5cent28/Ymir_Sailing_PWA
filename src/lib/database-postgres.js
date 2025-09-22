@@ -624,21 +624,18 @@ export async function bulkUpsertMembers(members) {
 }
 
 // Delete all members (cascades handled manually in deleteMember; here we truncate related tables safely)
-export async function deleteAllMembers() {
+export async function deleteAllNonAdminMembers() {
   const client = await getClient();
   try {
-    // Remove dependent rows referencing members
-    await client.query('DELETE FROM trip_likes');
-    await client.query('DELETE FROM trip_comments');
-    await client.query('DELETE FROM trip_photos');
-    await client.query('DELETE FROM boat_hours');
-    await client.query('DELETE FROM outing_participants');
-    await client.query('DELETE FROM messages');
-    await client.query('UPDATE maintenance_issues SET reported_by = NULL, resolved_by = NULL');
-    await client.query('UPDATE check_ins SET member_number = NULL');
-    await client.query('DELETE FROM push_subscriptions');
-    const res = await client.query('DELETE FROM members');
-    return res.rowCount;
+    // Get all non-admin member numbers
+    const res = await client.query('SELECT member_number FROM members WHERE is_admin = FALSE');
+    const memberNumbers = res.rows.map(r => r.member_number);
+    let deletedCount = 0;
+    for (const memberNumber of memberNumbers) {
+      await deleteMember(memberNumber);
+      deletedCount += 1;
+    }
+    return deletedCount;
   } finally {
     client.release();
   }

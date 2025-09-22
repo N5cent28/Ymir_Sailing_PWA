@@ -1,4 +1,4 @@
-import { deleteAllMembers, verifyMemberCredentials, isAdmin } from '../../lib/database-postgres.js';
+import { deleteAllNonAdminMembers, verifyMemberCredentials, isAdmin } from '../../lib/database-postgres.js';
 
 export async function POST({ request }) {
   try {
@@ -12,8 +12,8 @@ export async function POST({ request }) {
       return new Response(JSON.stringify({ success: false, error: 'Invalid admin credentials' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
     }
 
-    const count = await deleteAllMembers();
-    return new Response(JSON.stringify({ success: true, deleted: count }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    const count = await deleteAllNonAdminMembers();
+    return new Response(JSON.stringify({ success: true, deleted: count, scope: 'non-admin' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('Delete all members error:', error);
     return new Response(JSON.stringify({ success: false, error: 'Internal server error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
