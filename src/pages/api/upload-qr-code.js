@@ -1,5 +1,6 @@
 import { getQRCodes, getQRCodeByBoatId, createQRCode, updateQRCode } from '../../lib/database-postgres.js';
-import { getStore } from '@netlify/blobs';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
 
 export async function POST({ request }) {
   try {
@@ -42,32 +43,31 @@ export async function POST({ request }) {
 
     // Generate unique filename
     const fileExtension = (qrCodeFile.name && qrCodeFile.name.includes('.')) ? qrCodeFile.name.split('.').pop() : 'png';
-    const filename = `qr-codes/${boatId}-${Date.now()}.${fileExtension}`;
+    const filename = `${boatId}-${Date.now()}.${fileExtension}`;
+    const qrCodesDir = join(process.cwd(), 'public', 'qr-codes');
+    const filePath = join(qrCodesDir, filename);
+
+    // Ensure qr-codes directory exists
+    console.log('📤 Creating qr-codes directory if it doesn\'t exist...');
+    await mkdir(qrCodesDir, { recursive: true });
 
     // Convert file to ArrayBuffer
     console.log('📤 Converting file to ArrayBuffer...');
     const arrayBuffer = await qrCodeFile.arrayBuffer();
     console.log('📤 ArrayBuffer size:', arrayBuffer.byteLength);
 
-    // Upload to Netlify Blobs store
-    console.log('📤 Uploading to Netlify Blobs...');
-    let qrCodeUrl;
+    // Write file to local storage
+    console.log('📤 Writing file to local storage...');
     try {
-      const store = getStore({ name: 'qr-codes', consistency: 'strong' });
-      await store.set(filename, arrayBuffer, {
-        metadata: {
-          contentType: qrCodeFile.type || 'image/png',
-          boatId: boatId,
-          boatName: boatName
-        }
-      });
+      await writeFile(filePath, Buffer.from(arrayBuffer));
       
-      // Get the public URL for the blob
-      qrCodeUrl = store.url(filename);
-      console.log('📤 Blob uploaded:', qrCodeUrl);
-    } catch (blobError) {
-      console.error('❌ Netlify Blobs error:', blobError);
-      throw new Error(`Netlify Blobs upload failed: ${blobError.message}`);
+      // Generate public URL for the file
+      const baseUrl = process.env.APP_URL || 'https://siglingafelagidymir.com';
+      const qrCodeUrl = `${baseUrl}/qr-codes/${filename}`;
+      console.log('📤 File saved locally:', qrCodeUrl);
+    } catch (fileError) {
+      console.error('❌ File write error:', fileError);
+      throw new Error(`File upload failed: ${fileError.message}`);
     }
     
     // Check if QR code already exists for this boat
@@ -83,7 +83,7 @@ export async function POST({ request }) {
 
     return new Response(JSON.stringify({
       success: true,
-      filename: filename,
+      filename: `qr-codes/${filename}`,
       url: qrCodeUrl,
       message: `QR code uploaded successfully for ${boatName}`
     }), {
