@@ -595,6 +595,55 @@ export async function getAllMembers() {
   }
 }
 
+// Bulk upsert members (insert or update by member_number)
+export async function bulkUpsertMembers(members) {
+  const client = await getClient();
+  try {
+    const values = [];
+    const placeholders = [];
+    members.forEach((m, i) => {
+      const offset = i * 5;
+      placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5})`);
+      values.push(m.member_number, m.name, m.phone || null, m.email || null, m.is_admin || false);
+    });
+    if (values.length === 0) return 0;
+    const sql = `
+      INSERT INTO members (member_number, name, phone, email, is_admin)
+      VALUES ${placeholders.join(', ')}
+      ON CONFLICT (member_number) DO UPDATE SET
+        name = EXCLUDED.name,
+        phone = EXCLUDED.phone,
+        email = EXCLUDED.email,
+        is_admin = COALESCE(EXCLUDED.is_admin, members.is_admin)
+    `;
+    const result = await client.query(sql, values);
+    return result.rowCount;
+  } finally {
+    client.release();
+  }
+}
+
+// Delete all members (cascades handled manually in deleteMember; here we truncate related tables safely)
+export async function deleteAllMembers() {
+  const client = await getClient();
+  try {
+    // Remove dependent rows referencing members
+    await client.query('DELETE FROM trip_likes');
+    await client.query('DELETE FROM trip_comments');
+    await client.query('DELETE FROM trip_photos');
+    await client.query('DELETE FROM boat_hours');
+    await client.query('DELETE FROM outing_participants');
+    await client.query('DELETE FROM messages');
+    await client.query('UPDATE maintenance_issues SET reported_by = NULL, resolved_by = NULL');
+    await client.query('UPDATE check_ins SET member_number = NULL');
+    await client.query('DELETE FROM push_subscriptions');
+    const res = await client.query('DELETE FROM members');
+    return res.rowCount;
+  } finally {
+    client.release();
+  }
+}
+
 export async function getAdminMembers() {
   const client = await getClient();
   try {

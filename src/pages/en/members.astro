@@ -106,6 +106,32 @@ const members = await getAllMembers();
           <div id="message" class="mt-4 p-3 rounded-lg hidden"></div>
         </div>
 
+        <!-- Bulk Import / Dangerous Actions -->
+        <div class="bg-sail-white rounded-lg p-6 shadow-lg mb-8">
+          <h3 class="text-xl font-bold text-ocean-blue mb-6">Bulk Member Actions</h3>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="p-4 border rounded-lg">
+              <h4 class="font-semibold mb-2">Upload Members (CSV)</h4>
+              <p class="text-sm text-gray-600 mb-3">Upload a CSV with headers: <span class="font-mono">member_number,name,phone,email,is_admin</span>. Existing rows will be updated.</p>
+              <input type="file" id="memberCsv" accept=".csv,text/csv" class="block w-full text-sm text-gray-600" />
+              <div class="mt-3 flex gap-2">
+                <input type="password" id="adminPinUpload" placeholder="Admin PIN" class="px-3 py-2 border rounded w-40" />
+                <button onclick="uploadMembersCsv()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Upload CSV</button>
+              </div>
+              <p class="text-xs text-gray-500 mt-2" id="uploadStatus"></p>
+            </div>
+            <div class="p-4 border rounded-lg bg-red-50 border-red-200">
+              <h4 class="font-semibold mb-2 text-red-800">Delete All Members</h4>
+              <p class="text-sm text-red-700 mb-3">This removes all member records and related data. Enter admin PIN to confirm.</p>
+              <div class="flex gap-2">
+                <input type="password" id="adminPinDeleteAll" placeholder="Admin PIN" class="px-3 py-2 border rounded w-40" />
+                <button onclick="deleteAllMembersAction()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Delete All Members</button>
+              </div>
+              <p class="text-xs text-gray-500 mt-2" id="deleteAllStatus"></p>
+            </div>
+          </div>
+        </div>
+
         <!-- Member List -->
         <div class="bg-sail-white rounded-lg p-6 shadow-lg">
           <div class="flex justify-between items-center mb-6">
@@ -145,7 +171,7 @@ const members = await getAllMembers();
                 </tr>
               </thead>
               <tbody id="membersTableBody" class="bg-white divide-y divide-gray-200">
-                {members.map((member) => (
+                {members.map((member: any) => (
                   <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {member.member_number}
@@ -204,6 +230,81 @@ const members = await getAllMembers();
   </main>
 
   <script>
+    // @ts-nocheck
+    async function uploadMembersCsv() {
+      const fileInput = document.getElementById('memberCsv');
+      const status = document.getElementById('uploadStatus');
+      const adminPin = (document.getElementById('adminPinUpload') || {}).value || '';
+      status.textContent = '';
+      if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        status.textContent = 'Please choose a CSV file.';
+        return;
+      }
+      const adminMember = localStorage.getItem('adminMember');
+      if (!adminMember) {
+        status.textContent = 'Admin login required.';
+        return;
+      }
+      if (!adminPin) {
+        status.textContent = 'Admin PIN required.';
+        return;
+      }
+      const member = JSON.parse(adminMember);
+      const csv = await fileInput.files[0].text();
+      try {
+        const resp = await fetch('/api/upload-members', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/csv',
+            'x-admin-member': member.member_number,
+            'x-admin-pin': adminPin
+          },
+          body: csv
+        });
+        const data = await resp.json();
+        if (data.success) {
+          status.textContent = `Uploaded/updated ${data.count} members. Reloading...`;
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          status.textContent = data.error || 'Upload failed';
+        }
+      } catch (e) {
+        status.textContent = 'Upload error: ' + e.message;
+      }
+    }
+
+    async function deleteAllMembersAction() {
+      const status = document.getElementById('deleteAllStatus');
+      const adminPin = (document.getElementById('adminPinDeleteAll') || {}).value || '';
+      status.textContent = '';
+      const adminMember = localStorage.getItem('adminMember');
+      if (!adminMember) {
+        status.textContent = 'Admin login required.';
+        return;
+      }
+      if (!adminPin) {
+        status.textContent = 'Admin PIN required.';
+        return;
+      }
+      if (!confirm('This will permanently delete all members and related data. Are you sure?')) return;
+      const member = JSON.parse(adminMember);
+      try {
+        const resp = await fetch('/api/delete-all-members', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ adminMemberNumber: member.member_number, adminPin })
+        });
+        const data = await resp.json();
+        if (data.success) {
+          status.textContent = `Deleted ${data.deleted} members.`;
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          status.textContent = data.error || 'Delete failed';
+        }
+      } catch (e) {
+        status.textContent = 'Delete error: ' + e.message;
+      }
+    }
     // Check if user is logged in as admin
     function checkAdminAuth() {
       const adminMember = localStorage.getItem('adminMember');
