@@ -1,5 +1,5 @@
 import { getQRCodes, getQRCodeByBoatId, createQRCode, updateQRCode } from '../../lib/database-postgres.js';
-import { put } from '@netlify/blobs';
+import { getStore } from '@netlify/blobs';
 
 export async function POST({ request }) {
   try {
@@ -49,16 +49,22 @@ export async function POST({ request }) {
     const arrayBuffer = await qrCodeFile.arrayBuffer();
     console.log('📤 ArrayBuffer size:', arrayBuffer.byteLength);
 
-    // Upload to Netlify Blobs (public bucket)
+    // Upload to Netlify Blobs store
     console.log('📤 Uploading to Netlify Blobs...');
     let qrCodeUrl;
     try {
-      const blob = await put(filename, arrayBuffer, {
-        contentType: qrCodeFile.type || 'image/png',
-        access: 'public'
+      const store = getStore({ name: 'qr-codes', consistency: 'strong' });
+      await store.set(filename, arrayBuffer, {
+        metadata: {
+          contentType: qrCodeFile.type || 'image/png',
+          boatId: boatId,
+          boatName: boatName
+        }
       });
-      console.log('📤 Blob uploaded:', blob.url);
-      qrCodeUrl = blob.url; // Public URL
+      
+      // Get the public URL for the blob
+      qrCodeUrl = store.url(filename);
+      console.log('📤 Blob uploaded:', qrCodeUrl);
     } catch (blobError) {
       console.error('❌ Netlify Blobs error:', blobError);
       throw new Error(`Netlify Blobs upload failed: ${blobError.message}`);
