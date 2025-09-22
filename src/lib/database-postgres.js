@@ -255,6 +255,16 @@ export async function getBoatStatus(boatId) {
   }
 }
 
+export async function getAllBoats() {
+  const client = await getClient();
+  try {
+    const result = await client.query('SELECT id, name, boat_type, status FROM boats ORDER BY id');
+    return result.rows;
+  } finally {
+    client.release();
+  }
+}
+
 export async function updateBoatStatus(boatId, status, notes = null, adminMemberNumber = null) {
   const client = await getClient();
   try {
