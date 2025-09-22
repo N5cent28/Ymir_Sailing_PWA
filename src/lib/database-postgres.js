@@ -1,5 +1,4 @@
 import pkg from 'pg';
-import bcrypt from 'bcryptjs';
 const { Pool } = pkg;
 
 // Create a connection pool only if DATABASE_URL is available
@@ -594,12 +593,9 @@ export async function getMemberByNumber(memberNumber) {
 export async function createMember(memberNumber, name, phone = null, email = null, isAdmin = false, pin = null, role = 'member') {
   const client = await getClient();
   try {
-    // Hash PIN if provided
-    const hashedPin = pin ? await bcrypt.hash(pin, 10) : null;
-    
     await client.query(
       'INSERT INTO members (member_number, name, phone, email, is_admin, pin, role) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [memberNumber, name, phone, email, isAdmin, hashedPin, role]
+      [memberNumber, name, phone, email, isAdmin, pin, role]
     );
   } finally {
     client.release();
@@ -1091,24 +1087,10 @@ export async function verifyMemberCredentials(memberNumber, pin) {
   const client = await getClient();
   try {
     const result = await client.query(
-      'SELECT * FROM members WHERE member_number = $1',
-      [memberNumber]
+      'SELECT * FROM members WHERE member_number = $1 AND pin = $2',
+      [memberNumber, pin]
     );
-    
-    if (result.rows.length === 0) {
-      return null;
-    }
-    
-    const member = result.rows[0];
-    
-    // If no PIN is set, allow login (for new members)
-    if (!member.pin) {
-      return member;
-    }
-    
-    // Verify PIN using bcrypt
-    const isValidPin = await bcrypt.compare(pin, member.pin);
-    return isValidPin ? member : null;
+    return result.rows[0] || null;
   } finally {
     client.release();
   }
@@ -1117,12 +1099,9 @@ export async function verifyMemberCredentials(memberNumber, pin) {
 export async function updateMemberPin(memberNumber, newPin) {
   const client = await getClient();
   try {
-    // Hash the new PIN
-    const hashedPin = await bcrypt.hash(newPin, 10);
-    
     await client.query(
       'UPDATE members SET pin = $1 WHERE member_number = $2',
-      [hashedPin, memberNumber]
+      [newPin, memberNumber]
     );
   } finally {
     client.release();

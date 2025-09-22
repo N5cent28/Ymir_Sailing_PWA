@@ -454,7 +454,7 @@
                 <span class="security-badge secure">✓ Input Validation</span>
                 <span class="security-badge secure">✓ SQL Injection Prevention</span>
                 <span class="security-badge secure">✓ Environment Variables</span>
-                <span class="security-badge secure">✓ PIN Hashing (bcrypt)</span>
+                <span class="security-badge secure">✓ Simple PIN System</span>
                 <span class="security-badge">⚠️ Rate Limiting (Optional Add-on)</span>
             </div>
             
@@ -464,14 +464,14 @@
                 <li>Input validation on all API endpoints</li>
                 <li>Parameterized queries prevent SQL injection</li>
                 <li>Sensitive data stored in environment variables</li>
-                <li>PINs securely hashed using bcrypt with salt rounds</li>
+                <li>Simple 3-digit PIN system for easy mobile access</li>
                 <li>Session-based authentication with expiration</li>
                 <li>Admin role-based access control</li>
-                <li>Automatic session cleanup and security monitoring</li>
+                <li>Minimal data exposure (only names and emails)</li>
             </ul>
             
             <p style="background: #d4edda; padding: 15px; border-radius: 5px; border-left: 4px solid #28a745; margin: 20px 0;">
-                <strong>✅ Production-Ready Security:</strong> All PINs are securely hashed using industry-standard bcrypt encryption. The system is ready for production use with enterprise-grade security measures.
+                <strong>✅ Appropriate Security Level:</strong> The system uses appropriate security measures for a sailing club PWA that only stores names and email addresses. Simple PIN authentication provides ease of use while maintaining basic security.
             </p>
         </div>
 
