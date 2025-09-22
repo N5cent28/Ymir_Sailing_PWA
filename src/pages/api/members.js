@@ -134,7 +134,8 @@ export async function PUT({ request }) {
         name: body.name,
         phone: body.phone,
         email: body.email,
-        is_admin: body.is_admin
+        is_admin: body.is_admin,
+        role: body.role
       };
       await updateMember(memberNumber, updateData);
     }

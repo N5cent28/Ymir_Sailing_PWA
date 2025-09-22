@@ -1362,7 +1362,7 @@ export async function deleteMember(memberNumber) {
 export async function updateMember(memberNumber, updateData) {
   const client = await getClient();
   try {
-    const { name, phone, email, is_admin, pin } = updateData;
+    const { name, phone, email, is_admin, pin, role } = updateData;
     
     let query = 'UPDATE members SET ';
     const params = [];
@@ -1391,6 +1391,11 @@ export async function updateMember(memberNumber, updateData) {
     if (pin !== undefined) {
       query += `pin = $${paramCount++}, `;
       params.push(pin);
+    }
+    
+    if (role !== undefined) {
+      query += `role = $${paramCount++}, `;
+      params.push(role);
     }
     
     query = query.slice(0, -2); // Remove trailing comma and space
