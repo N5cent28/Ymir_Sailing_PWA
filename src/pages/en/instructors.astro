@@ -36,154 +36,33 @@ const admins = await getAdminMembers();
           {admins && admins.length > 0 ? admins.map((admin: any) => (
             <div class="bg-sail-white rounded-lg p-8 shadow-lg text-center">
               <div class="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden bg-gray-200">
-                <img 
-                  src={admin.profile_picture || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face'} 
-                  alt={admin.name}
-                  class="w-full h-full object-cover"
-                />
+                {admin.profile_picture ? (
+                  <img 
+                    src={admin.profile_picture} 
+                    alt={admin.name}
+                    class="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div class="w-full h-full bg-ocean-green flex items-center justify-center">
+                    <span class="text-white text-4xl font-bold">
+                      {admin.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+                    </span>
+                  </div>
+                )}
               </div>
               <h3 class="text-2xl font-bold text-ocean-green mb-2">{admin.name}</h3>
-              <p class="text-lg text-anchor-gray mb-4">{admin.email || admin.member_number || 'Administrator'}</p>
+              <p class="text-lg text-anchor-gray mb-2 capitalize">{admin.role || 'Administrator'}</p>
+              <p class="text-sm text-anchor-gray mb-4">{admin.email || admin.member_number}</p>
               {admin.bio && (<p class="text-anchor-gray mb-4">{admin.bio}</p>)}
             </div>
           )) : (
-            <div class="col-span-full text-center text-anchor-gray">No administrators found.</div>
+            <div class="col-span-full text-center text-anchor-gray">
+              <p class="text-lg mb-4">No administrators found in the database.</p>
+              <p class="text-sm">Administrators will appear here once they are added to the system.</p>
+            </div>
           )}
         </div>
 
-        <!-- Static showcase (optional) removed for dynamic list -->
-          <!-- Instructor 1 -->
-          <div class="bg-sail-white rounded-lg p-8 shadow-lg text-center">
-            <div class="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden bg-gray-200">
-              <img 
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face" 
-                alt="Erik Jónsson" 
-                class="w-full h-full object-cover"
-              />
-            </div>
-            <h3 class="text-2xl font-bold text-ocean-green mb-2">Erik Jónsson</h3>
-            <p class="text-lg text-anchor-gray mb-4">Head Instructor & Safety Coordinator</p>
-            <p class="text-anchor-gray mb-4">
-              With over 20 years of sailing experience, Erik has been teaching at Ýmir since 2010. 
-              He holds advanced certifications in sailing instruction and marine safety, and has 
-              competed in numerous regattas around Iceland.
-            </p>
-            <div class="flex flex-wrap justify-center gap-2">
-              <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">RYA Certified</span>
-              <span class="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">Safety Expert</span>
-            </div>
-          </div>
-
-          <!-- Instructor 2 -->
-          <div class="bg-sail-white rounded-lg p-8 shadow-lg text-center">
-            <div class="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden bg-gray-200">
-              <img 
-                src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop&crop=face" 
-                alt="Anna Sigurðardóttir" 
-                class="w-full h-full object-cover"
-              />
-            </div>
-            <h3 class="text-2xl font-bold text-ocean-green mb-2">Anna Sigurðardóttir</h3>
-            <p class="text-lg text-anchor-gray mb-4">Senior Instructor & Youth Program Director</p>
-            <p class="text-anchor-gray mb-4">
-              Anna specializes in youth sailing programs and has been instrumental in developing 
-              our "Leikur við sjóinn" curriculum. She brings enthusiasm and patience to every 
-              lesson, making sailing accessible to sailors of all ages.
-            </p>
-            <div class="flex flex-wrap justify-center gap-2">
-              <span class="px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full">Youth Specialist</span>
-              <span class="px-3 py-1 bg-pink-100 text-pink-800 text-sm rounded-full">Curriculum Developer</span>
-            </div>
-          </div>
-
-          <!-- Instructor 3 -->
-          <div class="bg-sail-white rounded-lg p-8 shadow-lg text-center">
-            <div class="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden bg-gray-200">
-              <img 
-                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face" 
-                alt="Magnús Ólafsson" 
-                class="w-full h-full object-cover"
-              />
-            </div>
-            <h3 class="text-2xl font-bold text-ocean-green mb-2">Magnús Ólafsson</h3>
-            <p class="text-lg text-anchor-gray mb-4">Advanced Sailing & Racing Coach</p>
-            <p class="text-anchor-gray mb-4">
-              A competitive sailor with international racing experience, Magnús leads our advanced 
-              programs and racing teams. He has represented Iceland in multiple international 
-              competitions and brings that expertise to our members.
-            </p>
-            <div class="flex flex-wrap justify-center gap-2">
-              <span class="px-3 py-1 bg-red-100 text-red-800 text-sm rounded-full">Racing Coach</span>
-              <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm rounded-full">International Experience</span>
-            </div>
-          </div>
-
-          <!-- Instructor 4 -->
-          <div class="bg-sail-white rounded-lg p-8 shadow-lg text-center">
-            <div class="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden bg-gray-200">
-              <img 
-                src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop&crop=face" 
-                alt="Helga Björnsdóttir" 
-                class="w-full h-full object-cover"
-              />
-            </div>
-            <h3 class="text-2xl font-bold text-ocean-green mb-2">Helga Björnsdóttir</h3>
-            <p class="text-lg text-anchor-gray mb-4">Navigation & Weather Specialist</p>
-            <p class="text-anchor-gray mb-4">
-              Helga is our navigation expert, teaching everything from basic chart reading to 
-              advanced celestial navigation. She has extensive experience sailing in Icelandic 
-              waters and understands the unique challenges of our local conditions.
-            </p>
-            <div class="flex flex-wrap justify-center gap-2">
-              <span class="px-3 py-1 bg-indigo-100 text-indigo-800 text-sm rounded-full">Navigation Expert</span>
-              <span class="px-3 py-1 bg-teal-100 text-teal-800 text-sm rounded-full">Weather Specialist</span>
-            </div>
-          </div>
-
-          <!-- Instructor 5 -->
-          <div class="bg-sail-white rounded-lg p-8 shadow-lg text-center">
-            <div class="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden bg-gray-200">
-              <img 
-                src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop&crop=face" 
-                alt="Björn Kristjánsson" 
-                class="w-full h-full object-cover"
-              />
-            </div>
-            <h3 class="text-2xl font-bold text-ocean-green mb-2">Björn Kristjánsson</h3>
-            <p class="text-lg text-anchor-gray mb-4">Boat Maintenance & Technical Instructor</p>
-            <p class="text-anchor-gray mb-4">
-              Björn teaches our technical courses, covering everything from engine maintenance 
-              to sail repair. His practical approach helps members become more self-sufficient 
-              sailors and contributes to our fleet maintenance program.
-            </p>
-            <div class="flex flex-wrap justify-center gap-2">
-              <span class="px-3 py-1 bg-orange-100 text-orange-800 text-sm rounded-full">Technical Expert</span>
-              <span class="px-3 py-1 bg-gray-100 text-gray-800 text-sm rounded-full">Maintenance Specialist</span>
-            </div>
-          </div>
-
-          <!-- Instructor 6 -->
-          <div class="bg-sail-white rounded-lg p-8 shadow-lg text-center">
-            <div class="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden bg-gray-200">
-              <img 
-                src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&h=300&fit=crop&crop=face" 
-                alt="Sólveig Gunnarsdóttir" 
-                class="w-full h-full object-cover"
-              />
-            </div>
-            <h3 class="text-2xl font-bold text-ocean-green mb-2">Sólveig Gunnarsdóttir</h3>
-            <p class="text-lg text-anchor-gray mb-4">Beginner Program Coordinator</p>
-            <p class="text-anchor-gray mb-4">
-              Sólveig leads our beginner programs and has a gift for making new sailors feel 
-              comfortable and confident. She focuses on building strong fundamentals and 
-              creating a supportive learning environment for all students.
-            </p>
-            <div class="flex flex-wrap justify-center gap-2">
-              <span class="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">Beginner Specialist</span>
-              <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">Patient Teacher</span>
-            </div>
-          </div>
-        </div>
 
         <!-- Teaching Philosophy -->
         <div class="bg-blue-50 rounded-lg p-8 mb-16">

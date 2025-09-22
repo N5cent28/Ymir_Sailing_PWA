@@ -30,6 +30,7 @@ async function initializeDatabase() {
         sailing_experience TEXT,
         pin VARCHAR(50),
         is_admin BOOLEAN DEFAULT FALSE,
+        role VARCHAR(100) DEFAULT 'member',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
       
@@ -194,6 +195,12 @@ async function initializeDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (boat_id) REFERENCES boats (id)
       );
+    `);
+    
+    // Add role column if it doesn't exist (for existing databases)
+    await client.query(`
+      ALTER TABLE members 
+      ADD COLUMN IF NOT EXISTS role VARCHAR(100) DEFAULT 'member'
     `);
     
     // Populate boats table with default boats
@@ -583,12 +590,12 @@ export async function getMemberByNumber(memberNumber) {
   }
 }
 
-export async function createMember(memberNumber, name, phone = null, email = null, isAdmin = false, pin = null) {
+export async function createMember(memberNumber, name, phone = null, email = null, isAdmin = false, pin = null, role = 'member') {
   const client = await getClient();
   try {
     await client.query(
-      'INSERT INTO members (member_number, name, phone, email, is_admin, pin) VALUES ($1, $2, $3, $4, $5, $6)',
-      [memberNumber, name, phone, email, isAdmin, pin]
+      'INSERT INTO members (member_number, name, phone, email, is_admin, pin, role) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      [memberNumber, name, phone, email, isAdmin, pin, role]
     );
   } finally {
     client.release();
@@ -612,19 +619,20 @@ export async function bulkUpsertMembers(members) {
     const values = [];
     const placeholders = [];
     members.forEach((m, i) => {
-      const offset = i * 5;
-      placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5})`);
-      values.push(m.member_number, m.name, m.phone || null, m.email || null, m.is_admin || false);
+      const offset = i * 6;
+      placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6})`);
+      values.push(m.member_number, m.name, m.phone || null, m.email || null, m.is_admin || false, m.role || 'member');
     });
     if (values.length === 0) return 0;
     const sql = `
-      INSERT INTO members (member_number, name, phone, email, is_admin)
+      INSERT INTO members (member_number, name, phone, email, is_admin, role)
       VALUES ${placeholders.join(', ')}
       ON CONFLICT (member_number) DO UPDATE SET
         name = COALESCE(EXCLUDED.name, members.name),
         phone = COALESCE(EXCLUDED.phone, members.phone),
         email = COALESCE(EXCLUDED.email, members.email),
-        is_admin = COALESCE(EXCLUDED.is_admin, members.is_admin)
+        is_admin = COALESCE(EXCLUDED.is_admin, members.is_admin),
+        role = COALESCE(EXCLUDED.role, members.role)
     `;
     const result = await client.query(sql, values);
     return result.rowCount;
