@@ -114,8 +114,17 @@ const members = await getAllMembers();
               <h4 class="font-semibold mb-2">Upload Members (CSV)</h4>
               <p class="text-sm text-gray-600 mb-3">Upload a CSV with headers: <span class="font-mono">member_number,name,phone,email,is_admin</span>. Existing rows will be updated.</p>
               <input type="file" id="memberCsv" accept=".csv,text/csv" class="block w-full text-sm text-gray-600" />
-              <div class="mt-3">
+              <div class="mt-3 relative inline-block group">
                 <button onclick="uploadMembersCsv()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Upload CSV</button>
+                <div class="absolute left-0 mt-2 w-72 bg-white border border-gray-200 rounded shadow-lg p-3 text-xs text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  <div class="font-semibold mb-1">How uploads are merged</div>
+                  <ul class="list-disc pl-4 space-y-1">
+                    <li>Member number is the unique identifier.</li>
+                    <li>If a row’s member number exists, fields are updated.</li>
+                    <li>Empty CSV fields won’t overwrite existing values.</li>
+                    <li>is_admin will update only if provided in CSV.</li>
+                  </ul>
+                </div>
               </div>
               <p class="text-xs text-gray-500 mt-2" id="uploadStatus"></p>
             </div>

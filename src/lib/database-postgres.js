@@ -611,9 +611,9 @@ export async function bulkUpsertMembers(members) {
       INSERT INTO members (member_number, name, phone, email, is_admin)
       VALUES ${placeholders.join(', ')}
       ON CONFLICT (member_number) DO UPDATE SET
-        name = EXCLUDED.name,
-        phone = EXCLUDED.phone,
-        email = EXCLUDED.email,
+        name = COALESCE(EXCLUDED.name, members.name),
+        phone = COALESCE(EXCLUDED.phone, members.phone),
+        email = COALESCE(EXCLUDED.email, members.email),
         is_admin = COALESCE(EXCLUDED.is_admin, members.is_admin)
     `;
     const result = await client.query(sql, values);

@@ -38,17 +38,17 @@ import Layout from '../layouts/Layout.astro';
             <label class="block text-sm font-medium text-gray-700 mb-2">Member Number (optional)</label>
             <input type="text" id="memberNumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 1234">
             <p class="text-xs text-gray-500 mt-1">Leave empty to test all users</p>
-          </div>
-          
+    </div>
+    
           <div class="space-y-3">
             <button title="Client-only. Calls Notification.requestPermission(); if granted, prepares SW/Push setup. No server call." onclick="requestNotificationPermission()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
               🔔 Request Notification Permission
             </button>
 
             <button title="Server push via /api/test-notification?type=test. Targets memberNumber if provided; else all. Uses VAPID + Web Push payload." onclick="testNotification('test')" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm">
-              📢 Basic Test Notification
-            </button>
-
+        📢 Basic Test Notification
+      </button>
+      
             <button title="End-to-end test path. Invokes scheduler/handlers to emulate real flows, aggregates results, logs success/fail counts." onclick="testNotificationSystem()" class="w-full px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm">
               🔍 Test Notification System
             </button>
@@ -58,17 +58,17 @@ import Layout from '../layouts/Layout.astro';
             </button>
 
             <button title="Server push via /api/test-notification?type=checkout. Sends templated 'Boat Check-Out Confirmed' payload." onclick="testNotification('checkout')" class="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm">
-              ⛵ Boat Checkout Confirmation
-            </button>
-
+        ⛵ Boat Checkout Confirmation
+      </button>
+      
             <button title="Server push via /api/test-notification?type=reminder. Uses extension reminder template and options." onclick="testNotification('reminder')" class="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm">
-              ⏰ Time Extension Reminder
-            </button>
-
+        ⏰ Time Extension Reminder
+      </button>
+      
             <button title="Server push via /api/test-notification?type=overdue. Sends escalating overdue alert payload." onclick="testNotification('overdue')" class="w-full px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors text-sm">
-              🚨 Overdue Boat Alert
-            </button>
-          </div>
+        🚨 Overdue Boat Alert
+      </button>
+    </div>
         </div>
 
         <!-- Subscription Management -->
@@ -97,20 +97,20 @@ import Layout from '../layouts/Layout.astro';
 
             <button title="Call internal cron endpoint to run scheduler now" onclick="testCronJob()" class="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm">
               🕐 Test Cron Job
-            </button>
-
+      </button>
+      
             <button title="Check client/server VAPID configuration and attempt a fresh subscription" onclick="verifyVapidKeys()" class="w-full px-4 py-2 bg-indigo-700 text-white rounded-lg hover:bg-indigo-800 transition-colors text-sm">
               🔑 Verify VAPID Keys
-            </button>
-
+      </button>
+      
             <button title="Recreate push subscription to ensure p256dh/auth keys are present" onclick="fixEncryptionKeys()" class="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm">
               🔧 Fix Encryption Keys
-            </button>
-
+      </button>
+      
             <button title="Associate an existing anonymous subscription with the entered member number" onclick="fixSubscriptionLink()" class="w-full px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm">
-              🔗 Fix Subscription Link
-            </button>
-
+        🔗 Fix Subscription Link
+      </button>
+      
             <button title="Extract keys from current browser subscription and update DB row" onclick="updateDatabaseSubscriptions()" class="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm">
               🔄 Update Database Subscriptions
             </button>
