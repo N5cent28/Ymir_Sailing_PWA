@@ -37,8 +37,8 @@ export async function POST({ request }) {
       pin: headers.indexOf('pin'),
       role: headers.indexOf('role')
     };
-    if (idx.member_number === -1 || idx.name === -1) {
-      return new Response(JSON.stringify({ success: false, error: 'CSV must include member_number and name headers' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    if (idx.name === -1) {
+      return new Response(JSON.stringify({ success: false, error: 'CSV must include name header' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
     // Build a set of existing PINs to avoid collisions when auto-generating
@@ -66,9 +66,28 @@ export async function POST({ request }) {
     for (let i = 1; i < lines.length; i++) {
       const row = lines[i].split(',');
       if (row.length === 1 && row[0].trim() === '') continue;
-      const member_number = row[idx.member_number]?.trim();
-      const name = row[idx.name]?.trim();
-      if (!member_number || !name) continue;
+      const rawMemberNum = idx.member_number !== -1 ? (row[idx.member_number]?.trim() || '') : '';
+      const name = (row[idx.name] || '').trim();
+      if (!name) continue;
+      let member_number = rawMemberNum;
+      if (!member_number) {
+        // Generate unique 4-digit member number
+        let attempt = 0;
+        const existingMembers = existing || [];
+        const existingSet = new Set(existingMembers.map(m => m.member_number));
+        while (attempt < 10000) {
+          const candidate = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+          if (!existingSet.has(candidate)) {
+            member_number = candidate;
+            existingSet.add(candidate);
+            break;
+          }
+          attempt++;
+        }
+        if (!member_number) {
+          member_number = (Date.now() % 10000).toString().padStart(4, '0');
+        }
+      }
       const phone = idx.phone !== -1 ? (row[idx.phone]?.trim() || null) : null;
       const email = idx.email !== -1 ? (row[idx.email]?.trim() || null) : null;
       const is_admin = idx.is_admin !== -1 ? ['true','1','yes','y'].includes((row[idx.is_admin]||'').trim().toLowerCase()) : false;
