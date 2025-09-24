@@ -619,20 +619,30 @@ export async function bulkUpsertMembers(members) {
     const values = [];
     const placeholders = [];
     members.forEach((m, i) => {
-      const offset = i * 6;
-      placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6})`);
-      values.push(m.member_number, m.name, m.phone || null, m.email || null, m.is_admin || false, m.role || 'member');
+      const offset = i * 8;
+      placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8})`);
+      values.push(
+        m.member_number,
+        m.name,
+        m.phone || null,
+        m.email || null,
+        m.is_admin || false,
+        m.role || 'member',
+        m.pin || null,
+        new Date()
+      );
     });
     if (values.length === 0) return 0;
     const sql = `
-      INSERT INTO members (member_number, name, phone, email, is_admin, role)
+      INSERT INTO members (member_number, name, phone, email, is_admin, role, pin, created_at)
       VALUES ${placeholders.join(', ')}
       ON CONFLICT (member_number) DO UPDATE SET
         name = COALESCE(EXCLUDED.name, members.name),
         phone = COALESCE(EXCLUDED.phone, members.phone),
         email = COALESCE(EXCLUDED.email, members.email),
         is_admin = COALESCE(EXCLUDED.is_admin, members.is_admin),
-        role = COALESCE(EXCLUDED.role, members.role)
+        role = COALESCE(EXCLUDED.role, members.role),
+        pin = COALESCE(EXCLUDED.pin, members.pin)
     `;
     const result = await client.query(sql, values);
     return result.rowCount;

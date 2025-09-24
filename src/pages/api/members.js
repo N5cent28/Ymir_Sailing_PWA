@@ -1,4 +1,4 @@
-import { getAllMembers, createMember, getMemberByNumber, updateMemberProfile, deleteMember, updateMember } from '../../lib/database-postgres.js';
+import { getAllMembers, createMember, getMemberByNumber, updateMemberProfile, deleteMember, updateMember, updateMemberPin } from '../../lib/database-postgres.js';
 
 export async function GET({ request }) {
   try {
@@ -138,6 +138,14 @@ export async function PUT({ request }) {
         role: body.role
       };
       await updateMember(memberNumber, updateData);
+
+      // Optional PIN update if a valid 3-digit pin is provided
+      if (typeof body.pin === 'string') {
+        const trimmed = body.pin.trim();
+        if (trimmed && /^\d{3}$/.test(trimmed)) {
+          await updateMemberPin(memberNumber, trimmed);
+        }
+      }
     }
     
     return new Response(JSON.stringify({ 

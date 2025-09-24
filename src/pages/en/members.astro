@@ -439,6 +439,12 @@ const members = await getAllMembers();
             </div>
             
             <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">PIN (3 digits)</label>
+              <input type="text" id="editPin" value="" placeholder="Leave blank to keep current" maxlength="3" pattern="\\d{3}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ocean-blue">
+              <p class="text-xs text-gray-500 mt-1">Enter 3 digits (e.g., 123). Leave blank to keep existing PIN.</p>
+            </div>
+            
+            <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
               <select id="editRole" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ocean-blue">
                 <option value="member" ${role === 'member' ? 'selected' : ''}>Member</option>
@@ -489,7 +495,8 @@ const members = await getAllMembers();
               phone: document.getElementById('editPhone').value || null,
               email: document.getElementById('editEmail').value || null,
               is_admin: document.getElementById('editIsAdmin').checked,
-              role: document.getElementById('editRole').value
+              role: document.getElementById('editRole').value,
+              pin: (document.getElementById('editPin').value || '').trim()
             })
           });
           

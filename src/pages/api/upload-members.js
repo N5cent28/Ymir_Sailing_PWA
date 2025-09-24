@@ -1,8 +1,8 @@
-import { bulkUpsertMembers, verifyMemberCredentials, isAdmin } from '../../lib/database-postgres.js';
+import { bulkUpsertMembers, getAllMembers, isAdmin } from '../../lib/database-postgres.js';
 
 // Accepts CSV via POST body with admin credentials in headers
 // Headers required: x-admin-member, x-admin-pin
-// CSV headers: member_number,name,phone,email,is_admin
+// CSV headers: member_number,name,phone,email,is_admin[,pin][,role]
 export async function POST({ request }) {
   try {
     const contentType = request.headers.get('content-type') || '';
@@ -33,10 +33,33 @@ export async function POST({ request }) {
       name: headers.indexOf('name'),
       phone: headers.indexOf('phone'),
       email: headers.indexOf('email'),
-      is_admin: headers.indexOf('is_admin')
+      is_admin: headers.indexOf('is_admin'),
+      pin: headers.indexOf('pin'),
+      role: headers.indexOf('role')
     };
     if (idx.member_number === -1 || idx.name === -1) {
       return new Response(JSON.stringify({ success: false, error: 'CSV must include member_number and name headers' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    // Build a set of existing PINs to avoid collisions when auto-generating
+    const existing = await getAllMembers();
+    const existingPins = new Set((existing || []).map(m => m.pin).filter(Boolean));
+
+    function generateUniquePin() {
+      // 3-digit pin, allow leading zeros
+      let attempt = 0;
+      while (attempt < 2000) {
+        const pin = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        if (!existingPins.has(pin)) {
+          existingPins.add(pin);
+          return pin;
+        }
+        attempt++;
+      }
+      // Fallback in the unlikely event of exhaustion
+      const fallback = Date.now().toString().slice(-3);
+      existingPins.add(fallback);
+      return fallback;
     }
 
     const members = [];
@@ -49,7 +72,11 @@ export async function POST({ request }) {
       const phone = idx.phone !== -1 ? (row[idx.phone]?.trim() || null) : null;
       const email = idx.email !== -1 ? (row[idx.email]?.trim() || null) : null;
       const is_admin = idx.is_admin !== -1 ? ['true','1','yes','y'].includes((row[idx.is_admin]||'').trim().toLowerCase()) : false;
-      members.push({ member_number, name, phone, email, is_admin });
+      const pin = idx.pin !== -1 ? ((row[idx.pin] || '').trim() || null) : null;
+      const finalPin = pin && /^\d{3}$/.test(pin) ? pin : generateUniquePin();
+      const role = idx.role !== -1 ? ((row[idx.role] || '').trim().toLowerCase() || 'member') : 'member';
+
+      members.push({ member_number, name, phone, email, is_admin, pin: finalPin, role });
     }
 
     const upserted = await bulkUpsertMembers(members);
