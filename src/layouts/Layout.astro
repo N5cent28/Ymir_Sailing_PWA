@@ -42,63 +42,8 @@ const { title, description = 'Ymir Sailing Club - Reykjavik, Iceland', lang = 'e
             const registration = await navigator.serviceWorker.register('/sw.js');
             console.log('SW registered: ', registration);
             
-            // Request notification permission
-            if ('Notification' in window) {
-              const permission = await Notification.requestPermission();
-              console.log('Notification permission:', permission);
-              
-              if (permission === 'granted') {
-                // Subscribe to push notifications
-                try {
-                  const subscription = await registration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: 'BNr0dhFU7WG9GAdFO4vYzJBSYi3sPesGDeZVNayZ8KQMs2MjNMo5oNlM-KcxBiA1NrDPCktRmgfzKWdjBVw9MKY'
-                  });
-                  
-                  // Extract encryption keys before sending
-                  let p256dh = null;
-                  let auth = null;
-                  
-                  if (subscription.getKey) {
-                    try {
-                      const p256dhKey = subscription.getKey('p256dh');
-                      const authKey = subscription.getKey('auth');
-                      
-                      if (p256dhKey) {
-                        p256dh = btoa(String.fromCharCode(...new Uint8Array(p256dhKey)));
-                      }
-                      
-                      if (authKey) {
-                        auth = btoa(String.fromCharCode(...new Uint8Array(authKey)));
-                      }
-                    } catch (error) {
-                      console.error('Error extracting subscription keys:', error);
-                    }
-                  }
-
-                  // Send subscription to server
-                  await fetch('/api/push-subscription', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      subscription: {
-                        endpoint: subscription.endpoint,
-                        p256dh: p256dh,
-                        auth: auth
-                      },
-                      userAgent: navigator.userAgent,
-                      timestamp: new Date().toISOString()
-                    })
-                  });
-                  
-                  console.log('Push subscription successful');
-                } catch (error) {
-                  console.error('Push subscription failed:', error);
-                }
-              }
-            }
+            // Note: Push subscription collection is now handled on specific user actions
+            // (login, boat checkout, admin login) rather than on every page load
           } catch (registrationError) {
             console.log('SW registration failed: ', registrationError);
           }

@@ -59,11 +59,116 @@ export function setUserSession(member) {
   localStorage.setItem(SESSION_KEY, JSON.stringify(member));
   localStorage.setItem(SESSION_EXPIRY_KEY, expiryTime.toString());
   
-  // Link any existing push subscriptions to this member
-  linkPushSubscriptionToMember(member.member_number);
+  // Handle push subscription for logged-in user
+  handleUserPushSubscription(member.member_number);
   
   // Dispatch custom event for other components to listen to
   window.dispatchEvent(new CustomEvent('userLogin', { detail: member }));
+}
+
+/**
+ * Handle push subscription for logged-in user - try to link existing or create new
+ * @param {string} memberNumber - Member number to associate with subscription
+ */
+async function handleUserPushSubscription(memberNumber) {
+  try {
+    // First try to link any existing push subscriptions
+    const linked = await linkPushSubscriptionToMember(memberNumber);
+    
+    if (!linked) {
+      // If no existing subscription was linked, request a new one
+      console.log('No existing push subscription found, requesting new one...');
+      await requestPushSubscription(memberNumber);
+    }
+  } catch (error) {
+    console.error('Error handling push subscription for user:', error);
+  }
+}
+
+/**
+ * Request push notification permission and create subscription for logged-in user
+ * @param {string} memberNumber - Member number to associate with subscription
+ */
+export async function requestPushSubscription(memberNumber) {
+  try {
+    // Check if push notifications are supported
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+      console.log('Push notifications not supported in this browser');
+      return false;
+    }
+
+    // Request notification permission
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      console.log('Notification permission denied');
+      return false;
+    }
+
+    // Get service worker registration
+    const registration = await navigator.serviceWorker.ready;
+    
+    // Check if we already have a subscription
+    let subscription = await registration.pushManager.getSubscription();
+    
+    if (!subscription) {
+      // Create new subscription
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: 'BNr0dhFU7WG9GAdFO4vYzJBSYi3sPesGDeZVNayZ8KQMs2MjNMo5oNlM-KcxBiA1NrDPCktRmgfzKWdjBVw9MKY'
+      });
+    }
+
+    // Extract encryption keys
+    let p256dh = null;
+    let auth = null;
+    
+    if (subscription.getKey) {
+      try {
+        const p256dhKey = subscription.getKey('p256dh');
+        const authKey = subscription.getKey('auth');
+        
+        if (p256dhKey) {
+          p256dh = btoa(String.fromCharCode(...new Uint8Array(p256dhKey)));
+        }
+        
+        if (authKey) {
+          auth = btoa(String.fromCharCode(...new Uint8Array(authKey)));
+        }
+      } catch (error) {
+        console.error('Error extracting subscription keys:', error);
+        return false;
+      }
+    }
+
+    // Send subscription to server
+    const response = await fetch('/api/push-subscription', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        subscription: {
+          endpoint: subscription.endpoint,
+          p256dh: p256dh,
+          auth: auth
+        },
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString(),
+        memberNumber: memberNumber
+      })
+    });
+
+    if (response.ok) {
+      console.log(`📱 Push subscription created for member ${memberNumber}`);
+      return true;
+    } else {
+      console.error('Failed to store push subscription');
+      return false;
+    }
+  } catch (error) {
+    console.error('Error requesting push subscription:', error);
+    return false;
+  }
 }
 
 /**
@@ -98,6 +203,7 @@ async function linkPushSubscriptionToMember(memberNumber) {
             }
           } catch (error) {
             console.error('Error extracting subscription keys:', error);
+            return false;
           }
         }
 
@@ -121,6 +227,7 @@ async function linkPushSubscriptionToMember(memberNumber) {
         
         if (updateResponse.ok) {
           console.log(`📱 Updated existing push subscription for member ${memberNumber}`);
+          return true;
         } else {
           // If update failed, try to create/update via POST
           const response = await fetch('/api/push-subscription', {
@@ -142,12 +249,15 @@ async function linkPushSubscriptionToMember(memberNumber) {
           
           if (response.ok) {
             console.log(`📱 Linked push subscription to member ${memberNumber}`);
+            return true;
           }
         }
       }
     }
+    return false;
   } catch (error) {
     console.log('Could not link push subscription to member:', error);
+    return false;
   }
 }
 
