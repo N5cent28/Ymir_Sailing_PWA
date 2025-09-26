@@ -274,10 +274,31 @@ import Layout from '../layouts/Layout.astro';
       
       try {
         const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.getSubscription();
+        const browserSubscription = await registration.pushManager.getSubscription();
         
-        if (subscription) {
-          updateStatus('pushSubscriptionStatus', 'Active', true);
+        // Check if we have a subscription in our database for the current user
+        const { getCurrentUser } = await import('../lib/auth.js');
+        const currentUser = getCurrentUser();
+        let dbSubscription = null;
+        
+        if (currentUser) {
+          try {
+            const response = await fetch(`/api/test-notification?debug=true&memberNumber=${currentUser.member_number}`);
+            const data = await response.json();
+            if (data.success && data.memberSubscriptions > 0) {
+              dbSubscription = data.allSubscriptions.find(sub => sub.member_number === currentUser.member_number);
+            }
+          } catch (error) {
+            console.error('Error checking database subscription:', error);
+          }
+        }
+        
+        if (browserSubscription && dbSubscription) {
+          updateStatus('pushSubscriptionStatus', 'Active (Browser + DB)', true);
+        } else if (browserSubscription) {
+          updateStatus('pushSubscriptionStatus', 'Browser Only', false);
+        } else if (dbSubscription) {
+          updateStatus('pushSubscriptionStatus', 'DB Only', false);
         } else {
           updateStatus('pushSubscriptionStatus', 'Not Active', false);
         }
