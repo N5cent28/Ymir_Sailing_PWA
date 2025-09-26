@@ -120,7 +120,10 @@ const returnUrl = url.searchParams.get('returnUrl') || '/en/admin-dashboard';
         
         if (result.success) {
           showMessage('Login successful! Redirecting...', 'success');
-          // Store admin info in localStorage for this session
+          // Store admin info using the auth system (includes push subscription linking)
+          const { setUserSession } = await import('/src/lib/auth.js');
+          setUserSession(result.member);
+          // Also store in adminMember for backward compatibility
           localStorage.setItem('adminMember', JSON.stringify(result.member));
           // Redirect to admin dashboard
           setTimeout(() => {
