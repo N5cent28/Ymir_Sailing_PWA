@@ -55,6 +55,27 @@ const { title, description = 'Ymir Sailing Club - Reykjavik, Iceland', lang = 'e
                     applicationServerKey: 'BNr0dhFU7WG9GAdFO4vYzJBSYi3sPesGDeZVNayZ8KQMs2MjNMo5oNlM-KcxBiA1NrDPCktRmgfzKWdjBVw9MKY'
                   });
                   
+                  // Extract encryption keys before sending
+                  let p256dh = null;
+                  let auth = null;
+                  
+                  if (subscription.getKey) {
+                    try {
+                      const p256dhKey = subscription.getKey('p256dh');
+                      const authKey = subscription.getKey('auth');
+                      
+                      if (p256dhKey) {
+                        p256dh = btoa(String.fromCharCode(...new Uint8Array(p256dhKey)));
+                      }
+                      
+                      if (authKey) {
+                        auth = btoa(String.fromCharCode(...new Uint8Array(authKey)));
+                      }
+                    } catch (error) {
+                      console.error('Error extracting subscription keys:', error);
+                    }
+                  }
+
                   // Send subscription to server
                   await fetch('/api/push-subscription', {
                     method: 'POST',
@@ -62,7 +83,11 @@ const { title, description = 'Ymir Sailing Club - Reykjavik, Iceland', lang = 'e
                       'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                      subscription: subscription,
+                      subscription: {
+                        endpoint: subscription.endpoint,
+                        p256dh: p256dh,
+                        auth: auth
+                      },
                       userAgent: navigator.userAgent,
                       timestamp: new Date().toISOString()
                     })
